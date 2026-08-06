@@ -2,6 +2,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = process.cwd();
+const validatorPath = path.join(root, 'scripts', 'validate-project.mjs');
 const read = (file) => readFile(path.join(root, file), 'utf8');
 const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
@@ -27,10 +28,15 @@ async function walk(dir) {
     if (['node_modules', 'dist', '.git', 'coverage'].includes(entry)) continue;
     const full = path.join(dir, entry);
     const info = await stat(full);
-    if (info.isDirectory()) await walk(full);
-    else if (!entry.endsWith('.lock')) {
-      const text = await readFile(full, 'utf8').catch(() => '');
-      for (const term of forbidden) assert(!text.includes(term), `${full} contém termo proibido: ${term}`);
+    if (info.isDirectory()) {
+      await walk(full);
+      continue;
+    }
+    if (entry.endsWith('.lock') || full === validatorPath) continue;
+
+    const text = await readFile(full, 'utf8').catch(() => '');
+    for (const term of forbidden) {
+      assert(!text.includes(term), `${full} contém termo proibido: ${term}`);
     }
   }
 }
