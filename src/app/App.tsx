@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 type TabId = 'today' | 'plan' | 'cardio' | 'progress' | 'more';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 const tabs: Array<{ id: TabId; label: string; icon: string }> = [
   { id: 'today', label: 'Hoje', icon: '⌂' },
@@ -28,7 +34,7 @@ const emptyCopy: Record<TabId, { title: string; body: string }> = {
     body: 'Seu histórico de treino e evolução aparecerá aqui.'
   },
   more: {
-    title: 'TITAN FIT v0.1.0',
+    title: 'Sobre o TITAN FIT',
     body: 'Shell inicial do aplicativo, pronto para receber a importação de fichas.'
   }
 };
@@ -36,18 +42,44 @@ const emptyCopy: Record<TabId, { title: string; body: string }> = {
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installDismissed, setInstallDismissed] = useState(false);
+
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker
+  } = useRegisterSW({
+    onRegisterError(error) {
+      console.warn('Não foi possível registrar o PWA.', error);
+    }
+  });
 
   useEffect(() => {
-    const update = () => setIsOnline(navigator.onLine);
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    const captureInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    window.addEventListener('beforeinstallprompt', captureInstallPrompt);
+
     return () => {
-      window.removeEventListener('online', update);
-      window.removeEventListener('offline', update);
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+      window.removeEventListener('beforeinstallprompt', captureInstallPrompt);
     };
   }, []);
 
   const content = emptyCopy[activeTab];
+
+  async function installApp() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') setInstallPrompt(null);
+  }
 
   return (
     <div className="app-shell">
@@ -83,7 +115,48 @@ export function App() {
             <strong>Local-first</strong>
           </div>
         </section>
+
+        {activeTab === 'more' && (
+          <section className="settings-card" aria-label="Aplicativo">
+            <div>
+              <span className="info-label">Conexão</span>
+              <strong>{isOnline ? 'Online' : 'Offline'}</strong>
+            </div>
+            <button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>
+              {installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}
+            </button>
+            <button type="button" className="secondary-action" onClick={() => window.location.reload()}>
+              Verificar atualização
+            </button>
+          </section>
+        )}
       </main>
+
+      {installPrompt && !installDismissed && (
+        <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT">
+          <div>
+            <strong>Instale o TITAN FIT</strong>
+            <p>Acesso rápido e funcionamento offline.</p>
+          </div>
+          <div className="prompt-actions">
+            <button type="button" onClick={installApp}>Instalar</button>
+            <button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button>
+          </div>
+        </aside>
+      )}
+
+      {needRefresh && (
+        <aside className="pwa-prompt" role="alert" aria-live="polite">
+          <div>
+            <strong>Nova versão disponível</strong>
+            <p>Atualize quando for conveniente.</p>
+          </div>
+          <div className="prompt-actions">
+            <button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button>
+            <button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button>
+          </div>
+        </aside>
+      )}
 
       <nav className="bottom-navigation" aria-label="Navegação principal">
         {tabs.map((tab) => (
