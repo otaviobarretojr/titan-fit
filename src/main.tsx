@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/global.css';
 import './styles/history.css';
 import './styles/cardio.css';
+import './styles/coach.css';
 import './styles/pwa.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
