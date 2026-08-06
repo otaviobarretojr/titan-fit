@@ -15,10 +15,15 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => findFirstPendingExercise(workout, loadWorkoutExecution(planId, workout.id)));
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
+  const [sessionSeconds, setSessionSeconds] = useState(() => secondsSince(execution.startedAt));
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
   const [prMessage, setPrMessage] = useState<string | null>(null);
 
   useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
+  useEffect(() => {
+    const interval = window.setInterval(() => setSessionSeconds(secondsSince(execution.startedAt)), 1000);
+    return () => window.clearInterval(interval);
+  }, [execution.startedAt]);
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
     const interval = window.setInterval(() => setTimerSeconds((current) => {
@@ -41,6 +46,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const isCardio = activeExercise.muscleGroup.toLowerCase() === 'cardio';
   const previousExercise = previousExercises.get(activeExercise.id) ?? null;
   const nextExerciseName = workout.exercises[activeExerciseIndex + 1]?.name ?? null;
+  const coachRecommendation = !isCardio && exerciseCompleted ? buildCoachRecommendation(activeSets, activeExercise.minReps, activeExercise.maxReps, activeExercise.targetRir, previousExercise) : null;
 
   function updateSet(exerciseId: string, setNumber: number, patch: Partial<ExecutedSet>) {
     setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [exerciseId]: { ...current.exercises[exerciseId], sets: current.exercises[exerciseId].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
@@ -52,9 +58,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     if (completed) {
       startRest(activeExercise.restSeconds);
       const previousBest = previousExercise?.bestWeightKg ?? 0;
-      if ((set.weightKg ?? 0) > previousBest && (set.repetitions ?? 0) > 0) {
-        setPrMessage(`Novo PR: ${activeExercise.name} — ${set.weightKg} kg × ${set.repetitions}`);
-      }
+      if ((set.weightKg ?? 0) > previousBest && (set.repetitions ?? 0) > 0) setPrMessage(`Novo PR: ${activeExercise.name} — ${set.weightKg} kg × ${set.repetitions}`);
     } else setPrMessage(null);
   }
   function nextExercise() { setPrMessage(null); setActiveExerciseIndex((value) => Math.min(workout.exercises.length - 1, value + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -74,14 +78,14 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }
   function resetSession() {
     if (!window.confirm('Apagar todos os registros desta sessão?')) return;
-    removeWorkoutExecution(planId, workout.id); setExecution(createExecution(planId, workout)); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setPrMessage(null);
+    removeWorkoutExecution(planId, workout.id); setExecution(createExecution(planId, workout)); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setPrMessage(null); setSessionSeconds(0);
   }
 
   if (summary) return <section className="workout-summary"><span className="eyebrow">TREINO CONCLUÍDO</span><h2>{workout.title}</h2><p>Excelente. Sua sessão foi salva no histórico.</p><div className="summary-grid"><div><span>Tempo</span><strong>{formatDuration(summary.durationSeconds)}</strong></div><div><span>Volume</span><strong>{Math.round(summary.totalVolumeKg).toLocaleString('pt-BR')} kg</strong></div><div><span>Séries</span><strong>{summary.totalSets}</strong></div><div><span>Cardio</span><strong>{summary.cardioMinutes ? `${summary.cardioMinutes} min` : '—'}</strong></div></div>{summary.prs.length > 0 && <div className="pr-summary"><span className="eyebrow">NOVOS RECORDES</span>{summary.prs.map((pr) => <strong key={pr}>🏆 {pr}</strong>)}</div>}<button type="button" className="primary-action" onClick={onCompleted}>Ver progresso</button></section>;
 
   return <div className="workout-mode">
     <button type="button" className="secondary-action back-action" onClick={onBack}>← Sair do modo treino</button>
-    <section className="workout-progress-card"><div><span className="eyebrow">MODO TREINO · EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} séries · Volume {Math.round(totals.volume).toLocaleString('pt-BR')} kg</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
+    <section className="workout-progress-card"><div><span className="eyebrow">MODO TREINO · EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} séries · Volume {Math.round(totals.volume).toLocaleString('pt-BR')} kg · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
 
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
     {prMessage && <aside className="pr-banner" role="status">🏆 <strong>{prMessage}</strong></aside>}
@@ -97,6 +101,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {!isCardio && activeExercise.restSeconds > 0 && <button type="button" className="text-action rest-shortcut" onClick={() => startRest(activeExercise.restSeconds)}>Iniciar descanso de {formatRest(activeExercise.restSeconds)}</button>}
     </article>
 
+    {coachRecommendation && <aside className="next-exercise-preview" aria-label="Recomendação do Coach TITAN"><span>Coach TITAN · próxima sessão</span><strong>{coachRecommendation}</strong></aside>}
     {nextExerciseName && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{nextExerciseName}</strong></aside>}
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
@@ -106,9 +111,26 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
 function getPreviousExercises(history: WorkoutHistoryRecord[], workoutId: string) { const record = history.find((item) => item.workoutId === workoutId); return new Map((record?.exercises ?? []).map((exercise) => [exercise.exerciseId, exercise])); }
 function formatPrevious(previous: HistoryExercise | null) { if (!previous) return 'Sem histórico'; const bestSet = [...previous.sets].filter((set) => set.weightKg !== null && set.repetitions !== null).sort((a, b) => (b.weightKg ?? 0) - (a.weightKg ?? 0))[0]; return bestSet ? `${bestSet.weightKg} kg × ${bestSet.repetitions}` : 'Sem carga registrada'; }
 function formatTarget(previous: HistoryExercise | null, minReps?: number, maxReps?: number) { if (!previous?.bestWeightKg) return `${minReps ?? '—'}–${maxReps ?? '—'} reps com técnica`; return `${previous.bestWeightKg} kg · buscar ${maxReps ?? minReps ?? 'mais'} reps`; }
+function buildCoachRecommendation(sets: ExecutedSet[], minReps = 0, maxReps = minReps, targetRir = 2, previous: HistoryExercise | null) {
+  const valid = sets.filter((set) => set.completed && set.repetitions !== null && set.rir !== null);
+  if (!valid.length) return 'Registre repetições e RIR para receber uma recomendação.';
+  const allAtTop = valid.every((set) => (set.repetitions ?? 0) >= maxReps && (set.rir ?? 0) >= targetRir);
+  const belowRange = valid.some((set) => (set.repetitions ?? 0) < minReps);
+  const tooHard = valid.some((set) => (set.rir ?? 0) === 0);
+  const currentBest = Math.max(...valid.map((set) => set.weightKg ?? 0));
+  if (allAtTop && currentBest > 0) return `Aumente a carga na próxima sessão: tente ${formatWeight(currentBest + suggestedIncrement(currentBest))} kg.`;
+  if (belowRange && tooHard) return `Reduza levemente a carga ou repita ${formatWeight(currentBest)} kg com mais controle.`;
+  if (belowRange) return `Mantenha ${formatWeight(currentBest)} kg até cumprir pelo menos ${minReps} repetições em todas as séries.`;
+  if (previous && currentBest > (previous.bestWeightKg ?? 0)) return `Novo patamar consolidado. Mantenha ${formatWeight(currentBest)} kg e aumente as repetições.`;
+  return `Mantenha ${formatWeight(currentBest)} kg e busque chegar a ${maxReps} repetições com RIR ${targetRir}.`;
+}
+function suggestedIncrement(weight: number) { return weight < 20 ? 1 : weight < 50 ? 2 : 2.5; }
+function formatWeight(weight: number) { return Number.isInteger(weight) ? String(weight) : weight.toFixed(1).replace('.', ','); }
+function secondsSince(startedAt: string) { return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)); }
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution | null) { if (!execution) return 0; const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
 function createExecution(planId: string, workout: TitanWorkoutDay): WorkoutExecution { const now = new Date().toISOString(); return { planId, workoutId: workout.id, startedAt: now, updatedAt: now, exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, { exerciseId: exercise.id, sets: Array.from({ length: exercise.sets }, (_, index) => ({ setNumber: index + 1, weightKg: null, repetitions: null, rir: exercise.targetRir ?? null, completed: false })) }])) }; }
 function createHistoryRecord(planId: string, planName: string, workout: TitanWorkoutDay, execution: WorkoutExecution, completedAt: string): WorkoutHistoryRecord { const exercises = workout.exercises.map((exercise) => { const sets = execution.exercises[exercise.id].sets.map(({ setNumber, weightKg, repetitions, rir }) => ({ setNumber, weightKg, repetitions, rir })); const volumeKg = sets.reduce((total, set) => total + (set.weightKg ?? 0) * (set.repetitions ?? 0), 0); const weights = sets.map((set) => set.weightKg).filter((value): value is number => value !== null); return { exerciseId: exercise.id, name: exercise.name, muscleGroup: exercise.muscleGroup, sets, volumeKg, bestWeightKg: weights.length ? Math.max(...weights) : null }; }); return { id: `${planId}:${workout.id}:${completedAt}`, planId, planName, workoutId: workout.id, workoutTitle: workout.title, workoutDay: workout.day, startedAt: execution.startedAt, completedAt, durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(execution.startedAt).getTime()) / 1000)), totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0), totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0), exercises }; }
 function formatTimer(seconds: number) { const minutes = Math.floor(seconds / 60); return `${minutes}:${String(seconds % 60).padStart(2, '0')}`; }
 function formatRest(seconds: number) { return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
+function formatSessionTime(seconds: number) { const minutes = Math.floor(seconds / 60); return `${String(minutes).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`; }
 function formatDuration(seconds: number) { const minutes = Math.max(1, Math.round(seconds / 60)); return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}min` : `${minutes} min`; }
