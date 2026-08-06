@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { BackupPanel } from '../core/backup/BackupPanel';
 import { migrateLegacyStorage } from '../core/database/migrateLegacyStorage';
-import { CardioPage } from '../features/cardio/CardioPage';
-import { CoachPage } from '../features/coach/CoachPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ProgressPage } from '../features/history/ProgressPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
@@ -11,10 +9,13 @@ import { PlanViewer } from '../features/plan/PlanViewer';
 import { loadActivePlan, removeActivePlan, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
 
-type TabId = 'today' | 'plan' | 'cardio' | 'coach' | 'progress' | 'more';
+type TabId = 'today' | 'plan' | 'progress' | 'more';
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
 const tabs: Array<{ id: TabId; label: string; icon: string }> = [
-  { id: 'today', label: 'Hoje', icon: '⌂' }, { id: 'plan', label: 'Ficha', icon: '▤' }, { id: 'cardio', label: 'Cardio', icon: '◌' }, { id: 'coach', label: 'Coach', icon: '◆' }, { id: 'progress', label: 'Evolução', icon: '↗' }, { id: 'more', label: 'Mais', icon: '•••' }
+  { id: 'today', label: 'Hoje', icon: '⌂' },
+  { id: 'plan', label: 'Ficha', icon: '▤' },
+  { id: 'progress', label: 'Progresso', icon: '↗' },
+  { id: 'more', label: 'Mais', icon: '•••' }
 ];
 
 export function App() {
@@ -31,9 +32,15 @@ export function App() {
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine);
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
-    window.addEventListener('online', updateConnection); window.addEventListener('offline', updateConnection); window.addEventListener('beforeinstallprompt', captureInstallPrompt);
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    window.addEventListener('beforeinstallprompt', captureInstallPrompt);
     void migrateLegacyStorage().then(() => setDataEngineStatus('ready')).catch(() => setDataEngineStatus('unavailable'));
-    return () => { window.removeEventListener('online', updateConnection); window.removeEventListener('offline', updateConnection); window.removeEventListener('beforeinstallprompt', captureInstallPrompt); };
+    return () => {
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+      window.removeEventListener('beforeinstallprompt', captureInstallPrompt);
+    };
   }, []);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
@@ -44,16 +51,14 @@ export function App() {
   function openPlan() { setShowImporter(!activePlan); setActiveTab('plan'); }
 
   return <div className="app-shell">
-    <header className="app-header"><div><span className="eyebrow">TITAN ECOSYSTEM</span><h1>TITAN FIT</h1></div><span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></header>
+    <header className="app-header"><div><span className="eyebrow">TREINO E PROGRESSÃO</span><h1>TITAN FIT</h1></div><span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></header>
     <main className="app-main">
-      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onOpenCoach={() => openTab('coach')} onOpenCardio={() => openTab('cardio')} onOpenProgress={() => openTab('progress')} />}
+      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onOpenProgress={() => openTab('progress')} />}
       {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para a ficha atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer plan={activePlan} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
-      {activeTab === 'cardio' && <CardioPage />}
-      {activeTab === 'coach' && <CoachPage />}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
-      {activeTab === 'more' && <><EmptyPage title="Sobre o TITAN FIT" body="Dashboard inteligente, Engine de Dados e backup local." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.9.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
+      {activeTab === 'more' && <><EmptyPage title="Configurações" body="Backup, instalação e atualização do seu aplicativo de treino." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.9.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
     </main>
-    {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido e funcionamento offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
+    {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido aos seus treinos, mesmo offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
     {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
     <nav className="bottom-navigation" aria-label="Navegação principal">{tabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => openTab(tab.id)} aria-current={activeTab === tab.id ? 'page' : undefined}><span className="nav-icon" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span></button>)}</nav>
   </div>;
