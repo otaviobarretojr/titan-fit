@@ -1,0 +1,25 @@
+{
+  "schema": "TITAN_FIT", "schemaVersion": "1.0", "type": "training_plan", "title": "Ficha demonstrativa TITAN FIT", "author": "TITAN FIT", "createdAt": "2026-08-06T00:00:00.000Z",
+  "payload": { "planId": "titan-demo-1", "name": "Força & Hipertrofia", "description": "Ficha demonstrativa de quatro dias para conhecer o TITAN FIT.", "durationWeeks": 8, "sessions": [
+    { "id":"demo-a","name":"Treino A — Peito e Tríceps","dayOfWeek":1,"sequence":0,"estimatedDurationMinutes":60,"focus":"Peito e tríceps","exercises":[
+      {"id":"demo-a-1","exerciseId":"supino-reto","name":"Supino reto","muscleGroup":"Peitoral","equipment":"Barra","sequence":0,"sets":4,"minReps":6,"maxReps":8,"targetRir":2,"restSeconds":120,"commonErrors":["Retirar os pés do chão"],"alternatives":["Supino com halteres"],"notes":"Mantenha as escápulas firmes."},
+      {"id":"demo-a-2","exerciseId":"supino-inclinado","name":"Supino inclinado com halteres","muscleGroup":"Peitoral","sequence":1,"sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":90,"alternatives":["Máquina convergente"]},
+      {"id":"demo-a-3","exerciseId":"triceps-corda","name":"Tríceps na corda","muscleGroup":"Tríceps","sequence":2,"sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":60,"notes":"Evite mover os cotovelos."}
+    ]},
+    { "id":"demo-b","name":"Treino B — Costas e Bíceps","dayOfWeek":2,"sequence":1,"estimatedDurationMinutes":60,"focus":"Costas e bíceps","exercises":[
+      {"id":"demo-b-1","exerciseId":"puxada-alta","name":"Puxada alta","muscleGroup":"Dorsal","sequence":0,"sets":4,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":90,"alternatives":["Barra fixa"]},
+      {"id":"demo-b-2","exerciseId":"remada-baixa","name":"Remada baixa","muscleGroup":"Costas","sequence":1,"sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":90,"notes":"Conduza o movimento pelos cotovelos."},
+      {"id":"demo-b-3","exerciseId":"rosca-direta","name":"Rosca direta","muscleGroup":"Bíceps","sequence":2,"sets":3,"minReps":10,"maxReps":12,"targetRir":1,"restSeconds":60}
+    ]},
+    { "id":"demo-c","name":"Treino C — Pernas","dayOfWeek":4,"sequence":2,"estimatedDurationMinutes":70,"focus":"Quadríceps e posteriores","exercises":[
+      {"id":"demo-c-1","exerciseId":"agachamento-livre","name":"Agachamento livre","muscleGroup":"Quadríceps","secondaryMuscles":["Glúteos"],"sequence":0,"sets":4,"minReps":6,"maxReps":10,"targetRir":2,"restSeconds":150,"commonErrors":["Perder a posição neutra da coluna"],"alternatives":["Hack squat"]},
+      {"id":"demo-c-2","exerciseId":"leg-press","name":"Leg press 45°","muscleGroup":"Quadríceps","sequence":1,"sets":3,"minReps":10,"maxReps":15,"targetRir":2,"restSeconds":120},
+      {"id":"demo-c-3","exerciseId":"mesa-flexora","name":"Mesa flexora","muscleGroup":"Posteriores de coxa","sequence":2,"sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75}
+    ]},
+    { "id":"demo-d","name":"Treino D — Ombros e Core","dayOfWeek":5,"sequence":3,"estimatedDurationMinutes":50,"focus":"Ombros e core","exercises":[
+      {"id":"demo-d-1","exerciseId":"desenvolvimento","name":"Desenvolvimento com halteres","muscleGroup":"Ombros","sequence":0,"sets":4,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":90},
+      {"id":"demo-d-2","exerciseId":"elevacao-lateral","name":"Elevação lateral","muscleGroup":"Ombros","sequence":1,"sets":3,"minReps":12,"maxReps":15,"targetRir":1,"restSeconds":60,"notes":"Controle a descida."},
+      {"id":"demo-d-3","exerciseId":"prancha","name":"Prancha","muscleGroup":"Core","sequence":2,"sets":3,"minReps":30,"maxReps":45,"restSeconds":60,"notes":"Repetições representam segundos."}
+    ]}
+  ]}
+}

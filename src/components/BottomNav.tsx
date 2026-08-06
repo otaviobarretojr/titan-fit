@@ -1,0 +1,3 @@
+export type Area = 'today' | 'plan' | 'cardio' | 'progress' | 'more';
+const items: { id: Area; icon: string; label: string }[] = [{ id:'today',icon:'⌂',label:'Hoje'},{id:'plan',icon:'▤',label:'Ficha'},{id:'cardio',icon:'⌁',label:'Cardio'},{id:'progress',icon:'↗',label:'Evolução'},{id:'more',icon:'•••',label:'Mais'}];
+export function BottomNav({ active, onChange }: { active: Area; onChange: (area: Area) => void }) { return <nav className="bottom-nav" aria-label="Navegação principal">{items.map((item)=><button key={item.id} className={active===item.id?'active':''} onClick={()=>onChange(item.id)} aria-current={active===item.id?'page':undefined}><span>{item.icon}</span>{item.label}</button>)}</nav> }

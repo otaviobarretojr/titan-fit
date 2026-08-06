@@ -1,0 +1,5 @@
+export interface PlanExercise { id: string; exerciseId: string; name: string; muscleGroup: string; secondaryMuscles?: string[]; equipment?: string; sequence: number; sets: number; minReps: number; maxReps: number; targetRir?: number; restSeconds: number; tempo?: string; technique?: string; commonErrors?: string[]; alternatives?: string[]; notes?: string }
+export interface PlanSession { id: string; name: string; dayOfWeek?: number; sequence: number; estimatedDurationMinutes?: number; focus: string; exercises: PlanExercise[] }
+export interface TrainingPlanPayload { planId: string; name: string; description?: string; durationWeeks?: number; effectiveFrom?: string; sessions: PlanSession[] }
+export interface TitanEnvelope { schema: 'TITAN_FIT'; schemaVersion: '1.0'; type: 'training_plan'; title: string; author: string; createdAt: string; payload: TrainingPlanPayload }
+export interface TrainingPlanRecord { id: string; name: string; description?: string; author: string; createdAt: string; importedAt: string; status: 'active' | 'archived'; durationWeeks?: number; effectiveFrom?: string; source: TitanEnvelope }

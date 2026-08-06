@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://titan.fit/schemas/training-plan-1.0.json","title":"TITAN FIT Training Plan 1.0","type":"object","additionalProperties":false,
+  "required":["schema","schemaVersion","type","title","author","createdAt","payload"],
+  "properties":{"schema":{"const":"TITAN_FIT"},"schemaVersion":{"const":"1.0"},"type":{"const":"training_plan"},"title":{"type":"string","minLength":1},"author":{"type":"string","minLength":1},"createdAt":{"type":"string","format":"date-time"},"payload":{"type":"object","required":["planId","name","sessions"],"properties":{"planId":{"type":"string","minLength":1},"name":{"type":"string","minLength":1},"description":{"type":"string"},"durationWeeks":{"type":"integer","minimum":1},"effectiveFrom":{"type":"string","format":"date"},"sessions":{"type":"array","minItems":1}},"additionalProperties":false}}
+}

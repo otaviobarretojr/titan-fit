@@ -1,0 +1,22 @@
+import { useCallback, useEffect, useState } from 'react';
+import { BottomNav, type Area } from './components/BottomNav';
+import { db } from './database/database';
+import { createBackup, downloadJson, restoreBackup } from './modules/backup/backupService';
+import { ImportPanel } from './modules/import/ImportPanel';
+import type { TrainingPlanRecord } from './types/training';
+
+export default function App() {
+  const [area,setArea]=useState<Area>('today'); const [active,setActive]=useState<TrainingPlanRecord>(); const [archived,setArchived]=useState<TrainingPlanRecord[]>([]); const [notice,setNotice]=useState('');
+  const refresh=useCallback(async()=>{setActive(await db.trainingPlans.where('status').equals('active').first());setArchived(await db.trainingPlans.where('status').equals('archived').reverse().sortBy('importedAt'));},[]);
+  useEffect(()=>{void refresh();},[refresh]);
+  const heading={today:['Seu treino,','sua evolução.'],plan:['Sua ficha,','sempre organizada.'],cardio:['Cardio,','no seu ritmo.'],progress:['Consistência que','vira evolução.'],more:['Controle total,','sempre local.']}[area];
+  async function backup(){const value=await createBackup();downloadJson(value,`titan-fit-backup-${value.createdAt.slice(0,10)}.json`);setNotice('Backup criado com sucesso.');}
+  async function restore(file?:File){if(!file)return;try{await restoreBackup(await file.text());await refresh();setNotice('Backup restaurado com sucesso.');}catch{setNotice('Não foi possível restaurar este backup.');}}
+  return <main className="app"><header className="topbar"><div className="brand">TITAN <i>FIT</i></div><span className="status-dot" title="Dados locais"/></header><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h1>{heading[0]}<br/>{heading[1]}</h1><p className="subtitle">Musculação, cardio e seu histórico em um só lugar.</p>
+    {area==='today'&&(active?<section className="card hero"><span className="eyebrow">FICHA ATIVA</span><h2>{active.name}</h2><p>{active.description||'Seu próximo treino está pronto.'}</p><div className="hero-meta"><span>{active.source.payload.sessions.length} sessões</span><span>{active.durationWeeks?`${active.durationWeeks} semanas`:'Duração flexível'}</span></div><button className="button primary" onClick={()=>setNotice('O modo treino série por série chega na próxima etapa.')}>Iniciar treino</button>{notice&&<p className="message">{notice}</p>}</section>:<section className="card empty"><div className="large-icon">◇</div><h2>Nenhuma ficha ativa</h2><p>Importe a ficha criada pelo seu Coach para começar.</p><button className="button primary" onClick={()=>setArea('plan')}>Importar ficha</button></section>)}
+    {area==='plan'&&<>{active&&<section><h2>Ficha ativa</h2>{active.source.payload.sessions.sort((a,b)=>a.sequence-b.sequence).map((session)=><article className="card session" key={session.id}><span className="session-number">{session.sequence+1}</span><div><h3>{session.name}</h3><p>{session.focus} · {session.exercises.length} exercícios</p></div></article>)}</section>}<ImportPanel hasActivePlan={Boolean(active)} onImported={()=>void refresh()}/>{archived.length>0&&<section><h2>Fichas arquivadas</h2>{archived.map(plan=><article className="card archived" key={plan.id}><h3>{plan.name}</h3><p>{plan.author} · histórico preservado</p></article>)}</section>}</>}
+    {area==='cardio'&&<section className="card empty"><div className="large-icon">⌁</div><h2>Cardio em preparação</h2><p>Em breve, registre duração, distância e intensidade das suas sessões.</p></section>}
+    {area==='progress'&&<section className="card empty"><div className="large-icon">↗</div><h2>Seu histórico fica aqui</h2><p>Cada execução será preservada mesmo quando você importar uma nova ficha.</p></section>}
+    {area==='more'&&<><ImportPanel hasActivePlan={Boolean(active)} onImported={()=>void refresh()}/><section className="card"><button className="more-row" onClick={()=>void backup()}>Criar e baixar backup <span>⇩</span></button><label className="more-row file-button">Restaurar backup <span>⇧</span><input type="file" accept="application/json,.json" onChange={e=>void restore(e.target.files?.[0])}/></label><div className="more-row">Versão <span>0.1.0</span></div><div className="more-row">Sobre <span>TITAN FIT</span></div>{notice&&<p className="message" role="status">{notice}</p>}</section></>}
+    <BottomNav active={area} onChange={setArea}/></main>;
+}
