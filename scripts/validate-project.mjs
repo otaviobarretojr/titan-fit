@@ -10,6 +10,8 @@ const assert = (condition, message) => { if (!condition) failures.push(message);
 const pkg = JSON.parse(await read('package.json'));
 const vite = await read('vite.config.ts');
 const app = await read('src/app/App.tsx');
+const dashboard = await read('src/features/dashboard/DashboardPage.tsx');
+const cardioExecution = await read('src/features/cardio/CardioExecutionView.tsx');
 const database = await read('src/core/database/indexedDb.ts');
 const migration = await read('src/core/database/migrateLegacyStorage.ts');
 const backup = await read('src/core/backup/backup.ts');
@@ -19,23 +21,26 @@ const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
 const validation = await read('src/features/plan/validation.ts');
 const readme = await read('README.md');
 
-assert(pkg.version === '0.9.0', 'package.json deve usar a versão 0.9.0');
+assert(pkg.version === '0.10.0', 'package.json deve usar a versão 0.10.0');
 assert(vite.includes("base: '/titan-fit/'"), 'Vite deve usar base /titan-fit/');
 assert(vite.includes("start_url: '/titan-fit/'"), 'Manifest deve usar start_url /titan-fit/');
 assert(vite.includes("scope: '/titan-fit/'"), 'Manifest deve usar scope /titan-fit/');
-assert(app.includes('Hoje') && app.includes('Ficha') && app.includes('Progresso') && app.includes('Mais'), 'As quatro áreas principais de treino devem existir');
-assert(!app.includes("label: 'Cardio'") && !app.includes("label: 'Coach'"), 'Cardio e Coach não devem estar na navegação principal');
-assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.9.0'), 'A Engine e o backup devem estar conectados ao app');
+assert(app.includes('Hoje') && app.includes('Projeto') && app.includes('Progresso') && app.includes('Mais'), 'As quatro áreas principais devem existir');
+assert(!app.includes("label: 'Cardio'") && !app.includes("label: 'Coach'"), 'Cardio e Coach não devem ocupar abas principais');
+assert(app.includes('CardioExecutionView') && app.includes('startCardio'), 'A execução guiada do cardio deve estar conectada ao fluxo principal');
+assert(dashboard.includes('Iniciar cardio') && dashboard.includes('onStartCardio'), 'O Dashboard deve iniciar o cardio diretamente');
+assert(cardioExecution.includes('Concluir cardio') && cardioExecution.includes('Pausar'), 'A execução do cardio deve oferecer cronômetro e conclusão');
+assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.10.0'), 'Engine, backup e versão devem estar conectados ao app');
 assert(database.includes('indexedDB.open') && database.includes('putRecord') && database.includes('getAllRecords'), 'O adaptador IndexedDB deve oferecer operações básicas');
 assert(migration.includes('migratedFromLocalStorageAt') && migration.includes('titan-fit:history:v1'), 'A migração deve preservar os dados legados');
 assert(backup.includes("format: 'titan-fit-backup'") && backup.includes('restoreBackup'), 'O contrato de backup e restauração deve existir');
 assert(backupPanel.includes('Exportar backup') && backupPanel.includes('Restaurar backup'), 'Os controles de backup devem existir');
-assert(viewer.includes('WorkoutExecutionView'), 'A visualização da ficha deve continuar funcional');
+assert(viewer.includes('WorkoutExecutionView'), 'A visualização do projeto deve manter a musculação funcional');
 assert(execution.includes('Concluir e salvar treino') && execution.includes('weightKg'), 'A execução série por série deve continuar existindo');
 assert(viewer.includes('youtube-nocookie.com/embed/') && viewer.includes('allowFullScreen'), 'O player seguro do YouTube deve continuar existindo');
-assert(validation.includes('schemaVersion') && validation.includes('extractYouTubeVideoId'), 'A validação da ficha e dos vídeos deve existir');
+assert(validation.includes('schemaVersion') && validation.includes('extractYouTubeVideoId'), 'A validação do projeto e dos vídeos deve existir');
 assert(!/userProfile|login|signup|auth/i.test(app), 'O aplicativo não pode conter perfil ou autenticação');
-assert(readme.includes('TITAN FIT'), 'README deve identificar o TITAN FIT');
+assert(readme.includes('v0.10.0') && readme.includes('Execução de Treino'), 'README deve documentar a v0.10');
 
 const forbidden = ['IronFit', 'TreinoFit', 'Projeto Titan', 'Titan App'];
 async function walk(dir) {
@@ -53,4 +58,4 @@ async function walk(dir) {
 await walk(root);
 
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.9.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.10.0 concluída com sucesso.');
