@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.0 — Coach TITAN
+
+- Score TITAN baseado em musculação e cardio registrados.
+- Pilares separados para treino, cardio e confiança dos dados.
+- Prioridade automática do momento.
+- Insights de consistência semanal, volume e marco dos primeiros 5 km.
+- Aviso explícito quando faltarem dados para uma análise mais ampla.
+- Processamento local, sem inventar sono, nutrição, hidratação ou recuperação.
+
 ## v0.6.0 — Cardio e primeiros 5 km
 
 - Importação de planilha progressiva de cardio em `.json` ou `.titan-cardio`.
