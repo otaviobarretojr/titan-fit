@@ -49,7 +49,7 @@ export async function migrateLegacyStorage(): Promise<{ migrated: boolean; items
   if (cardioRecords) { await putRecord(STORE_NAMES.cardioRecords, 'records', cardioRecords); items += 1; }
 
   for (const execution of listLegacyWorkoutExecutions()) {
-    await putRecord(STORE_NAMES.workoutExecutions, execution.id, execution.value);
+    await putRecord(STORE_NAMES.activeSessions, execution.id, execution.value);
     items += 1;
   }
 
