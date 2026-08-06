@@ -13,3 +13,16 @@
 .cardio-form input, .cardio-form textarea { width: 100%; min-height: 48px; border: 1px solid var(--color-border); border-radius: 12px; padding: 10px 12px; background: rgba(255,255,255,.04); color: var(--color-text); }
 .cardio-form textarea { min-height: 90px; resize: vertical; }
 .cardio-form .primary-action { width: 100%; margin-top: 4px; }
+.today-cardio { padding: 24px; border: 1px solid rgba(74,222,128,.28); border-radius: 24px; background: linear-gradient(145deg, rgba(4,120,87,.28), rgba(15,23,42,.98)); box-shadow: var(--shadow-card); }
+.today-cardio h3 { margin: 14px 0 8px; font-size: 1.55rem; }
+.today-cardio p { color: var(--color-muted); line-height: 1.55; }
+.today-cardio small { display: block; margin-top: 14px; color: #bbf7d0; }
+.today-cardio .primary-action { margin-top: 20px; }
+.cardio-execution { display: grid; gap: 18px; }
+.cardio-execution-hero, .cardio-step-card { padding: 24px; border: 1px solid var(--color-border); border-radius: 24px; background: linear-gradient(180deg, rgba(18,36,56,.98), rgba(9,18,31,.98)); box-shadow: var(--shadow-card); }
+.cardio-execution-hero h2 { margin: 10px 0 8px; font-size: 1.8rem; }
+.cardio-execution-hero p { color: var(--color-muted); line-height: 1.55; }
+.cardio-timer { margin: 24px 0 6px; font-size: 3.6rem; font-weight: 900; letter-spacing: .04em; }
+.cardio-execution-hero .primary-action { width: 100%; margin-top: 20px; }
+.cardio-step-card h3 { margin: 12px 0 22px; font-size: 1.35rem; line-height: 1.35; }
+.cardio-step-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
