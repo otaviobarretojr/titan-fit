@@ -3,18 +3,13 @@ import type { TitanPlan, TitanWorkoutDay } from '../plan/types';
 type DashboardPageProps = {
   plan: TitanPlan | null;
   onOpenPlan: () => void;
-  onOpenCoach: () => void;
-  onOpenCardio: () => void;
   onOpenProgress: () => void;
 };
 
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 function normalize(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 function getTodayWorkout(plan: TitanPlan): TitanWorkoutDay | null {
@@ -30,29 +25,25 @@ function getGreeting() {
 }
 
 function formatToday() {
-  return new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long'
-  }).format(new Date());
+  return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date());
 }
 
-export function DashboardPage({ plan, onOpenPlan, onOpenCoach, onOpenCardio, onOpenProgress }: DashboardPageProps) {
+export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPageProps) {
   if (!plan) {
     return (
       <div className="dashboard-page">
         <section className="dashboard-welcome">
-          <span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span>
+          <span className="eyebrow">SEU TREINO COMEÇA AQUI</span>
           <h2>Nenhuma ficha ativa</h2>
-          <p>Importe sua ficha TITAN FIT para liberar o treino do dia, a evolução e as análises do Coach.</p>
+          <p>Importe sua ficha para liberar o treino do dia, registrar séries e acompanhar sua progressão.</p>
           <button type="button" className="primary-action" onClick={onOpenPlan}>Importar ficha</button>
         </section>
-        <section className="dashboard-grid dashboard-grid-empty" aria-label="Recursos disponíveis">
-          <button type="button" className="dashboard-tile" onClick={onOpenCardio}>
-            <span className="dashboard-tile-icon">◌</span><span>Cardio</span><strong>Plano dos 5 km</strong>
+        <section className="dashboard-grid dashboard-grid-empty" aria-label="Recursos de treino">
+          <button type="button" className="dashboard-tile" onClick={onOpenPlan}>
+            <span className="dashboard-tile-icon">▤</span><span>Ficha</span><strong>Organize seus treinos</strong>
           </button>
-          <button type="button" className="dashboard-tile" onClick={onOpenCoach}>
-            <span className="dashboard-tile-icon">◆</span><span>Coach TITAN</span><strong>Análise honesta</strong>
+          <button type="button" className="dashboard-tile" onClick={onOpenProgress}>
+            <span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Cargas e histórico</strong>
           </button>
         </section>
       </div>
@@ -71,9 +62,6 @@ export function DashboardPage({ plan, onOpenPlan, onOpenCoach, onOpenCardio, onO
           <h2>{getGreeting()}, Otávio</h2>
           <p>{plan.name}</p>
         </div>
-        <button type="button" className="dashboard-score" onClick={onOpenCoach} aria-label="Abrir Score TITAN">
-          <span>Score</span><strong>—</strong><small>Aguardando dados</small>
-        </button>
       </section>
 
       <section className="today-workout" aria-labelledby="today-workout-title">
@@ -90,24 +78,19 @@ export function DashboardPage({ plan, onOpenPlan, onOpenCoach, onOpenCardio, onO
         <button type="button" className="primary-action" onClick={onOpenPlan}>Iniciar treino</button>
       </section>
 
-      <section className="dashboard-grid" aria-label="Resumo do dia">
-        <button type="button" className="dashboard-tile" onClick={onOpenCardio}>
-          <span className="dashboard-tile-icon">◌</span><span>Cardio</span><strong>Ver sessão planejada</strong><small>Plano dos primeiros 5 km</small>
+      <section className="dashboard-grid" aria-label="Resumo de treino">
+        <button type="button" className="dashboard-tile" onClick={onOpenPlan}>
+          <span className="dashboard-tile-icon">▤</span><span>Ficha completa</span><strong>Ver exercícios</strong><small>Séries, repetições, carga e RIR</small>
         </button>
         <button type="button" className="dashboard-tile" onClick={onOpenProgress}>
-          <span className="dashboard-tile-icon">↗</span><span>Evolução</span><strong>Acompanhar progresso</strong><small>Cargas, volume e histórico</small>
+          <span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Acompanhar evolução</strong><small>Cargas, volume e histórico</small>
         </button>
       </section>
 
-      <button type="button" className="coach-priority-card" onClick={onOpenCoach}>
-        <div><span className="eyebrow">COACH TITAN</span><strong>Veja a prioridade baseada nos seus registros</strong><p>O Coach só recomenda quando existem dados suficientes.</p></div>
+      <button type="button" className="coach-priority-card" onClick={onOpenProgress}>
+        <div><span className="eyebrow">PRÓXIMA PROGRESSÃO</span><strong>Consulte seus últimos registros</strong><p>Compare carga, repetições e volume antes de avançar.</p></div>
         <span className="coach-priority-arrow">→</span>
       </button>
-
-      <section className="future-modules" aria-label="Módulos futuros">
-        <div><span>Nutrição</span><strong>Em preparação</strong></div>
-        <div><span>Água e sono</span><strong>Sem dados ainda</strong></div>
-      </section>
     </div>
   );
 }
