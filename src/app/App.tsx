@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type TabId = 'today' | 'plan' | 'cardio' | 'progress' | 'more';
 
@@ -37,7 +37,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  useMemo(() => {
+  useEffect(() => {
     const update = () => setIsOnline(navigator.onLine);
     window.addEventListener('online', update);
     window.addEventListener('offline', update);
