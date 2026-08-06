@@ -20,7 +20,7 @@ const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
 const validation = await read('src/features/plan/validation.ts');
 const readme = await read('README.md');
 
-assert(pkg.version === '0.13.0', 'package.json deve usar a versão 0.13.0');
+assert(pkg.version === '0.14.0', 'package.json deve usar a versão 0.14.0');
 assert(vite.includes("base: '/titan-fit/'"), 'Vite deve usar base /titan-fit/');
 assert(vite.includes("start_url: '/titan-fit/'"), 'Manifest deve usar start_url /titan-fit/');
 assert(vite.includes("scope: '/titan-fit/'"), 'Manifest deve usar scope /titan-fit/');
@@ -28,13 +28,16 @@ assert(app.includes('Hoje') && app.includes('Projeto') && app.includes('Progress
 assert(!app.includes('CardioExecutionView') && !app.includes('startCardio'), 'Não deve existir fluxo separado de cardio');
 assert(!dashboard.includes('Iniciar cardio') && dashboard.includes('Iniciar treino'), 'O Dashboard deve iniciar apenas o treino completo');
 assert(dashboard.includes('cardioCount') && dashboard.includes('muscleGroup'), 'O cardio deve ser reconhecido como exercício do treino');
-assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.13.0'), 'Engine, backup e versão devem estar conectados ao app');
+assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.14.0'), 'Engine, backup e versão devem estar conectados ao app');
 assert(execution.includes('MODO TREINO') && execution.includes('Próximo exercício'), 'O modo treino deve guiar exercício por exercício');
 assert(execution.includes('DESCANSO AUTOMÁTICO') && execution.includes('Registrar série'), 'O modo treino deve oferecer descanso automático e registro rápido');
 assert(execution.includes('Última sessão') && execution.includes('Meta de hoje'), 'A progressão deve mostrar histórico e meta da sessão');
 assert(execution.includes('Novo PR') && execution.includes('pr-banner'), 'A detecção visual de recordes deve existir');
 assert(execution.includes('Volume') && execution.includes('totals.volume'), 'O volume em tempo real deve existir');
 assert(execution.includes('Coach TITAN · próxima sessão') && execution.includes('buildCoachRecommendation'), 'O Coach deve recomendar aumentar, manter ou reduzir carga');
+assert(execution.includes('Diagnóstico') || execution.includes('diagnosis'), 'O Coach deve apresentar diagnóstico');
+assert(execution.includes('Recomendação:') && execution.includes('Motivo:'), 'O Coach deve explicar recomendação e motivo');
+assert(execution.includes('Carga sugerida:') && execution.includes('nextLoadKg'), 'O Coach deve apresentar a carga sugerida quando aplicável');
 assert(execution.includes('Tempo') && execution.includes('formatSessionTime'), 'O tempo da sessão deve aparecer durante o treino');
 assert(execution.includes('TREINO CONCLUÍDO') && execution.includes('summary-grid'), 'O resumo final do treino deve existir');
 assert(execution.includes("muscleGroup.toLowerCase() === 'cardio'") && execution.includes('Concluir cardio'), 'O cardio deve funcionar como exercício integrado');
@@ -47,7 +50,7 @@ assert(execution.includes('Concluir e salvar treino') && execution.includes('wei
 assert(viewer.includes('youtube-nocookie.com/embed/') && viewer.includes('allowFullScreen'), 'O player seguro do YouTube deve continuar existindo');
 assert(validation.includes('schemaVersion') && validation.includes('extractYouTubeVideoId'), 'A validação do projeto e dos vídeos deve existir');
 assert(!/userProfile|login|signup|auth/i.test(app), 'O aplicativo não pode conter perfil ou autenticação');
-assert(readme.includes('v0.13.0') && readme.includes('Coach de Progressão'), 'README deve documentar a v0.13');
+assert(readme.includes('v0.14.0') && readme.includes('Coach Explicável'), 'README deve documentar a v0.14');
 
 const forbidden = ['IronFit', 'TreinoFit', 'Projeto Titan', 'Titan App'];
 async function walk(dir) {
@@ -65,4 +68,4 @@ async function walk(dir) {
 await walk(root);
 
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.13.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.14.0 concluída com sucesso.');
