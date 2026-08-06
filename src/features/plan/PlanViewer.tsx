@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { WorkoutExecutionView } from '../workout/WorkoutExecutionView';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from './types';
 
-type PlanViewerProps = { plan: TitanPlan; onImportAnother: () => void; onRemove: () => void; };
+type PlanViewerProps = { plan: TitanPlan; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; };
 
-export function PlanViewer({ plan, onImportAnother, onRemove }: PlanViewerProps) {
+export function PlanViewer({ plan, onImportAnother, onRemove, onHistoryChange }: PlanViewerProps) {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   const [executingWorkoutId, setExecutingWorkoutId] = useState<string | null>(null);
@@ -12,7 +12,7 @@ export function PlanViewer({ plan, onImportAnother, onRemove }: PlanViewerProps)
   const selectedExercise = selectedWorkout?.exercises.find((exercise) => exercise.id === selectedExerciseId) ?? null;
   const executingWorkout = plan.workouts.find((workout) => workout.id === executingWorkoutId) ?? null;
 
-  if (executingWorkout) return <WorkoutExecutionView planId={plan.id} workout={executingWorkout} onBack={() => setExecutingWorkoutId(null)} />;
+  if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => setExecutingWorkoutId(null)} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onHistoryChange(); }} />;
   if (selectedWorkout && selectedExercise) return <ExerciseDetail exercise={selectedExercise} workout={selectedWorkout} onBack={() => setSelectedExerciseId(null)} />;
   if (selectedWorkout) return <WorkoutDetail workout={selectedWorkout} onBack={() => setSelectedWorkoutId(null)} onSelectExercise={setSelectedExerciseId} onStart={() => setExecutingWorkoutId(selectedWorkout.id)} />;
 
@@ -27,22 +27,12 @@ export function PlanViewer({ plan, onImportAnother, onRemove }: PlanViewerProps)
 }
 
 function WorkoutDetail({ workout, onBack, onSelectExercise, onStart }: { workout: TitanWorkoutDay; onBack: () => void; onSelectExercise: (exerciseId: string) => void; onStart: () => void; }) {
-  return <>
-    <button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para a ficha</button>
-    <section className="section-header"><span className="eyebrow">{workout.day.toUpperCase()}</span><h2>{workout.title}</h2>{workout.focus && <p>{workout.focus}</p>}<p>{workout.exercises.length} exercícios</p><button type="button" className="primary-action start-session" onClick={onStart}>Iniciar treino</button></section>
-    <section className="exercise-list" aria-label={`Exercícios de ${workout.title}`}>{workout.exercises.map((exercise, index) => <button type="button" className="exercise-card" key={exercise.id} onClick={() => onSelectExercise(exercise.id)}><span className="exercise-order">{index + 1}</span><div className="exercise-card-content"><span className="info-label">{exercise.muscleGroup}</span><h3>{exercise.name}</h3><p>{formatPrescription(exercise)}</p></div><span className="exercise-arrow">›</span></button>)}</section>
-  </>;
+  return <><button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para a ficha</button><section className="section-header"><span className="eyebrow">{workout.day.toUpperCase()}</span><h2>{workout.title}</h2>{workout.focus && <p>{workout.focus}</p>}<p>{workout.exercises.length} exercícios</p><button type="button" className="primary-action start-session" onClick={onStart}>Iniciar treino</button></section><section className="exercise-list" aria-label={`Exercícios de ${workout.title}`}>{workout.exercises.map((exercise, index) => <button type="button" className="exercise-card" key={exercise.id} onClick={() => onSelectExercise(exercise.id)}><span className="exercise-order">{index + 1}</span><div className="exercise-card-content"><span className="info-label">{exercise.muscleGroup}</span><h3>{exercise.name}</h3><p>{formatPrescription(exercise)}</p></div><span className="exercise-arrow">›</span></button>)}</section></>;
 }
 
 function ExerciseDetail({ exercise, workout, onBack }: { exercise: TitanExercise; workout: TitanWorkoutDay; onBack: () => void; }) {
   const [showVideo, setShowVideo] = useState(false);
-  return <>
-    <button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o treino</button>
-    <section className="exercise-detail-header"><span className="eyebrow">{workout.title.toUpperCase()}</span><h2>{exercise.name}</h2><p>{exercise.muscleGroup}</p></section>
-    <section className="prescription-grid" aria-label="Prescrição do exercício"><Metric label="Séries" value={String(exercise.sets)} /><Metric label="Repetições" value={formatRepetitions(exercise)} /><Metric label="RIR" value={exercise.targetRir === undefined ? '—' : String(exercise.targetRir)} /><Metric label="Descanso" value={formatRest(exercise.restSeconds)} /></section>
-    {exercise.video && <section className="video-card"><div className="video-card-heading"><div><span className="info-label">VÍDEO DE EXECUÇÃO</span><strong>{exercise.video.title ?? exercise.name}</strong></div><button type="button" className="secondary-action" onClick={() => setShowVideo((current) => !current)}>{showVideo ? 'Fechar vídeo' : 'Ver execução'}</button></div>{showVideo && <div className="video-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${exercise.video.videoId}?rel=0`} title={exercise.video.title ?? `Execução de ${exercise.name}`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>}</section>}
-    {exercise.technique && <DetailSection title="Técnica" text={exercise.technique} />}{exercise.commonMistakes?.length ? <ListSection title="Erros comuns" items={exercise.commonMistakes} /> : null}{exercise.alternatives?.length ? <ListSection title="Alternativas" items={exercise.alternatives} /> : null}
-  </>;
+  return <><button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o treino</button><section className="exercise-detail-header"><span className="eyebrow">{workout.title.toUpperCase()}</span><h2>{exercise.name}</h2><p>{exercise.muscleGroup}</p></section><section className="prescription-grid" aria-label="Prescrição do exercício"><Metric label="Séries" value={String(exercise.sets)} /><Metric label="Repetições" value={formatRepetitions(exercise)} /><Metric label="RIR" value={exercise.targetRir === undefined ? '—' : String(exercise.targetRir)} /><Metric label="Descanso" value={formatRest(exercise.restSeconds)} /></section>{exercise.video && <section className="video-card"><div className="video-card-heading"><div><span className="info-label">VÍDEO DE EXECUÇÃO</span><strong>{exercise.video.title ?? exercise.name}</strong></div><button type="button" className="secondary-action" onClick={() => setShowVideo((current) => !current)}>{showVideo ? 'Fechar vídeo' : 'Ver execução'}</button></div>{showVideo && <div className="video-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${exercise.video.videoId}?rel=0`} title={exercise.video.title ?? `Execução de ${exercise.name}`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>}</section>}{exercise.technique && <DetailSection title="Técnica" text={exercise.technique} />}{exercise.commonMistakes?.length ? <ListSection title="Erros comuns" items={exercise.commonMistakes} /> : null}{exercise.alternatives?.length ? <ListSection title="Alternativas" items={exercise.alternatives} /> : null}</>;
 }
 
 function Metric({ label, value }: { label: string; value: string }) { return <div className="metric-card"><span className="info-label">{label}</span><strong>{value}</strong></div>; }

@@ -1,25 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
+import { addWorkoutHistoryRecord } from '../history/storage';
+import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanWorkoutDay } from '../plan/types';
 import { loadWorkoutExecution, removeWorkoutExecution, saveWorkoutExecution } from './storage';
 import type { ExecutedSet, WorkoutExecution } from './types';
 
 type Props = {
   planId: string;
+  planName: string;
   workout: TitanWorkoutDay;
   onBack: () => void;
+  onCompleted: () => void;
 };
 
-export function WorkoutExecutionView({ planId, workout, onBack }: Props) {
+export function WorkoutExecutionView({ planId, planName, workout, onBack, onCompleted }: Props) {
   const [execution, setExecution] = useState<WorkoutExecution>(() =>
     loadWorkoutExecution(planId, workout.id) ?? createExecution(planId, workout)
   );
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
 
-  useEffect(() => {
-    saveWorkoutExecution(execution);
-  }, [execution]);
-
+  useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
     const interval = window.setInterval(() => {
@@ -54,9 +55,17 @@ export function WorkoutExecutionView({ planId, workout, onBack }: Props) {
     }));
   }
 
-  function startRest(seconds: number) {
-    setTimerSeconds(seconds);
-    setTimerRunning(true);
+  function startRest(seconds: number) { setTimerSeconds(seconds); setTimerRunning(true); }
+
+  function finishWorkout() {
+    if (totals.completed !== totals.total) return;
+    const completedAt = new Date().toISOString();
+    const record = createHistoryRecord(planId, planName, workout, execution, completedAt);
+    addWorkoutHistoryRecord(record);
+    removeWorkoutExecution(planId, workout.id);
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    onCompleted();
   }
 
   function resetSession() {
@@ -67,66 +76,43 @@ export function WorkoutExecutionView({ planId, workout, onBack }: Props) {
     setTimerSeconds(0);
   }
 
-  return (
-    <>
-      <button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o treino</button>
-      <section className="section-header">
-        <span className="eyebrow">MODO TREINO</span>
-        <h2>{workout.title}</h2>
-        <p>{totals.completed} de {totals.total} séries concluídas</p>
-      </section>
-
-      <section className="rest-timer" aria-label="Cronômetro de descanso">
-        <div><span className="info-label">DESCANSO</span><strong>{formatTimer(timerSeconds)}</strong></div>
-        <div className="timer-actions">
-          <button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)} disabled={!timerSeconds}>{timerRunning ? 'Pausar' : 'Continuar'}</button>
-          <button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Zerar</button>
-        </div>
-      </section>
-
-      <section className="execution-list">
-        {workout.exercises.map((exercise, exerciseIndex) => (
-          <article className="execution-card" key={exercise.id}>
-            <header><span className="exercise-order">{exerciseIndex + 1}</span><div><span className="info-label">{exercise.muscleGroup}</span><h3>{exercise.name}</h3></div></header>
-            <div className="set-table-header"><span>Série</span><span>kg</span><span>Reps</span><span>RIR</span><span>Feita</span></div>
-            {execution.exercises[exercise.id].sets.map((set) => (
-              <div className={`set-row ${set.completed ? 'completed' : ''}`} key={set.setNumber}>
-                <strong>{set.setNumber}</strong>
-                <input aria-label={`${exercise.name} série ${set.setNumber} carga`} type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { weightKg: event.target.value === '' ? null : Number(event.target.value) })} />
-                <input aria-label={`${exercise.name} série ${set.setNumber} repetições`} type="number" inputMode="numeric" min="0" value={set.repetitions ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { repetitions: event.target.value === '' ? null : Number(event.target.value) })} />
-                <input aria-label={`${exercise.name} série ${set.setNumber} RIR`} type="number" inputMode="numeric" min="0" max="10" value={set.rir ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { rir: event.target.value === '' ? null : Number(event.target.value) })} />
-                <button type="button" className="set-check" aria-label={`Concluir ${exercise.name} série ${set.setNumber}`} aria-pressed={set.completed} onClick={() => { const completed = !set.completed; updateSet(exercise.id, set.setNumber, { completed }); if (completed) startRest(exercise.restSeconds); }}>{set.completed ? '✓' : '○'}</button>
-              </div>
-            ))}
-            <button type="button" className="text-action rest-shortcut" onClick={() => startRest(exercise.restSeconds)}>Iniciar descanso de {formatRest(exercise.restSeconds)}</button>
-          </article>
-        ))}
-      </section>
-
-      <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
-    </>
-  );
+  return <>
+    <button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o treino</button>
+    <section className="section-header"><span className="eyebrow">MODO TREINO</span><h2>{workout.title}</h2><p>{totals.completed} de {totals.total} séries concluídas</p></section>
+    <section className="rest-timer" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)} disabled={!timerSeconds}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Zerar</button></div></section>
+    <section className="execution-list">{workout.exercises.map((exercise, exerciseIndex) => <article className="execution-card" key={exercise.id}><header><span className="exercise-order">{exerciseIndex + 1}</span><div><span className="info-label">{exercise.muscleGroup}</span><h3>{exercise.name}</h3></div></header><div className="set-table-header"><span>Série</span><span>kg</span><span>Reps</span><span>RIR</span><span>Feita</span></div>{execution.exercises[exercise.id].sets.map((set) => <div className={`set-row ${set.completed ? 'completed' : ''}`} key={set.setNumber}><strong>{set.setNumber}</strong><input aria-label={`${exercise.name} série ${set.setNumber} carga`} type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { weightKg: event.target.value === '' ? null : Number(event.target.value) })} /><input aria-label={`${exercise.name} série ${set.setNumber} repetições`} type="number" inputMode="numeric" min="0" value={set.repetitions ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { repetitions: event.target.value === '' ? null : Number(event.target.value) })} /><input aria-label={`${exercise.name} série ${set.setNumber} RIR`} type="number" inputMode="numeric" min="0" max="10" value={set.rir ?? ''} onChange={(event) => updateSet(exercise.id, set.setNumber, { rir: event.target.value === '' ? null : Number(event.target.value) })} /><button type="button" className="set-check" aria-label={`Concluir ${exercise.name} série ${set.setNumber}`} aria-pressed={set.completed} onClick={() => { const completed = !set.completed; updateSet(exercise.id, set.setNumber, { completed }); if (completed) startRest(exercise.restSeconds); }}>{set.completed ? '✓' : '○'}</button></div>)}<button type="button" className="text-action rest-shortcut" onClick={() => startRest(exercise.restSeconds)}>Iniciar descanso de {formatRest(exercise.restSeconds)}</button></article>)}</section>
+    <button type="button" className="primary-action finish-session" disabled={totals.completed !== totals.total} onClick={finishWorkout}>{totals.completed === totals.total ? 'Concluir e salvar treino' : `Faltam ${totals.total - totals.completed} séries`}</button>
+    <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
+  </>;
 }
 
 function createExecution(planId: string, workout: TitanWorkoutDay): WorkoutExecution {
   const now = new Date().toISOString();
+  return { planId, workoutId: workout.id, startedAt: now, updatedAt: now, exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, { exerciseId: exercise.id, sets: Array.from({ length: exercise.sets }, (_, index) => ({ setNumber: index + 1, weightKg: null, repetitions: null, rir: exercise.targetRir ?? null, completed: false })) }])) };
+}
+
+function createHistoryRecord(planId: string, planName: string, workout: TitanWorkoutDay, execution: WorkoutExecution, completedAt: string): WorkoutHistoryRecord {
+  const exercises = workout.exercises.map((exercise) => {
+    const sets = execution.exercises[exercise.id].sets.map(({ setNumber, weightKg, repetitions, rir }) => ({ setNumber, weightKg, repetitions, rir }));
+    const volumeKg = sets.reduce((total, set) => total + (set.weightKg ?? 0) * (set.repetitions ?? 0), 0);
+    const weights = sets.map((set) => set.weightKg).filter((value): value is number => value !== null);
+    return { exerciseId: exercise.id, name: exercise.name, muscleGroup: exercise.muscleGroup, sets, volumeKg, bestWeightKg: weights.length ? Math.max(...weights) : null };
+  });
   return {
+    id: `${planId}:${workout.id}:${completedAt}`,
     planId,
+    planName,
     workoutId: workout.id,
-    startedAt: now,
-    updatedAt: now,
-    exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, {
-      exerciseId: exercise.id,
-      sets: Array.from({ length: exercise.sets }, (_, index) => ({ setNumber: index + 1, weightKg: null, repetitions: null, rir: exercise.targetRir ?? null, completed: false }))
-    }]))
+    workoutTitle: workout.title,
+    workoutDay: workout.day,
+    startedAt: execution.startedAt,
+    completedAt,
+    durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(execution.startedAt).getTime()) / 1000)),
+    totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0),
+    totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0),
+    exercises
   };
 }
 
-function formatTimer(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
-}
-
-function formatRest(seconds: number) {
-  return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-}
+function formatTimer(seconds: number) { const minutes = Math.floor(seconds / 60); return `${minutes}:${String(seconds % 60).padStart(2, '0')}`; }
+function formatRest(seconds: number) { return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }

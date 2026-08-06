@@ -1,0 +1,19 @@
+.finish-session { width: 100%; margin-top: 18px; }
+.progress-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 22px; }
+.progress-summary > div, .progression-card, .history-card { background: linear-gradient(180deg, rgba(24,34,52,.98), rgba(18,25,38,.98)); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.progress-summary > div { padding: 14px 10px; text-align: center; }
+.progress-summary strong { display: block; color: #bfdbfe; font-size: 1.05rem; overflow-wrap: anywhere; }
+.progress-section { margin-top: 24px; }
+.progress-section > h3 { margin-bottom: 12px; }
+.progression-list, .history-list { display: grid; gap: 12px; }
+.progression-card { padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.progression-card > div:last-child { text-align: right; }
+.progression-card strong { color: #bfdbfe; }
+.history-card { padding: 16px; }
+.history-card header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.history-card header > strong { color: #bfdbfe; white-space: nowrap; }
+.history-card p { margin-top: 5px; color: var(--color-muted); font-size: .8rem; }
+.history-metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.history-metrics span { padding: 7px 9px; border-radius: 999px; background: rgba(59,130,246,.1); color: #bfdbfe; font-size: .72rem; font-weight: 700; }
+.danger-text { margin-top: 12px; padding: 8px 0; color: #fca5a5; }
+@media (max-width: 360px) { .progress-summary { grid-template-columns: 1fr; } }
