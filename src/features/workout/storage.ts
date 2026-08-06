@@ -27,10 +27,10 @@ export function loadWorkoutExecution(planId: string, workoutId: string): Workout
 
 export function saveWorkoutExecution(execution: WorkoutExecution) {
   localStorage.setItem(key(execution.planId, execution.workoutId), JSON.stringify(execution));
-  void putRecord(STORE_NAMES.workoutExecutions, recordId(execution.planId, execution.workoutId), execution).catch(reportMirrorFailure);
+  void putRecord(STORE_NAMES.activeSessions, recordId(execution.planId, execution.workoutId), execution).catch(reportMirrorFailure);
 }
 
 export function removeWorkoutExecution(planId: string, workoutId: string) {
   localStorage.removeItem(key(planId, workoutId));
-  void deleteRecord(STORE_NAMES.workoutExecutions, recordId(planId, workoutId)).catch(reportMirrorFailure);
+  void deleteRecord(STORE_NAMES.activeSessions, recordId(planId, workoutId)).catch(reportMirrorFailure);
 }
