@@ -4,6 +4,7 @@ import { BackupPanel } from '../core/backup/BackupPanel';
 import { migrateLegacyStorage } from '../core/database/migrateLegacyStorage';
 import { CardioPage } from '../features/cardio/CardioPage';
 import { CoachPage } from '../features/coach/CoachPage';
+import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ProgressPage } from '../features/history/ProgressPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
 import { PlanViewer } from '../features/plan/PlanViewer';
@@ -39,21 +40,22 @@ export function App() {
   function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setActiveTab('today'); }
   function deletePlan() { if (!window.confirm('Remover a ficha ativa deste aparelho?')) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); }
   function historyChanged() { setHistoryRefresh((value) => value + 1); setActiveTab('progress'); }
-  const exerciseCount = activePlan?.workouts.reduce((total, workout) => total + workout.exercises.length, 0) ?? 0;
+  function openTab(tab: TabId) { setActiveTab(tab); if (tab !== 'plan') setShowImporter(false); }
+  function openPlan() { setShowImporter(!activePlan); setActiveTab('plan'); }
 
   return <div className="app-shell">
     <header className="app-header"><div><span className="eyebrow">TITAN ECOSYSTEM</span><h1>TITAN FIT</h1></div><span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></header>
     <main className="app-main">
-      {activeTab === 'today' && <><section className="hero-card" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{activePlan ? activePlan.name : 'Nenhuma ficha ativa'}</h2><p>{activePlan ? activePlan.description ?? 'Sua ficha está pronta para execução.' : 'Importe uma ficha TITAN FIT para começar.'}</p><button type="button" className="primary-action" onClick={() => { setShowImporter(false); setActiveTab('plan'); }}>{activePlan ? 'Abrir ficha' : 'Importar ficha'}</button><button type="button" className="secondary-action home-coach-action" onClick={() => setActiveTab('coach')}>Abrir Coach TITAN</button></section><section className="info-card"><div><span className="info-label">Treinos</span><strong>{activePlan?.workouts.length ?? 0}</strong></div><div><span className="info-label">Exercícios</span><strong>{exerciseCount}</strong></div></section></>}
+      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onOpenCoach={() => openTab('coach')} onOpenCardio={() => openTab('cardio')} onOpenProgress={() => openTab('progress')} />}
       {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para a ficha atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer plan={activePlan} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
       {activeTab === 'cardio' && <CardioPage />}
       {activeTab === 'coach' && <CoachPage />}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
-      {activeTab === 'more' && <><EmptyPage title="Sobre o TITAN FIT" body="Versão com Engine de Dados, migração segura e backup local." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.8.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
+      {activeTab === 'more' && <><EmptyPage title="Sobre o TITAN FIT" body="Dashboard inteligente, Engine de Dados e backup local." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.9.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
     </main>
     {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido e funcionamento offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
     {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
-    <nav className="bottom-navigation" aria-label="Navegação principal">{tabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => { setActiveTab(tab.id); if (tab.id !== 'plan') setShowImporter(false); }} aria-current={activeTab === tab.id ? 'page' : undefined}><span className="nav-icon" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span></button>)}</nav>
+    <nav className="bottom-navigation" aria-label="Navegação principal">{tabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => openTab(tab.id)} aria-current={activeTab === tab.id ? 'page' : undefined}><span className="nav-icon" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span></button>)}</nav>
   </div>;
 }
 function EmptyPage({ title, body }: { title: string; body: string }) { return <section className="hero-card compact" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{title}</h2><p>{body}</p></section>; }
