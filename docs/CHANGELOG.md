@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.0 — Dashboard inteligente
+
+- Home refeita para mostrar a próxima ação com clareza.
+- Saudação contextual, data e identificação da ficha ativa.
+- Treino do dia identificado pela programação semanal.
+- Resumo de exercícios e séries antes de iniciar.
+- Atalhos diretos para cardio, evolução e Coach TITAN.
+- Score exibido como indisponível quando ainda não existem dados suficientes.
+- Espaços de nutrição, água e sono preparados sem dados fictícios.
+- Estado vazio mais útil para quem ainda não importou uma ficha.
+
 ## v0.8.0 — Engine de Dados e backup
 
 - Banco IndexedDB versionado com stores para planos, histórico, cardio, sessões e preferências.
