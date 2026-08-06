@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.6.0 — Cardio e primeiros 5 km
+
+- Importação de planilha progressiva de cardio em `.json` ou `.titan-cardio`.
+- Plano organizado por semanas e sessões.
+- Meta estruturada para correr os primeiros 5 km.
+- Caminhada, Zona 2, corrida, HIIT, bicicleta, escada e atividade personalizada.
+- Registro de duração, distância, frequência cardíaca, esforço e observações.
+- Histórico permanente de cardio preservado após troca do plano.
+- Progresso por sessões concluídas e distância acumulada.
+
 ## v0.5.0 — Histórico e progressão
 
 - Conclusão definitiva do treino após todas as séries.
