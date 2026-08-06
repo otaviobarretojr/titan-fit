@@ -2,19 +2,22 @@
 
 **Treine. Registre. Evolua.**
 
-PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, cardio e acompanhamento de evolução.
+PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, cardio integrado e acompanhamento de evolução.
 
 ## Estado atual
 
-Versão `v0.10.0 — Execução de Treino` em desenvolvimento e validação.
+Versão `v0.11.0 — Modo Treino` em desenvolvimento e validação.
 
 Esta entrega inclui:
 
-- Dashboard diário com musculação e cardio programados.
-- Início direto da musculação do dia.
-- Execução guiada do cardio com cronômetro, pausa, etapas e conclusão.
-- Projeto importável com musculação e progressão para correr 5 km.
-- Registro série por série com carga, repetições e RIR.
+- Dashboard diário com treino completo do dia.
+- Início direto da execução.
+- Progresso geral da sessão.
+- Navegação exercício por exercício.
+- Registro rápido de carga, repetições e RIR.
+- Descanso automático após concluir séries.
+- Cardio tratado como exercício válido dentro do treino.
+- Resumo final com duração, volume, séries e cardio.
 - Histórico local, backup e funcionamento PWA.
 
 ## Executar
