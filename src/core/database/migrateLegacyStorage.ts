@@ -8,6 +8,8 @@ const LEGACY_KEYS = {
   cardioRecords: 'titan-fit:cardio-records'
 } as const;
 
+const WORKOUT_EXECUTION_PREFIX = 'titan-fit:execution:';
+
 function readJson(key: string): unknown | null {
   const raw = localStorage.getItem(key);
   if (!raw) return null;
@@ -16,6 +18,19 @@ function readJson(key: string): unknown | null {
   } catch {
     return null;
   }
+}
+
+function listLegacyWorkoutExecutions(): Array<{ id: string; value: unknown }> {
+  const executions: Array<{ id: string; value: unknown }> = [];
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const storageKey = localStorage.key(index);
+    if (!storageKey?.startsWith(WORKOUT_EXECUTION_PREFIX)) continue;
+    const value = readJson(storageKey);
+    if (value !== null) {
+      executions.push({ id: storageKey.slice(WORKOUT_EXECUTION_PREFIX.length), value });
+    }
+  }
+  return executions;
 }
 
 export async function migrateLegacyStorage(): Promise<{ migrated: boolean; items: number }> {
@@ -33,6 +48,11 @@ export async function migrateLegacyStorage(): Promise<{ migrated: boolean; items
   if (cardioPlan) { await putRecord(STORE_NAMES.cardioPlans, 'active', cardioPlan); items += 1; }
   if (cardioRecords) { await putRecord(STORE_NAMES.cardioRecords, 'records', cardioRecords); items += 1; }
 
+  for (const execution of listLegacyWorkoutExecutions()) {
+    await putRecord(STORE_NAMES.workoutExecutions, execution.id, execution.value);
+    items += 1;
+  }
+
   await putRecord<DatabaseMetadata>(STORE_NAMES.metadata, 'database', {
     schemaVersion: 1,
     migratedFromLocalStorageAt: new Date().toISOString()
@@ -41,4 +61,4 @@ export async function migrateLegacyStorage(): Promise<{ migrated: boolean; items
   return { migrated: true, items };
 }
 
-export { LEGACY_KEYS };
+export { LEGACY_KEYS, WORKOUT_EXECUTION_PREFIX };
