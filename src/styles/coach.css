@@ -15,4 +15,6 @@
 .insight-dot { width: 9px; height: 9px; margin-top: 5px; border-radius: 50%; background: #94a3b8; }
 .coach-insight.positive .insight-dot { background: #22c55e; }
 .coach-insight.attention .insight-dot { background: #eab308; }
-@media (max-width: 370px) { .coach-score-card { grid-template-columns: 1fr; } .coach-pillars { grid-template-columns: 1fr; } }
+.bottom-navigation { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.bottom-navigation button { padding-inline: 2px; font-size: .62rem; }
+@media (max-width: 370px) { .coach-score-card { grid-template-columns: 1fr; } .coach-pillars { grid-template-columns: 1fr; } .bottom-navigation button { font-size: .58rem; } }
