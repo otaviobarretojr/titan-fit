@@ -13,7 +13,7 @@ type TabId = 'today' | 'plan' | 'progress' | 'more';
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
 const tabs: Array<{ id: TabId; label: string; icon: string }> = [
   { id: 'today', label: 'Hoje', icon: '⌂' },
-  { id: 'plan', label: 'Ficha', icon: '▤' },
+  { id: 'plan', label: 'Projeto', icon: '▤' },
   { id: 'progress', label: 'Progresso', icon: '↗' },
   { id: 'more', label: 'Mais', icon: '•••' }
 ];
@@ -22,6 +22,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
   const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
   const [showImporter, setShowImporter] = useState(false);
+  const [directWorkoutId, setDirectWorkoutId] = useState<string | null>(null);
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [dataEngineStatus, setDataEngineStatus] = useState<'starting' | 'ready' | 'unavailable'>('starting');
@@ -44,17 +45,18 @@ export function App() {
   }, []);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
-  function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setActiveTab('today'); }
-  function deletePlan() { if (!window.confirm('Remover a ficha ativa deste aparelho?')) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); }
+  function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setDirectWorkoutId(null); setActiveTab('today'); }
+  function deletePlan() { if (!window.confirm('Remover o projeto ativo deste aparelho?')) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); setDirectWorkoutId(null); }
   function historyChanged() { setHistoryRefresh((value) => value + 1); setActiveTab('progress'); }
-  function openTab(tab: TabId) { setActiveTab(tab); if (tab !== 'plan') setShowImporter(false); }
-  function openPlan() { setShowImporter(!activePlan); setActiveTab('plan'); }
+  function openTab(tab: TabId) { setActiveTab(tab); if (tab !== 'plan') setShowImporter(false); if (tab !== 'plan') setDirectWorkoutId(null); }
+  function openPlan() { setShowImporter(!activePlan); setDirectWorkoutId(null); setActiveTab('plan'); }
+  function startWorkout(workoutId: string) { setShowImporter(false); setDirectWorkoutId(workoutId); setActiveTab('plan'); }
 
   return <div className="app-shell">
     <header className="app-header"><div><span className="eyebrow">TREINO E PROGRESSÃO</span><h1>TITAN FIT</h1></div><span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></header>
     <main className="app-main">
-      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onOpenProgress={() => openTab('progress')} />}
-      {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para a ficha atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer plan={activePlan} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
+      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onStartWorkout={startWorkout} onOpenProgress={() => openTab('progress')} />}
+      {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para o projeto atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
       {activeTab === 'more' && <><EmptyPage title="Configurações" body="Backup, instalação e atualização do seu aplicativo de treino." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.9.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
     </main>
