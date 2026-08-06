@@ -38,6 +38,8 @@ export type TitanCardioSession = {
   title: string;
   type: 'walk' | 'zone2' | 'run-walk' | 'run' | 'hiit' | 'bike' | 'stairs' | 'other';
   durationMinutes: number;
+  week?: number;
+  phase?: string;
   goal?: string;
   instructions?: string[];
 };
