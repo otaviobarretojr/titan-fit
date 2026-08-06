@@ -14,8 +14,8 @@ beforeEach(() => {
   vi.stubGlobal('scrollTo', vi.fn());
 });
 
-describe('WorkoutExecutionView v0.11', () => {
-  it('registra carga, repetições, RIR e conclusão por série', () => {
+describe('WorkoutExecutionView v0.12', () => {
+  it('registra carga, repetições, RIR e atualiza progresso e volume', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
@@ -23,7 +23,7 @@ describe('WorkoutExecutionView v0.11', () => {
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '1' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
 
-    expect(screen.getByText('1 de 2 séries concluídas')).toBeInTheDocument();
+    expect(screen.getByText(/1\s*\/\s*2 séries · Volume 720 kg/i)).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     const saved = localStorage.getItem('titan-fit:execution:plan-1:push-a');
     expect(saved).toContain('"weightKg":80');
