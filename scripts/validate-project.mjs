@@ -16,25 +16,22 @@ const backup = await read('src/core/backup/backup.ts');
 const backupPanel = await read('src/core/backup/BackupPanel.tsx');
 const viewer = await read('src/features/plan/PlanViewer.tsx');
 const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
-const cardio = await read('src/features/cardio/CardioPage.tsx');
-const coach = await read('src/features/coach/CoachPage.tsx');
 const validation = await read('src/features/plan/validation.ts');
 const readme = await read('README.md');
 
-assert(pkg.version === '0.8.0', 'package.json deve usar a versão 0.8.0');
+assert(pkg.version === '0.9.0', 'package.json deve usar a versão 0.9.0');
 assert(vite.includes("base: '/titan-fit/'"), 'Vite deve usar base /titan-fit/');
 assert(vite.includes("start_url: '/titan-fit/'"), 'Manifest deve usar start_url /titan-fit/');
 assert(vite.includes("scope: '/titan-fit/'"), 'Manifest deve usar scope /titan-fit/');
-assert(app.includes('Hoje') && app.includes('Ficha') && app.includes('Cardio') && app.includes('Coach') && app.includes('Evolução') && app.includes('Mais'), 'As seis áreas principais devem existir');
-assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.8.0'), 'A Engine e o backup devem estar conectados ao app');
+assert(app.includes('Hoje') && app.includes('Ficha') && app.includes('Progresso') && app.includes('Mais'), 'As quatro áreas principais de treino devem existir');
+assert(!app.includes("label: 'Cardio'") && !app.includes("label: 'Coach'"), 'Cardio e Coach não devem estar na navegação principal');
+assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.9.0'), 'A Engine e o backup devem estar conectados ao app');
 assert(database.includes('indexedDB.open') && database.includes('putRecord') && database.includes('getAllRecords'), 'O adaptador IndexedDB deve oferecer operações básicas');
 assert(migration.includes('migratedFromLocalStorageAt') && migration.includes('titan-fit:history:v1'), 'A migração deve preservar os dados legados');
 assert(backup.includes("format: 'titan-fit-backup'") && backup.includes('restoreBackup'), 'O contrato de backup e restauração deve existir');
 assert(backupPanel.includes('Exportar backup') && backupPanel.includes('Restaurar backup'), 'Os controles de backup devem existir');
 assert(viewer.includes('WorkoutExecutionView'), 'A visualização da ficha deve continuar funcional');
 assert(execution.includes('Concluir e salvar treino') && execution.includes('weightKg'), 'A execução série por série deve continuar existindo');
-assert(cardio.includes('PRIMEIROS 5 KM') && cardio.includes('Concluir sessão'), 'O módulo de cardio deve continuar funcional');
-assert(coach.includes('SCORE TITAN') && coach.includes('Escopo atual'), 'O Coach deve continuar funcional');
 assert(viewer.includes('youtube-nocookie.com/embed/') && viewer.includes('allowFullScreen'), 'O player seguro do YouTube deve continuar existindo');
 assert(validation.includes('schemaVersion') && validation.includes('extractYouTubeVideoId'), 'A validação da ficha e dos vídeos deve existir');
 assert(!/userProfile|login|signup|auth/i.test(app), 'O aplicativo não pode conter perfil ou autenticação');
@@ -56,4 +53,4 @@ async function walk(dir) {
 await walk(root);
 
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.8.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.9.0 concluída com sucesso.');
