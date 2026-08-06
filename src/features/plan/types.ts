@@ -31,6 +31,27 @@ export type TitanWorkoutDay = {
   exercises: TitanExercise[];
 };
 
+export type TitanCardioSession = {
+  id: string;
+  day: string;
+  startTime: string;
+  title: string;
+  type: 'walk' | 'zone2' | 'run-walk' | 'run' | 'hiit' | 'bike' | 'stairs' | 'other';
+  durationMinutes: number;
+  goal?: string;
+  instructions?: string[];
+};
+
+export type TitanProject = {
+  name: string;
+  objective: string;
+  startDate?: string;
+  durationWeeks?: number;
+  strengthStartTime?: string;
+  cardioGoal?: string;
+  cardioSchedule?: TitanCardioSession[];
+};
+
 export type TitanPlan = {
   schemaVersion: typeof TITAN_PLAN_SCHEMA_VERSION;
   id: string;
@@ -38,6 +59,7 @@ export type TitanPlan = {
   description?: string;
   createdAt: string;
   author?: string;
+  project?: TitanProject;
   workouts: TitanWorkoutDay[];
 };
 
