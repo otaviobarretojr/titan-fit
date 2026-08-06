@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['favicon.svg', 'icons/icon-192.png'],
+      includeAssets: ['favicon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'],
       manifest: {
         name: 'TITAN FIT',
         short_name: 'TITAN FIT',
@@ -21,12 +21,9 @@ export default defineConfig({
         background_color: '#0b0f17',
         theme_color: '#0b0f17',
         icons: [
-          {
-            src: '/titan-fit/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any'
-          }
+          { src: '/titan-fit/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/titan-fit/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/titan-fit/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
