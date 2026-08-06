@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
 import { App } from '../src/app/App';
 
@@ -19,16 +19,19 @@ describe('TITAN FIT shell', () => {
 
   it('navega pelas cinco áreas sem dados fictícios', () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: /Ficha/i }));
+    const navigation = screen.getByRole('navigation', { name: /Navegação principal/i });
+    const nav = within(navigation);
+
+    fireEvent.click(nav.getByRole('button', { name: /^Ficha$/i }));
     expect(screen.getByText('Nenhuma ficha importada')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Cardio/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Cardio$/i }));
     expect(screen.getByText('Cardio em breve')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Evolução/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Evolução$/i }));
     expect(screen.getByText('Evolução em breve')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Mais/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
     expect(screen.getByText('Sobre o TITAN FIT')).toBeInTheDocument();
   });
 
