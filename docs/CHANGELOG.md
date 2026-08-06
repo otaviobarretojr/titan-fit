@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.0 — Engine de Dados e backup
+
+- Banco IndexedDB versionado com stores para planos, histórico, cardio, sessões e preferências.
+- Migração automática dos registros existentes do localStorage sem apagá-los.
+- Gravação dupla temporária para manter localStorage e IndexedDB sincronizados durante a transição.
+- Migração também das sessões de treino já em andamento.
+- Contrato de backup completo e versionado.
+- Exportação de backup em arquivo local.
+- Restauração atômica, com validação, confirmação e proteção contra versões incompatíveis.
+- Indicador de status da Engine na área Mais.
+
 ## v0.7.0 — Coach TITAN
 
 - Score TITAN baseado em musculação e cardio registrados.
