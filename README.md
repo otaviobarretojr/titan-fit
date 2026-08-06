@@ -6,18 +6,20 @@ PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, ca
 
 ## Estado atual
 
-Versão `v0.12.0 — Progressão Inteligente` em desenvolvimento e validação.
+Versão `v0.13.0 — Coach de Progressão` em desenvolvimento e validação.
 
 Esta entrega inclui:
 
 - Dashboard diário com treino completo do dia.
 - Início direto da execução.
-- Progresso por séries e volume em tempo real.
+- Progresso por séries, volume e tempo em tempo real.
 - Navegação exercício por exercício.
 - Registro rápido de carga, repetições e RIR.
 - Descanso automático após concluir séries.
 - Última carga e meta da sessão por exercício.
 - Identificação automática de novos recordes de carga.
+- Recomendação do Coach TITAN após concluir o exercício.
+- Sugestão para aumentar, manter ou reduzir a carga conforme repetições e RIR.
 - Prévia do próximo exercício.
 - Cardio tratado como exercício válido dentro do treino.
 - Resumo final com duração, volume, séries, cardio e PRs.
