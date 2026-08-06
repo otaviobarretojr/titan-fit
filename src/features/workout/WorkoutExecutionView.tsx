@@ -7,6 +7,7 @@ import type { ExecutedSet, WorkoutExecution } from './types';
 
 type Props = { planId: string; planName: string; workout: TitanWorkoutDay; onBack: () => void; onCompleted: () => void; };
 type WorkoutSummary = { durationSeconds: number; totalVolumeKg: number; totalSets: number; cardioMinutes: number; prs: string[]; };
+type CoachRecommendation = { status: 'positive' | 'attention' | 'neutral'; diagnosis: string; action: string; reason: string; nextLoadKg: number | null; };
 
 export function WorkoutExecutionView({ planId, planName, workout, onBack, onCompleted }: Props) {
   const previousHistory = useMemo(() => loadWorkoutHistory(), []);
@@ -101,7 +102,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {!isCardio && activeExercise.restSeconds > 0 && <button type="button" className="text-action rest-shortcut" onClick={() => startRest(activeExercise.restSeconds)}>Iniciar descanso de {formatRest(activeExercise.restSeconds)}</button>}
     </article>
 
-    {coachRecommendation && <aside className="next-exercise-preview" aria-label="Recomendação do Coach TITAN"><span>Coach TITAN · próxima sessão</span><strong>{coachRecommendation}</strong></aside>}
+    {coachRecommendation && <aside className={`next-exercise-preview coach-explanation ${coachRecommendation.status}`} aria-label="Recomendação do Coach TITAN"><span>Coach TITAN · próxima sessão</span><strong>{coachRecommendation.diagnosis}</strong><p><b>Recomendação:</b> {coachRecommendation.action}</p><p><b>Motivo:</b> {coachRecommendation.reason}</p>{coachRecommendation.nextLoadKg !== null && <p><b>Carga sugerida:</b> {formatWeight(coachRecommendation.nextLoadKg)} kg</p>}</aside>}
     {nextExerciseName && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{nextExerciseName}</strong></aside>}
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
@@ -111,18 +112,24 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
 function getPreviousExercises(history: WorkoutHistoryRecord[], workoutId: string) { const record = history.find((item) => item.workoutId === workoutId); return new Map((record?.exercises ?? []).map((exercise) => [exercise.exerciseId, exercise])); }
 function formatPrevious(previous: HistoryExercise | null) { if (!previous) return 'Sem histórico'; const bestSet = [...previous.sets].filter((set) => set.weightKg !== null && set.repetitions !== null).sort((a, b) => (b.weightKg ?? 0) - (a.weightKg ?? 0))[0]; return bestSet ? `${bestSet.weightKg} kg × ${bestSet.repetitions}` : 'Sem carga registrada'; }
 function formatTarget(previous: HistoryExercise | null, minReps?: number, maxReps?: number) { if (!previous?.bestWeightKg) return `${minReps ?? '—'}–${maxReps ?? '—'} reps com técnica`; return `${previous.bestWeightKg} kg · buscar ${maxReps ?? minReps ?? 'mais'} reps`; }
-function buildCoachRecommendation(sets: ExecutedSet[], minReps = 0, maxReps = minReps, targetRir = 2, previous: HistoryExercise | null) {
+function buildCoachRecommendation(sets: ExecutedSet[], minReps = 0, maxReps = minReps, targetRir = 2, previous: HistoryExercise | null): CoachRecommendation {
   const valid = sets.filter((set) => set.completed && set.repetitions !== null && set.rir !== null);
-  if (!valid.length) return 'Registre repetições e RIR para receber uma recomendação.';
+  if (!valid.length) return { status: 'neutral', diagnosis: 'Dados insuficientes', action: 'Registre repetições e RIR em todas as séries.', reason: 'O Coach precisa desses dados para avaliar esforço e desempenho.', nextLoadKg: null };
   const allAtTop = valid.every((set) => (set.repetitions ?? 0) >= maxReps && (set.rir ?? 0) >= targetRir);
   const belowRange = valid.some((set) => (set.repetitions ?? 0) < minReps);
   const tooHard = valid.some((set) => (set.rir ?? 0) === 0);
   const currentBest = Math.max(...valid.map((set) => set.weightKg ?? 0));
-  if (allAtTop && currentBest > 0) return `Aumente a carga na próxima sessão: tente ${formatWeight(currentBest + suggestedIncrement(currentBest))} kg.`;
-  if (belowRange && tooHard) return `Reduza levemente a carga ou repita ${formatWeight(currentBest)} kg com mais controle.`;
-  if (belowRange) return `Mantenha ${formatWeight(currentBest)} kg até cumprir pelo menos ${minReps} repetições em todas as séries.`;
-  if (previous && currentBest > (previous.bestWeightKg ?? 0)) return `Novo patamar consolidado. Mantenha ${formatWeight(currentBest)} kg e aumente as repetições.`;
-  return `Mantenha ${formatWeight(currentBest)} kg e busque chegar a ${maxReps} repetições com RIR ${targetRir}.`;
+  if (allAtTop && currentBest > 0) {
+    const nextLoadKg = currentBest + suggestedIncrement(currentBest);
+    return { status: 'positive', diagnosis: 'Excelente execução', action: `Aumente a carga na próxima sessão para ${formatWeight(nextLoadKg)} kg.`, reason: `Você atingiu o topo da faixa em todas as séries mantendo RIR ${targetRir} ou maior.`, nextLoadKg };
+  }
+  if (belowRange && tooHard) {
+    const nextLoadKg = Math.max(0, currentBest - suggestedIncrement(currentBest));
+    return { status: 'attention', diagnosis: 'Carga acima do ideal', action: `Reduza para aproximadamente ${formatWeight(nextLoadKg)} kg ou repita com execução mais controlada.`, reason: `Houve série abaixo de ${minReps} repetições com RIR 0.`, nextLoadKg };
+  }
+  if (belowRange) return { status: 'attention', diagnosis: 'Faixa mínima não consolidada', action: `Mantenha ${formatWeight(currentBest)} kg.`, reason: `Primeiro alcance pelo menos ${minReps} repetições em todas as séries.`, nextLoadKg: currentBest };
+  if (previous && currentBest > (previous.bestWeightKg ?? 0)) return { status: 'positive', diagnosis: 'Novo patamar de carga', action: `Mantenha ${formatWeight(currentBest)} kg e aumente as repetições.`, reason: 'Você superou a melhor carga anterior, mas ainda pode consolidar desempenho antes de subir novamente.', nextLoadKg: currentBest };
+  return { status: 'neutral', diagnosis: 'Boa execução', action: `Mantenha ${formatWeight(currentBest)} kg e busque ${maxReps} repetições.`, reason: `A carga está adequada, mas o topo da faixa com RIR ${targetRir} ainda não foi consolidado.`, nextLoadKg: currentBest };
 }
 function suggestedIncrement(weight: number) { return weight < 20 ? 1 : weight < 50 ? 2 : 2.5; }
 function formatWeight(weight: number) { return Number.isInteger(weight) ? String(weight) : weight.toFixed(1).replace('.', ','); }
