@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { PlanImporter } from '../features/plan/PlanImporter';
+import { loadActivePlan, removeActivePlan, saveActivePlan } from '../features/plan/storage';
+import type { TitanPlan } from '../features/plan/types';
 
 type TabId = 'today' | 'plan' | 'cardio' | 'progress' | 'more';
 
@@ -16,31 +19,10 @@ const tabs: Array<{ id: TabId; label: string; icon: string }> = [
   { id: 'more', label: 'Mais', icon: '•••' }
 ];
 
-const emptyCopy: Record<TabId, { title: string; body: string }> = {
-  today: {
-    title: 'Nenhuma ficha ativa',
-    body: 'Na próxima versão, você poderá importar sua ficha de treino e executá-la diretamente no aplicativo.'
-  },
-  plan: {
-    title: 'Nenhuma ficha importada',
-    body: 'As fichas serão adicionadas por meio de arquivos TITAN FIT.'
-  },
-  cardio: {
-    title: 'Cardio em breve',
-    body: 'Suas sessões de cardio aparecerão aqui em uma próxima versão.'
-  },
-  progress: {
-    title: 'Evolução em breve',
-    body: 'Seu histórico de treino e evolução aparecerá aqui.'
-  },
-  more: {
-    title: 'Sobre o TITAN FIT',
-    body: 'Shell inicial do aplicativo, pronto para receber a importação de fichas.'
-  }
-};
-
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
+  const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
+  const [showImporter, setShowImporter] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installDismissed, setInstallDismissed] = useState(false);
@@ -72,14 +54,32 @@ export function App() {
     };
   }, []);
 
-  const content = emptyCopy[activeTab];
-
   async function installApp() {
     if (!installPrompt) return;
     await installPrompt.prompt();
     const choice = await installPrompt.userChoice;
     if (choice.outcome === 'accepted') setInstallPrompt(null);
   }
+
+  function importPlan(plan: TitanPlan) {
+    saveActivePlan(plan);
+    setActivePlan(plan);
+    setShowImporter(false);
+    setActiveTab('today');
+  }
+
+  function deletePlan() {
+    if (!window.confirm('Remover a ficha ativa deste aparelho?')) return;
+    removeActivePlan();
+    setActivePlan(null);
+    setShowImporter(false);
+  }
+
+  const exerciseCount = activePlan?.workouts.reduce((total, workout) => total + workout.exercises.length, 0) ?? 0;
+  const videoCount = activePlan?.workouts.reduce(
+    (total, workout) => total + workout.exercises.filter((exercise) => exercise.video).length,
+    0
+  ) ?? 0;
 
   return (
     <div className="app-shell">
@@ -94,50 +94,82 @@ export function App() {
       </header>
 
       <main className="app-main">
-        <section className="hero-card" aria-labelledby="page-title">
-          <span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span>
-          <h2 id="page-title">{content.title}</h2>
-          <p>{content.body}</p>
-          {activeTab === 'today' && (
-            <button type="button" className="primary-action" disabled>
-              Importar ficha em breve
-            </button>
-          )}
-        </section>
+        {activeTab === 'today' && (
+          <>
+            <section className="hero-card" aria-labelledby="page-title">
+              <span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span>
+              <h2 id="page-title">{activePlan ? activePlan.name : 'Nenhuma ficha ativa'}</h2>
+              <p>{activePlan ? activePlan.description ?? 'Sua ficha foi importada e está salva neste aparelho.' : 'Importe uma ficha TITAN FIT para começar.'}</p>
+              <button type="button" className="primary-action" onClick={() => { setShowImporter(false); setActiveTab('plan'); }}>
+                {activePlan ? 'Ver ficha' : 'Importar ficha'}
+              </button>
+            </section>
 
-        <section className="info-card">
-          <div>
-            <span className="info-label">Versão atual</span>
-            <strong>v0.1.0</strong>
-          </div>
-          <div>
-            <span className="info-label">Funcionamento</span>
-            <strong>Local-first</strong>
-          </div>
-        </section>
+            <section className="info-card">
+              <div><span className="info-label">Treinos</span><strong>{activePlan?.workouts.length ?? 0}</strong></div>
+              <div><span className="info-label">Exercícios</span><strong>{exerciseCount}</strong></div>
+            </section>
+          </>
+        )}
+
+        {activeTab === 'plan' && (
+          showImporter || !activePlan ? (
+            <>
+              {activePlan && (
+                <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>
+                  Voltar para a ficha atual
+                </button>
+              )}
+              <PlanImporter onImport={importPlan} />
+            </>
+          ) : (
+            <>
+              <section className="section-header">
+                <span className="eyebrow">FICHA ATIVA</span>
+                <h2>{activePlan.name}</h2>
+                <p>{exerciseCount} exercícios • {videoCount} vídeos vinculados</p>
+              </section>
+              <section className="workout-list" aria-label="Treinos importados">
+                {activePlan.workouts.map((workout) => (
+                  <article className="workout-card" key={workout.id}>
+                    <div>
+                      <span className="info-label">{workout.day}</span>
+                      <h3>{workout.title}</h3>
+                      {workout.focus && <p>{workout.focus}</p>}
+                    </div>
+                    <strong>{workout.exercises.length}</strong>
+                  </article>
+                ))}
+              </section>
+              <div className="stack-actions">
+                <button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Importar outra ficha</button>
+                <button type="button" className="danger-action" onClick={deletePlan}>Remover ficha</button>
+              </div>
+            </>
+          )
+        )}
+
+        {activeTab === 'cardio' && <EmptyPage title="Cardio em breve" body="Suas sessões de cardio aparecerão aqui em uma próxima versão." />}
+        {activeTab === 'progress' && <EmptyPage title="Evolução em breve" body="Seu histórico de treino e evolução aparecerá aqui." />}
 
         {activeTab === 'more' && (
-          <section className="settings-card" aria-label="Aplicativo">
-            <div>
-              <span className="info-label">Conexão</span>
-              <strong>{isOnline ? 'Online' : 'Offline'}</strong>
-            </div>
-            <button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>
-              {installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}
-            </button>
-            <button type="button" className="secondary-action" onClick={() => window.location.reload()}>
-              Verificar atualização
-            </button>
-          </section>
+          <>
+            <EmptyPage title="Sobre o TITAN FIT" body="Versão com importação segura de fichas e armazenamento local." />
+            <section className="settings-card" aria-label="Aplicativo">
+              <div><span className="info-label">Versão</span><strong>v0.2.0</strong></div>
+              <div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div>
+              <button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>
+                {installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}
+              </button>
+              <button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button>
+            </section>
+          </>
         )}
       </main>
 
       {installPrompt && !installDismissed && (
         <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT">
-          <div>
-            <strong>Instale o TITAN FIT</strong>
-            <p>Acesso rápido e funcionamento offline.</p>
-          </div>
+          <div><strong>Instale o TITAN FIT</strong><p>Acesso rápido e funcionamento offline.</p></div>
           <div className="prompt-actions">
             <button type="button" onClick={installApp}>Instalar</button>
             <button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button>
@@ -147,10 +179,7 @@ export function App() {
 
       {needRefresh && (
         <aside className="pwa-prompt" role="alert" aria-live="polite">
-          <div>
-            <strong>Nova versão disponível</strong>
-            <p>Atualize quando for conveniente.</p>
-          </div>
+          <div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div>
           <div className="prompt-actions">
             <button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button>
             <button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button>
@@ -160,18 +189,15 @@ export function App() {
 
       <nav className="bottom-navigation" aria-label="Navegação principal">
         {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={activeTab === tab.id ? 'active' : ''}
-            onClick={() => setActiveTab(tab.id)}
-            aria-current={activeTab === tab.id ? 'page' : undefined}
-          >
-            <span className="nav-icon" aria-hidden="true">{tab.icon}</span>
-            <span>{tab.label}</span>
+          <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => { setActiveTab(tab.id); if (tab.id !== 'plan') setShowImporter(false); }} aria-current={activeTab === tab.id ? 'page' : undefined}>
+            <span className="nav-icon" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span>
           </button>
         ))}
       </nav>
     </div>
   );
+}
+
+function EmptyPage({ title, body }: { title: string; body: string }) {
+  return <section className="hero-card compact" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{title}</h2><p>{body}</p></section>;
 }
