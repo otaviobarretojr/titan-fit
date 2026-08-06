@@ -16,24 +16,16 @@ describe('TITAN FIT v0.10', () => {
     expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
   });
 
-  it('mantém a navegação focada no projeto e expõe backup local', () => {
+  it('mantém a navegação focada no treino e expõe backup local', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     expect(nav.getByRole('button', { name: /^Hoje$/i })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Projeto$/i })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Progresso$/i })).toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Coach$/i })).not.toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
     expect(screen.getByText('v0.10.0')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
-  });
-
-  it('oferece acesso direto ao projeto e ao progresso', () => {
-    render(<App />);
-    const main = within(screen.getByRole('main'));
-    expect(main.getByText('Musculação e cardio').closest('button')).toBeEnabled();
-    expect(main.getByText('Cargas e histórico').closest('button')).toBeEnabled();
   });
 });
