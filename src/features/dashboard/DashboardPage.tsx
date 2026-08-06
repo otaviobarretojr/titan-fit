@@ -6,7 +6,43 @@ type DashboardPageProps = {
   onOpenProgress: () => void;
 };
 
+type CardioSchedule = {
+  title: string;
+  type: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  target: string;
+};
+
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
+const CARDIO_SCHEDULE: Partial<Record<number, CardioSchedule>> = {
+  2: {
+    title: 'Zona 2',
+    type: 'Condicionamento aeróbico',
+    startTime: '20:10',
+    endTime: '20:35',
+    durationMinutes: 25,
+    target: 'Ritmo contínuo e confortável'
+  },
+  4: {
+    title: 'Intervalado para 5 km',
+    type: 'Corrida e condicionamento',
+    startTime: '20:10',
+    endTime: '20:30',
+    durationMinutes: 20,
+    target: 'Tiros controlados, sem comprometer a recuperação'
+  },
+  6: {
+    title: 'Caminhada e trote leve',
+    type: 'Base para os primeiros 5 km',
+    startTime: '20:10',
+    endTime: '20:40',
+    durationMinutes: 30,
+    target: 'Acumular tempo com esforço moderado'
+  }
+};
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -51,6 +87,7 @@ export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPag
   }
 
   const workout = getTodayWorkout(plan);
+  const cardio = CARDIO_SCHEDULE[new Date().getDay()];
   const exerciseCount = workout?.exercises.length ?? 0;
   const setCount = workout?.exercises.reduce((total, exercise) => total + exercise.sets, 0) ?? 0;
 
@@ -66,7 +103,7 @@ export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPag
 
       <section className="today-workout" aria-labelledby="today-workout-title">
         <div className="today-workout-topline">
-          <span className="eyebrow">TREINO DE HOJE</span>
+          <span className="eyebrow">TREINO DE HOJE · 19:00–20:00</span>
           <span className="today-workout-day">{workout?.day ?? 'Hoje'}</span>
         </div>
         <h3 id="today-workout-title">{workout?.title ?? 'Treino disponível'}</h3>
@@ -77,6 +114,19 @@ export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPag
         </div>
         <button type="button" className="primary-action" onClick={onOpenPlan}>Iniciar treino</button>
       </section>
+
+      {cardio && (
+        <section className="coach-priority-card" aria-label="Cardio programado para hoje">
+          <div>
+            <span className="eyebrow">CARDIO DE HOJE · {cardio.startTime}–{cardio.endTime}</span>
+            <strong>{cardio.title}</strong>
+            <p>{cardio.type} · {cardio.durationMinutes} min</p>
+            <p>{cardio.target}</p>
+            <small>Intervalo após a musculação: 10 minutos</small>
+          </div>
+          <span className="coach-priority-arrow" aria-hidden="true">◌</span>
+        </section>
+      )}
 
       <section className="dashboard-grid" aria-label="Resumo de treino">
         <button type="button" className="dashboard-tile" onClick={onOpenPlan}>
