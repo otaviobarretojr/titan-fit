@@ -15,97 +15,71 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
   padding: calc(18px + env(safe-area-inset-top, 0px)) 20px 16px;
-  background: rgba(11,15,23,.88);
-  backdrop-filter: blur(18px);
+  background: rgba(11,15,23,.88); backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(38,50,71,.75);
 }
 
-.eyebrow {
-  display: block;
-  color: #93c5fd;
-  font-size: .68rem;
-  font-weight: 800;
-  letter-spacing: .12em;
-}
-
-h1, h2, p { margin: 0; }
+.eyebrow { display: block; color: #93c5fd; font-size: .68rem; font-weight: 800; letter-spacing: .12em; }
+h1, h2, h3, p { margin: 0; }
 h1 { margin-top: 4px; font-size: 1.25rem; letter-spacing: .02em; }
 h2 { margin-top: 12px; font-size: clamp(1.7rem, 7vw, 2.35rem); line-height: 1.08; }
+h3 { line-height: 1.25; }
 
-.status-pill {
-  border-radius: 999px;
-  padding: 7px 10px;
-  font-size: .72rem;
-  font-weight: 700;
-  border: 1px solid var(--color-border);
-}
+.status-pill { border-radius: 999px; padding: 7px 10px; font-size: .72rem; font-weight: 700; border: 1px solid var(--color-border); }
 .status-pill.online { color: #86efac; }
 .status-pill.offline { color: #fca5a5; }
 
 .app-main { padding: 22px 18px 28px; }
-.hero-card, .info-card {
+.hero-card, .info-card, .import-card, .workout-card, .settings-card {
   background: linear-gradient(180deg, rgba(24,34,52,.98), rgba(18,25,38,.98));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
 }
 .hero-card { padding: 24px; min-height: 330px; display: flex; flex-direction: column; justify-content: flex-end; }
-.hero-card p { margin-top: 14px; color: var(--color-muted); line-height: 1.55; }
+.hero-card.compact { min-height: 230px; }
+.hero-card p, .section-header p, .import-card p, .workout-card p { margin-top: 12px; color: var(--color-muted); line-height: 1.55; }
 
-.primary-action {
-  margin-top: 24px;
-  min-height: 52px;
-  border: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
-  color: white;
-  font-weight: 800;
+.primary-action, .secondary-action, .danger-action {
+  min-height: 48px; border-radius: 14px; font-weight: 800; padding: 0 16px;
 }
-.primary-action:disabled { opacity: .56; cursor: not-allowed; }
+.primary-action { margin-top: 24px; border: 0; background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong)); color: white; }
+.secondary-action { border: 1px solid var(--color-border); background: rgba(255,255,255,.035); color: var(--color-text); }
+.danger-action { border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.08); color: #fca5a5; }
+.primary-action:disabled, .secondary-action:disabled { opacity: .56; cursor: not-allowed; }
 
-.info-card {
-  margin-top: 14px;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0,1fr));
-  gap: 12px;
-}
+.info-card { margin-top: 14px; padding: 16px; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
 .info-card > div { padding: 12px; background: rgba(255,255,255,.025); border-radius: var(--radius-sm); }
 .info-label { display: block; color: var(--color-muted); font-size: .72rem; margin-bottom: 6px; }
 
+.section-header { margin-bottom: 18px; }
+.import-card { padding: 20px; }
+.file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.selected-file { font-size: .78rem; overflow-wrap: anywhere; }
+.validation-message, .plan-preview { margin-top: 18px; padding: 16px; border-radius: var(--radius-sm); }
+.validation-message.error { border: 1px solid rgba(239,68,68,.45); background: rgba(239,68,68,.08); color: #fecaca; }
+.validation-message ul { margin: 10px 0 0; padding-left: 18px; }
+.plan-preview { border: 1px solid rgba(59,130,246,.45); background: rgba(59,130,246,.08); }
+.warning-text { color: #fde68a !important; }
+.preview-actions, .stack-actions { display: grid; gap: 10px; margin-top: 18px; }
+.preview-actions .primary-action { margin-top: 0; }
+
+.workout-list { display: grid; gap: 12px; }
+.workout-card { padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.workout-card > strong { min-width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: rgba(59,130,246,.12); color: #bfdbfe; }
+.settings-card { margin-top: 14px; padding: 16px; display: grid; gap: 12px; }
+
 .bottom-navigation {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: min(100%, 520px);
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  padding: 8px 8px calc(8px + var(--safe-bottom));
-  background: rgba(11,15,23,.94);
-  backdrop-filter: blur(18px);
-  border-top: 1px solid var(--color-border);
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: min(100%, 520px); display: grid; grid-template-columns: repeat(5, 1fr);
+  padding: 8px 8px calc(8px + var(--safe-bottom)); background: rgba(11,15,23,.94);
+  backdrop-filter: blur(18px); border-top: 1px solid var(--color-border);
 }
 .bottom-navigation button {
-  min-height: 58px;
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  border-radius: 14px;
-  font-size: .68rem;
-  font-weight: 700;
+  min-height: 58px; border: 0; background: transparent; color: var(--color-muted);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; border-radius: 14px; font-size: .68rem; font-weight: 700;
 }
 .bottom-navigation button.active { color: #bfdbfe; background: rgba(59,130,246,.12); }
 .nav-icon { font-size: 1.15rem; line-height: 1; }
