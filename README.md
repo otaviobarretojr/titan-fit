@@ -6,18 +6,21 @@ PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, ca
 
 ## Estado atual
 
-Versão `v0.11.0 — Modo Treino` em desenvolvimento e validação.
+Versão `v0.12.0 — Progressão Inteligente` em desenvolvimento e validação.
 
 Esta entrega inclui:
 
 - Dashboard diário com treino completo do dia.
 - Início direto da execução.
-- Progresso geral da sessão.
+- Progresso por séries e volume em tempo real.
 - Navegação exercício por exercício.
 - Registro rápido de carga, repetições e RIR.
 - Descanso automático após concluir séries.
+- Última carga e meta da sessão por exercício.
+- Identificação automática de novos recordes de carga.
+- Prévia do próximo exercício.
 - Cardio tratado como exercício válido dentro do treino.
-- Resumo final com duração, volume, séries e cardio.
+- Resumo final com duração, volume, séries, cardio e PRs.
 - Histórico local, backup e funcionamento PWA.
 
 ## Executar
