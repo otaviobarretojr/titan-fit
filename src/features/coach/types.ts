@@ -10,7 +10,6 @@ export type CoachInsight = {
 export type CoachScore = {
   total: number;
   training: number;
-  cardio: number;
   dataConfidence: 'low' | 'medium' | 'high';
 };
 
