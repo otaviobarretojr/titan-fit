@@ -8,31 +8,32 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.6', () => {
+describe('TITAN FIT v0.7', () => {
   it('renderiza o estado vazio e oferece importação', () => {
     render(<App />);
     expect(screen.getByText('Nenhuma ficha ativa')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Importar ficha' })).toBeEnabled();
   });
 
-  it('navega pelas cinco áreas', () => {
+  it('navega pelas seis áreas', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     fireEvent.click(nav.getByRole('button', { name: /^Ficha$/i }));
     expect(screen.getByText('Arquivo TITAN FIT')).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Cardio$/i }));
     expect(screen.getByText('Nenhum plano de cardio')).toBeInTheDocument();
-    expect(screen.getByText('Importar plano 5 km')).toBeInTheDocument();
+    fireEvent.click(nav.getByRole('button', { name: /^Coach$/i }));
+    expect(screen.getByText('Leitura dos seus dados')).toBeInTheDocument();
+    expect(screen.getByText('Ainda faltam registros')).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Evolução$/i }));
     expect(screen.getByText('Nenhum treino concluído')).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
-    expect(screen.getByText('v0.6.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.7.0')).toBeInTheDocument();
   });
 
-  it('não possui perfil, login ou treino predefinido', () => {
+  it('não inventa pilares sem dados registrados', () => {
     render(<App />);
-    expect(screen.queryByText(/Perfil do Atleta/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Entrar|Login|Cadastro/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Supino|Agachamento|Puxada/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir Coach TITAN' }));
+    expect(screen.getByText(/não considera sono, nutrição, hidratação ou recuperação/i)).toBeInTheDocument();
   });
 });
