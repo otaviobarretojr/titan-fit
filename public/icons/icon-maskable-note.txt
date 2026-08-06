@@ -1,0 +1,1 @@
+The maskable icon uses the same source artwork as the 512px application icon in v0.1.0. It will receive dedicated safe-zone artwork in a later visual-design release.
