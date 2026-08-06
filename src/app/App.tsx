@@ -22,6 +22,7 @@ const tabs: Array<{ id: TabId; label: string; icon: string }> = [
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('today');
   const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
+  const [showImporter, setShowImporter] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installDismissed, setInstallDismissed] = useState(false);
@@ -63,6 +64,7 @@ export function App() {
   function importPlan(plan: TitanPlan) {
     saveActivePlan(plan);
     setActivePlan(plan);
+    setShowImporter(false);
     setActiveTab('today');
   }
 
@@ -70,6 +72,7 @@ export function App() {
     if (!window.confirm('Remover a ficha ativa deste aparelho?')) return;
     removeActivePlan();
     setActivePlan(null);
+    setShowImporter(false);
   }
 
   const exerciseCount = activePlan?.workouts.reduce((total, workout) => total + workout.exercises.length, 0) ?? 0;
@@ -97,7 +100,7 @@ export function App() {
               <span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span>
               <h2 id="page-title">{activePlan ? activePlan.name : 'Nenhuma ficha ativa'}</h2>
               <p>{activePlan ? activePlan.description ?? 'Sua ficha foi importada e está salva neste aparelho.' : 'Importe uma ficha TITAN FIT para começar.'}</p>
-              <button type="button" className="primary-action" onClick={() => setActiveTab('plan')}>
+              <button type="button" className="primary-action" onClick={() => { setShowImporter(false); setActiveTab('plan'); }}>
                 {activePlan ? 'Ver ficha' : 'Importar ficha'}
               </button>
             </section>
@@ -110,7 +113,16 @@ export function App() {
         )}
 
         {activeTab === 'plan' && (
-          activePlan ? (
+          showImporter || !activePlan ? (
+            <>
+              {activePlan && (
+                <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>
+                  Voltar para a ficha atual
+                </button>
+              )}
+              <PlanImporter onImport={importPlan} />
+            </>
+          ) : (
             <>
               <section className="section-header">
                 <span className="eyebrow">FICHA ATIVA</span>
@@ -130,11 +142,11 @@ export function App() {
                 ))}
               </section>
               <div className="stack-actions">
-                <button type="button" className="secondary-action" onClick={() => setActivePlan(null)}>Importar outra ficha</button>
+                <button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Importar outra ficha</button>
                 <button type="button" className="danger-action" onClick={deletePlan}>Remover ficha</button>
               </div>
             </>
-          ) : <PlanImporter onImport={importPlan} />
+          )
         )}
 
         {activeTab === 'cardio' && <EmptyPage title="Cardio em breve" body="Suas sessões de cardio aparecerão aqui em uma próxima versão." />}
@@ -177,7 +189,7 @@ export function App() {
 
       <nav className="bottom-navigation" aria-label="Navegação principal">
         {tabs.map((tab) => (
-          <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => setActiveTab(tab.id)} aria-current={activeTab === tab.id ? 'page' : undefined}>
+          <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => { setActiveTab(tab.id); if (tab.id !== 'plan') setShowImporter(false); }} aria-current={activeTab === tab.id ? 'page' : undefined}>
             <span className="nav-icon" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span>
           </button>
         ))}
