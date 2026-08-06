@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { vi } from 'vitest';
+import { beforeEach, vi } from 'vitest';
 import { App } from '../src/app/App';
 
 vi.mock('virtual:pwa-register/react', () => ({
@@ -10,20 +10,21 @@ vi.mock('virtual:pwa-register/react', () => ({
   })
 }));
 
-describe('TITAN FIT shell', () => {
-  it('renderiza o estado vazio da tela Hoje', () => {
+beforeEach(() => localStorage.clear());
+
+describe('TITAN FIT v0.2', () => {
+  it('renderiza o estado vazio e oferece importação', () => {
     render(<App />);
     expect(screen.getByText('Nenhuma ficha ativa')).toBeInTheDocument();
-    expect(screen.getByText('v0.1.0')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Importar ficha' })).toBeEnabled();
   });
 
-  it('navega pelas cinco áreas sem dados fictícios', () => {
+  it('navega pelas cinco áreas', () => {
     render(<App />);
-    const navigation = screen.getByRole('navigation', { name: /Navegação principal/i });
-    const nav = within(navigation);
+    const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
 
     fireEvent.click(nav.getByRole('button', { name: /^Ficha$/i }));
-    expect(screen.getByText('Nenhuma ficha importada')).toBeInTheDocument();
+    expect(screen.getByText('Arquivo TITAN FIT')).toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Cardio$/i }));
     expect(screen.getByText('Cardio em breve')).toBeInTheDocument();
@@ -32,7 +33,7 @@ describe('TITAN FIT shell', () => {
     expect(screen.getByText('Evolução em breve')).toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
-    expect(screen.getByText('Sobre o TITAN FIT')).toBeInTheDocument();
+    expect(screen.getByText('v0.2.0')).toBeInTheDocument();
   });
 
   it('não possui perfil, login ou treino predefinido', () => {
