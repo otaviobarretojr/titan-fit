@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="TITAN FIT">
+  <rect width="512" height="512" rx="112" fill="#0b0f17"/>
+  <path d="M112 132h288v72H292v176h-72V204H112z" fill="#3b82f6"/>
+  <path d="M164 308h184v72H164z" fill="#f8fafc"/>
+</svg>
