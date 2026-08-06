@@ -6,7 +6,7 @@ PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, ca
 
 ## Estado atual
 
-Versão `v0.13.0 — Coach de Progressão` em desenvolvimento e validação.
+Versão `v0.14.0 — Coach Explicável` em desenvolvimento e validação.
 
 Esta entrega inclui:
 
@@ -18,8 +18,10 @@ Esta entrega inclui:
 - Descanso automático após concluir séries.
 - Última carga e meta da sessão por exercício.
 - Identificação automática de novos recordes de carga.
-- Recomendação do Coach TITAN após concluir o exercício.
-- Sugestão para aumentar, manter ou reduzir a carga conforme repetições e RIR.
+- Diagnóstico do desempenho ao concluir o exercício.
+- Recomendação para aumentar, manter ou reduzir a carga.
+- Explicação objetiva do motivo da recomendação.
+- Carga sugerida para a próxima sessão quando aplicável.
 - Prévia do próximo exercício.
 - Cardio tratado como exercício válido dentro do treino.
 - Resumo final com duração, volume, séries, cardio e PRs.
