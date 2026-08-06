@@ -22,5 +22,12 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       ...reactRefresh.configs.vite.rules
     }
+  },
+  {
+    files: ['scripts/**/*.mjs', 'eslint.config.js', 'vite.config.ts'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.node
+    }
   }
 );
