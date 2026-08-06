@@ -8,7 +8,7 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.12', () => {
+describe('TITAN FIT v0.13', () => {
   it('renderiza o estado vazio e oferece importação de projeto', () => {
     render(<App />);
     expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe('TITAN FIT v0.12', () => {
     expect(nav.getByRole('button', { name: /^Progresso$/i })).toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
-    expect(screen.getByText('v0.12.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.13.0')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
   });
