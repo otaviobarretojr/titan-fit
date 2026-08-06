@@ -12,7 +12,7 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.2', () => {
+describe('TITAN FIT v0.3', () => {
   it('renderiza o estado vazio e oferece importação', () => {
     render(<App />);
     expect(screen.getByText('Nenhuma ficha ativa')).toBeInTheDocument();
@@ -33,7 +33,7 @@ describe('TITAN FIT v0.2', () => {
     expect(screen.getByText('Evolução em breve')).toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
-    expect(screen.getByText('v0.2.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.3.0')).toBeInTheDocument();
   });
 
   it('não possui perfil, login ou treino predefinido', () => {

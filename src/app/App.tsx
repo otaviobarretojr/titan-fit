@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { PlanImporter } from '../features/plan/PlanImporter';
+import { PlanViewer } from '../features/plan/PlanViewer';
 import { loadActivePlan, removeActivePlan, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
 
@@ -76,10 +77,6 @@ export function App() {
   }
 
   const exerciseCount = activePlan?.workouts.reduce((total, workout) => total + workout.exercises.length, 0) ?? 0;
-  const videoCount = activePlan?.workouts.reduce(
-    (total, workout) => total + workout.exercises.filter((exercise) => exercise.video).length,
-    0
-  ) ?? 0;
 
   return (
     <div className="app-shell">
@@ -99,9 +96,9 @@ export function App() {
             <section className="hero-card" aria-labelledby="page-title">
               <span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span>
               <h2 id="page-title">{activePlan ? activePlan.name : 'Nenhuma ficha ativa'}</h2>
-              <p>{activePlan ? activePlan.description ?? 'Sua ficha foi importada e está salva neste aparelho.' : 'Importe uma ficha TITAN FIT para começar.'}</p>
+              <p>{activePlan ? activePlan.description ?? 'Sua ficha está pronta para consulta.' : 'Importe uma ficha TITAN FIT para começar.'}</p>
               <button type="button" className="primary-action" onClick={() => { setShowImporter(false); setActiveTab('plan'); }}>
-                {activePlan ? 'Ver ficha' : 'Importar ficha'}
+                {activePlan ? 'Abrir ficha' : 'Importar ficha'}
               </button>
             </section>
 
@@ -123,29 +120,7 @@ export function App() {
               <PlanImporter onImport={importPlan} />
             </>
           ) : (
-            <>
-              <section className="section-header">
-                <span className="eyebrow">FICHA ATIVA</span>
-                <h2>{activePlan.name}</h2>
-                <p>{exerciseCount} exercícios • {videoCount} vídeos vinculados</p>
-              </section>
-              <section className="workout-list" aria-label="Treinos importados">
-                {activePlan.workouts.map((workout) => (
-                  <article className="workout-card" key={workout.id}>
-                    <div>
-                      <span className="info-label">{workout.day}</span>
-                      <h3>{workout.title}</h3>
-                      {workout.focus && <p>{workout.focus}</p>}
-                    </div>
-                    <strong>{workout.exercises.length}</strong>
-                  </article>
-                ))}
-              </section>
-              <div className="stack-actions">
-                <button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Importar outra ficha</button>
-                <button type="button" className="danger-action" onClick={deletePlan}>Remover ficha</button>
-              </div>
-            </>
+            <PlanViewer plan={activePlan} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} />
           )
         )}
 
@@ -154,9 +129,9 @@ export function App() {
 
         {activeTab === 'more' && (
           <>
-            <EmptyPage title="Sobre o TITAN FIT" body="Versão com importação segura de fichas e armazenamento local." />
+            <EmptyPage title="Sobre o TITAN FIT" body="Versão com visualização completa da ficha e vídeos de execução." />
             <section className="settings-card" aria-label="Aplicativo">
-              <div><span className="info-label">Versão</span><strong>v0.2.0</strong></div>
+              <div><span className="info-label">Versão</span><strong>v0.3.0</strong></div>
               <div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div>
               <button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>
                 {installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}
