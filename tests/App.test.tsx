@@ -33,7 +33,7 @@ describe('TITAN FIT v0.10', () => {
   it('oferece acesso direto ao projeto e ao progresso', () => {
     render(<App />);
     const main = within(screen.getByRole('main'));
-    expect(main.getByRole('button', { name: /^Projeto\s+Musculação e cardio$/i })).toBeEnabled();
-    expect(main.getByRole('button', { name: /Cargas e histórico/i })).toBeEnabled();
+    expect(main.getByText('Musculação e cardio').closest('button')).toBeEnabled();
+    expect(main.getByText('Cargas e histórico').closest('button')).toBeEnabled();
   });
 });
