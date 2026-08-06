@@ -1,6 +1,6 @@
 import type { TitanCardioSession, TitanPlan, TitanWorkoutDay } from '../plan/types';
 
-type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onOpenProgress: () => void; };
+type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; onOpenProgress: () => void; };
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
@@ -20,7 +20,7 @@ function addMinutes(time: string, minutes: number) {
 function getGreeting() { const hour = new Date().getHours(); if (hour < 12) return 'Bom dia'; if (hour < 18) return 'Boa tarde'; return 'Boa noite'; }
 function formatToday() { return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date()); }
 
-export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPageProps) {
+export function DashboardPage({ plan, onOpenPlan, onStartWorkout, onOpenProgress }: DashboardPageProps) {
   if (!plan) return <div className="dashboard-page">
     <section className="dashboard-welcome"><span className="eyebrow">SEU PROJETO COMEÇA AQUI</span><h2>Nenhum projeto ativo</h2><p>Importe seu Projeto TITAN para liberar musculação, cardio, horários e progressão.</p><button type="button" className="primary-action" onClick={onOpenPlan}>Importar projeto</button></section>
     <section className="dashboard-grid dashboard-grid-empty" aria-label="Recursos de treino"><button type="button" className="dashboard-tile" onClick={onOpenPlan}><span className="dashboard-tile-icon">▤</span><span>Projeto</span><strong>Musculação e cardio</strong></button><button type="button" className="dashboard-tile" onClick={onOpenProgress}><span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Cargas e histórico</strong></button></section>
@@ -36,11 +36,11 @@ export function DashboardPage({ plan, onOpenPlan, onOpenProgress }: DashboardPag
   return <div className="dashboard-page">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
 
-    {cardio && <section className="coach-priority-card" aria-label="Cardio programado para hoje"><div><span className="eyebrow">CARDIO · {cardio.startTime}–{cardioEnd}</span><strong>{cardio.title}</strong><p>{cardio.goal ?? plan.project?.cardioGoal ?? 'Condicionamento cardiovascular'} · {cardio.durationMinutes} min</p>{cardio.instructions?.length ? <p>{cardio.instructions.join(' • ')}</p> : null}<small>Recuperação até a musculação: {cardioEnd}–{strengthStart}</small></div><span className="coach-priority-arrow" aria-hidden="true">◌</span></section>}
+    {cardio && <button type="button" className="coach-priority-card" onClick={onOpenPlan} aria-label="Abrir plano de cardio"><div><span className="eyebrow">CARDIO · {cardio.startTime}–{cardioEnd}</span><strong>{cardio.title}</strong><p>{cardio.goal ?? plan.project?.cardioGoal ?? 'Condicionamento cardiovascular'} · {cardio.durationMinutes} min</p>{cardio.instructions?.length ? <p>{cardio.instructions.join(' • ')}</p> : null}<small>Recuperação até a musculação: {cardioEnd}–{strengthStart}</small></div><span className="coach-priority-arrow" aria-hidden="true">◌</span></button>}
 
-    <section className="today-workout" aria-labelledby="today-workout-title"><div className="today-workout-topline"><span className="eyebrow">MUSCULAÇÃO · {strengthStart}</span><span className="today-workout-day">{workout?.day ?? 'Hoje'}</span></div><h3 id="today-workout-title">{workout?.title ?? 'Treino disponível'}</h3><p>{workout?.focus ?? 'Siga o projeto e registre cada série.'}</p><div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> séries</span></div><button type="button" className="primary-action" onClick={onOpenPlan}>Iniciar treino</button></section>
+    <section className="today-workout" aria-labelledby="today-workout-title"><div className="today-workout-topline"><span className="eyebrow">MUSCULAÇÃO · {strengthStart}</span><span className="today-workout-day">{workout?.day ?? 'Hoje'}</span></div><h3 id="today-workout-title">{workout?.title ?? 'Treino disponível'}</h3><p>{workout?.focus ?? 'Siga o projeto e registre cada série.'}</p><div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> séries</span></div><button type="button" className="primary-action" disabled={!workout} onClick={() => workout && onStartWorkout(workout.id)}>Iniciar treino</button></section>
 
-    <section className="dashboard-grid" aria-label="Resumo de treino"><button type="button" className="dashboard-tile" onClick={onOpenPlan}><span className="dashboard-tile-icon">▤</span><span>Projeto completo</span><strong>Ver musculação</strong><small>Séries, repetições, carga e RIR</small></button><button type="button" className="dashboard-tile" onClick={onOpenProgress}><span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Acompanhar evolução</strong><small>Cargas, volume e histórico</small></button></section>
+    <section className="dashboard-grid" aria-label="Resumo de treino"><button type="button" className="dashboard-tile" onClick={onOpenPlan}><span className="dashboard-tile-icon">▤</span><span>Projeto completo</span><strong>Ver musculação e 5 km</strong><small>Séries, corrida, horários e progressão</small></button><button type="button" className="dashboard-tile" onClick={onOpenProgress}><span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Acompanhar evolução</strong><small>Cargas, volume e histórico</small></button></section>
     <button type="button" className="coach-priority-card" onClick={onOpenProgress}><div><span className="eyebrow">OBJETIVO DO PROJETO</span><strong>{plan.project?.objective ?? 'Hipertrofia com progressão'}</strong><p>{plan.project?.cardioGoal ?? 'Compare seus registros antes de avançar.'}</p></div><span className="coach-priority-arrow">→</span></button>
   </div>;
 }
