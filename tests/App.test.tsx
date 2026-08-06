@@ -3,16 +3,12 @@ import { beforeEach, vi } from 'vitest';
 import { App } from '../src/app/App';
 
 vi.mock('virtual:pwa-register/react', () => ({
-  useRegisterSW: () => ({
-    needRefresh: [false, vi.fn()],
-    offlineReady: [false, vi.fn()],
-    updateServiceWorker: vi.fn()
-  })
+  useRegisterSW: () => ({ needRefresh: [false, vi.fn()], offlineReady: [false, vi.fn()], updateServiceWorker: vi.fn() })
 }));
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.4', () => {
+describe('TITAN FIT v0.5', () => {
   it('renderiza o estado vazio e oferece importação', () => {
     render(<App />);
     expect(screen.getByText('Nenhuma ficha ativa')).toBeInTheDocument();
@@ -27,9 +23,9 @@ describe('TITAN FIT v0.4', () => {
     fireEvent.click(nav.getByRole('button', { name: /^Cardio$/i }));
     expect(screen.getByText('Cardio em breve')).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Evolução$/i }));
-    expect(screen.getByText('Evolução em breve')).toBeInTheDocument();
+    expect(screen.getByText('Nenhum treino concluído')).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
-    expect(screen.getByText('v0.4.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.5.0')).toBeInTheDocument();
   });
 
   it('não possui perfil, login ou treino predefinido', () => {
