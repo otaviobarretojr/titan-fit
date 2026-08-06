@@ -1,4 +1,3 @@
-import type { CardioRecord } from '../cardio/types';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { CoachInsight, CoachReport } from './types';
 
@@ -12,28 +11,19 @@ function clamp(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
-export function createCoachReport(workouts: WorkoutHistoryRecord[], cardio: CardioRecord[], now = new Date()): CoachReport {
+export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Date()): CoachReport {
   const recentWorkouts = workouts.filter((item) => daysSince(item.completedAt, now) <= 7);
-  const recentCardio = cardio.filter((item) => daysSince(item.completedAt, now) <= 7);
   const trainingScore = clamp((recentWorkouts.length / 4) * 100);
-  const cardioScore = clamp((recentCardio.length / 3) * 100);
-  const total = clamp(trainingScore * 0.7 + cardioScore * 0.3);
   const insights: CoachInsight[] = [];
 
-  if (!workouts.length && !cardio.length) {
-    insights.push({ id: 'no-data', severity: 'neutral', title: 'Ainda faltam registros', message: 'Conclua um treino ou uma sessão de cardio para o Coach começar a identificar tendências.' });
+  if (!workouts.length) {
+    insights.push({ id: 'no-data', severity: 'neutral', title: 'Ainda faltam registros', message: 'Conclua um treino para o Coach começar a identificar tendências.' });
   }
 
   if (recentWorkouts.length >= 4) {
-    insights.push({ id: 'training-consistency', severity: 'positive', title: 'Boa consistência na musculação', message: `Você concluiu ${recentWorkouts.length} treinos nos últimos 7 dias.` });
+    insights.push({ id: 'training-consistency', severity: 'positive', title: 'Boa consistência de treino', message: `Você concluiu ${recentWorkouts.length} treinos nos últimos 7 dias.` });
   } else if (workouts.length) {
-    insights.push({ id: 'training-low', severity: 'attention', title: 'Frequência de treino abaixo da referência', message: `Foram ${recentWorkouts.length} treinos nos últimos 7 dias. A referência atual do Coach é 4 sessões semanais.` });
-  }
-
-  if (recentCardio.length >= 3) {
-    insights.push({ id: 'cardio-consistency', severity: 'positive', title: 'Meta semanal de cardio atingida', message: `Você concluiu ${recentCardio.length} sessões de cardio nos últimos 7 dias.` });
-  } else if (cardio.length) {
-    insights.push({ id: 'cardio-low', severity: 'attention', title: 'Cardio precisa de atenção', message: `Você concluiu ${recentCardio.length} de 3 sessões de referência nesta semana.` });
+    insights.push({ id: 'training-low', severity: 'attention', title: 'Frequência abaixo da referência', message: `Foram ${recentWorkouts.length} treinos nos últimos 7 dias. A referência atual do Coach é 4 sessões semanais.` });
   }
 
   const latestWorkout = workouts[0];
@@ -46,18 +36,12 @@ export function createCoachReport(workouts: WorkoutHistoryRecord[], cardio: Card
     }
   }
 
-  const lastCardio = cardio[0];
-  if (lastCardio?.distanceKm && lastCardio.distanceKm >= 5) {
-    insights.push({ id: 'first-5k', severity: 'positive', title: 'Primeiros 5 km registrados', message: `Você concluiu ${lastCardio.distanceKm.toFixed(2)} km. Marco desbloqueado no TITAN FIT.` });
-  }
-
   const priority = insights.find((item) => item.severity === 'attention')
     ?? insights.find((item) => item.severity === 'positive')
     ?? { id: 'priority-start', severity: 'neutral' as const, title: 'Comece registrando', message: 'Use o aplicativo normalmente. O Coach melhora conforme o histórico cresce.' };
 
-  const dataPoints = workouts.length + cardio.length;
   return {
-    score: { total, training: trainingScore, cardio: cardioScore, dataConfidence: dataPoints >= 12 ? 'high' : dataPoints >= 4 ? 'medium' : 'low' },
+    score: { total: trainingScore, training: trainingScore, dataConfidence: workouts.length >= 12 ? 'high' : workouts.length >= 4 ? 'medium' : 'low' },
     priority,
     insights,
     generatedAt: now.toISOString()
