@@ -8,7 +8,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg'],
+      injectRegister: null,
+      includeAssets: ['favicon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'],
       manifest: {
         name: 'TITAN FIT',
         short_name: 'TITAN FIT',
@@ -20,19 +21,17 @@ export default defineConfig({
         background_color: '#0b0f17',
         theme_color: '#0b0f17',
         icons: [
-          {
-            src: '/titan-fit/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
-          }
+          { src: '/titan-fit/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/titan-fit/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/titan-fit/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
         cacheId: 'titan-fit',
         cleanupOutdatedCaches: true,
         navigateFallback: '/titan-fit/index.html',
-        globPatterns: ['**/*.{js,css,html,svg}']
+        globPatterns: ['**/*.{js,css,html,svg,png}'],
+        runtimeCaching: []
       }
     })
   ],
