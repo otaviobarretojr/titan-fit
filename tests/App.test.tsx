@@ -25,7 +25,7 @@ describe('TITAN FIT v0.21', () => {
     expect(nav.getByRole('button', { name: /^Progresso$/i })).toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Progresso$/i }));
-    expect(screen.getByText('Centro de evolução', { exact: false })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Evolução' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Corpo' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Treino' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
