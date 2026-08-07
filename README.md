@@ -6,7 +6,7 @@ PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, ca
 
 ## Estado atual
 
-Versão `v0.14.0 — Coach Explicável` em desenvolvimento e validação.
+Versão `v0.15.0 — Introdução por Vídeo` em desenvolvimento e validação.
 
 Esta entrega inclui:
 
@@ -14,15 +14,14 @@ Esta entrega inclui:
 - Início direto da execução.
 - Progresso por séries, volume e tempo em tempo real.
 - Navegação exercício por exercício.
+- Vídeo inicial incorporado do YouTube antes das séries, quando disponível.
+- Botão para confirmar a visualização e liberar o registro das séries.
+- Opção de pular ou assistir novamente à demonstração.
 - Registro rápido de carga, repetições e RIR.
 - Descanso automático após concluir séries.
 - Última carga e meta da sessão por exercício.
 - Identificação automática de novos recordes de carga.
-- Diagnóstico do desempenho ao concluir o exercício.
-- Recomendação para aumentar, manter ou reduzir a carga.
-- Explicação objetiva do motivo da recomendação.
-- Carga sugerida para a próxima sessão quando aplicável.
-- Prévia do próximo exercício.
+- Coach explicável com diagnóstico, recomendação, motivo e carga sugerida.
 - Cardio tratado como exercício válido dentro do treino.
 - Resumo final com duração, volume, séries, cardio e PRs.
 - Histórico local, backup e funcionamento PWA.
