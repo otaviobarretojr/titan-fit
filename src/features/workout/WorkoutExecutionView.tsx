@@ -10,6 +10,7 @@ type Props = { planId: string; planName: string; workout: TitanWorkoutDay; onBac
 type WorkoutSummary = { durationSeconds: number; totalVolumeKg: number; totalSets: number; cardioMinutes: number };
 type NumericField = 'weightKg' | 'repetitions' | 'rir' | 'durationSeconds' | 'distanceMeters' | 'speedKmh' | 'inclinePercent' | 'averageHeartRate' | 'calories';
 type StrengthReference = { weightKg: number; repetitions: number };
+type PrCelebration = { exerciseName: string; reference: StrengthReference };
 
 export function WorkoutExecutionView({ planId, planName, workout, onBack, onCompleted }: Props) {
   const previousHistory = useMemo(() => loadWorkoutHistory(), []);
@@ -21,6 +22,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const [sessionSeconds, setSessionSeconds] = useState(() => secondsSince(initial.startedAt));
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
   const [videoUnlocked, setVideoUnlocked] = useState<Record<string, boolean>>({});
+  const [prCelebration, setPrCelebration] = useState<PrCelebration | null>(null);
 
   useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
   useEffect(() => { const interval = window.setInterval(() => setSessionSeconds(secondsSince(execution.startedAt)), 1000); return () => window.clearInterval(interval); }, [execution.startedAt]);
@@ -32,6 +34,11 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     }), 1000);
     return () => window.clearInterval(interval);
   }, [timerRunning, timerSeconds]);
+  useEffect(() => {
+    if (!prCelebration) return;
+    const timeout = window.setTimeout(() => setPrCelebration(null), 2800);
+    return () => window.clearTimeout(timeout);
+  }, [prCelebration]);
 
   const totals = useMemo(() => {
     const entries = Object.values(execution.exercises).flatMap((exercise) => exercise.sets);
@@ -54,7 +61,15 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }
   function updateNumeric(setNumber: number, field: NumericField, value: string) { updateSet(setNumber, { [field]: value === '' ? null : Number(value) }); }
   function completeSet(set: ExecutedSet) {
-    const completed = !set.completed; updateSet(set.setNumber, { completed });
+    const completed = !set.completed;
+    if (completed && exerciseType === 'strength') {
+      const newPr = detectLivePr(previousHistory, activeExercise.id, activeSets, set);
+      if (newPr) {
+        setPrCelebration({ exerciseName: activeExercise.name, reference: newPr });
+        navigator.vibrate?.([120, 70, 220]);
+      }
+    }
+    updateSet(set.setNumber, { completed });
     if (completed && (activeExercise.restSeconds ?? 0) > 0) { setTimerSeconds(activeExercise.restSeconds ?? 0); setTimerRunning(true); }
   }
   function nextExercise() { setActiveExerciseIndex((value) => Math.min(workout.exercises.length - 1, value + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -68,12 +83,13 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }
   function resetSession() {
     if (!window.confirm('Apagar todos os registros desta sessão?')) return;
-    const next = createExecution(planId, workout); removeWorkoutExecution(planId, workout.id); setExecution(next); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setSessionSeconds(0);
+    const next = createExecution(planId, workout); removeWorkoutExecution(planId, workout.id); setExecution(next); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setSessionSeconds(0); setPrCelebration(null);
   }
 
   if (summary) return <section className="workout-summary"><span className="eyebrow">TREINO CONCLUÍDO</span><h2>{workout.title}</h2><p>Sessão salva com todas as métricas registradas.</p><div className="summary-grid"><div><span>Tempo</span><strong>{formatDuration(summary.durationSeconds)}</strong></div><div><span>Volume</span><strong>{Math.round(summary.totalVolumeKg).toLocaleString('pt-BR')} kg</strong></div><div><span>Registros</span><strong>{summary.totalSets}</strong></div><div><span>Cardio</span><strong>{summary.cardioMinutes ? `${summary.cardioMinutes} min` : '—'}</strong></div></div><button type="button" className="primary-action" onClick={onCompleted}>Ver progresso</button></section>;
 
   return <div className="workout-mode">
+    {prCelebration && <div className="live-pr-celebration" role="status" aria-live="polite"><span className="live-pr-trophy">🏆</span><div><small>NOVO PR</small><strong>{prCelebration.exerciseName}</strong><span>{formatStrengthReference(prCelebration.reference)}</span></div></div>}
     <button type="button" className="secondary-action back-action" onClick={onBack}>← Sair do modo treino</button>
     <section className="workout-progress-card compact-workout-progress"><div><span className="eyebrow">EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} concluídos · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
@@ -150,9 +166,7 @@ function normalizeExecution(saved: WorkoutExecution | null, planId: string, work
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
 
 function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
-  const sessions = history
-    .flatMap((record) => record.exercises.filter((item) => item.exerciseId === exercise.id).map((item) => ({ exercise: item, completedAt: record.completedAt })))
-    .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  const sessions = getStrengthSessions(history, exercise.id);
   if (!sessions.length) return { last: 'Sem histórico', pr: 'Ainda sem PR', target: 'Criar referência inicial' };
 
   const lastBest = bestStrengthSet(sessions[0].exercise);
@@ -160,6 +174,12 @@ function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExe
   const pr = findValidPr(sessions);
   const target = buildTodayTarget(lastBest, exercise);
   return { last, pr: pr ? formatStrengthReference(pr) : 'Ainda sem PR', target };
+}
+
+function getStrengthSessions(history: WorkoutHistoryRecord[], exerciseId: string) {
+  return history
+    .flatMap((record) => record.exercises.filter((item) => item.exerciseId === exerciseId).map((item) => ({ exercise: item, completedAt: record.completedAt })))
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 }
 
 function bestStrengthSet(exercise: HistoryExercise): StrengthReference | null {
@@ -197,6 +217,37 @@ function findValidPr(sessionsDescending: { exercise: HistoryExercise; completedA
     }
   }
   return currentPr;
+}
+
+function detectLivePr(history: WorkoutHistoryRecord[], exerciseId: string, currentSets: ExecutedSet[], candidateSet: ExecutedSet): StrengthReference | null {
+  const sessions = getStrengthSessions(history, exerciseId);
+  if (!sessions.length) return null;
+  const candidate = toStrengthReference(candidateSet);
+  if (!candidate) return null;
+
+  let bestWeight = -1;
+  let bestScore = -1;
+  for (const session of sessions) {
+    const best = bestStrengthSet(session.exercise);
+    if (!best) continue;
+    bestWeight = Math.max(bestWeight, best.weightKg);
+    bestScore = Math.max(bestScore, best.weightKg * best.repetitions);
+  }
+  for (const set of currentSets) {
+    if (!set.completed || set.setNumber === candidateSet.setNumber) continue;
+    const completed = toStrengthReference(set);
+    if (!completed) continue;
+    bestWeight = Math.max(bestWeight, completed.weightKg);
+    bestScore = Math.max(bestScore, completed.weightKg * completed.repetitions);
+  }
+
+  const candidateScore = candidate.weightKg * candidate.repetitions;
+  return candidate.weightKg > bestWeight || candidateScore > bestScore ? candidate : null;
+}
+
+function toStrengthReference(set: ExecutedSet): StrengthReference | null {
+  if ((set.weightKg ?? 0) <= 0 || (set.repetitions ?? 0) <= 0) return null;
+  return { weightKg: set.weightKg ?? 0, repetitions: set.repetitions ?? 0 };
 }
 
 function buildTodayTarget(last: StrengthReference | null, exercise: TitanExercise) {
