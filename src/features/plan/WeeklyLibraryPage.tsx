@@ -49,9 +49,8 @@ function ExerciseSheet({ exercise, onClose }: { exercise: TitanExercise; onClose
       </section>}
 
       {!video && type !== 'cardio' && <div className="video-not-required"><strong>Vídeo ainda não disponível</strong><p>O exercício continua acessível normalmente. Ao importar a ficha com vídeos, o player aparecerá aqui automaticamente.</p></div>}
-      {type === 'cardio' && <div className="video-not-required"><strong>Cardio</strong><p>Vídeo não necessário. Consulte abaixo a prescrição e as orientações.</p></div>}
+      {type === 'cardio' && <div className="video-not-required"><strong>Cardio</strong><p>Vídeo não necessário. Consulte abaixo as orientações do exercício.</p></div>}
 
-      <div className="exercise-prescription">{prescription(exercise).map((item) => <span key={item}><strong>{item}</strong></span>)}</div>
       {exercise.technique && <section className="library-info"><span className="info-label">EXECUÇÃO</span><p>{exercise.technique}</p></section>}
       {exercise.commonMistakes?.length ? <section className="library-info"><span className="info-label">ERROS COMUNS</span><ul>{exercise.commonMistakes.map((item) => <li key={item}>{item}</li>)}</ul></section> : null}
       {exercise.alternatives?.length ? <section className="library-info"><span className="info-label">ALTERNATIVAS</span><ul>{exercise.alternatives.map((item) => <li key={item}>{item}</li>)}</ul></section> : null}
@@ -60,15 +59,6 @@ function ExerciseSheet({ exercise, onClose }: { exercise: TitanExercise; onClose
   </div>;
 }
 
-function prescription(exercise: TitanExercise) {
-  const type = exercise.exerciseType ?? 'strength'; const items: string[] = [];
-  if (exercise.sets) items.push(`${exercise.sets} séries`);
-  if (type === 'strength') { items.push(`${exercise.minReps ?? '—'}–${exercise.maxReps ?? '—'} reps`); items.push(`RIR ${exercise.targetRir ?? '—'}`); }
-  if (type === 'distance') items.push(`${exercise.minDistanceMeters ?? exercise.distanceMeters ?? '—'}–${exercise.maxDistanceMeters ?? exercise.distanceMeters ?? '—'} m`);
-  if (type === 'cardio' && exercise.durationSeconds) items.push(`${Math.round(exercise.durationSeconds / 60)} min`);
-  if (exercise.restSeconds) items.push(`${exercise.restSeconds}s descanso`);
-  return items;
-}
 function typeLabel(type: ExerciseType) { return ({ strength: 'Musculação', distance: 'Distância', cardio: 'Cardio', isometric: 'Isometria', mobility: 'Mobilidade' })[type]; }
 function capitalize(value: string) { return value ? value[0].toUpperCase() + value.slice(1) : value; }
 function shortTitle(value: string) { return value.split('—')[0]?.trim() ?? value; }
