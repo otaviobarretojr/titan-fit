@@ -11,6 +11,9 @@ export type ProgressionAdvice = {
   title: string;
   message: string;
   suggestedWeightKg: number | null;
+  suggestedReps: number | null;
+  confidence: 'low' | 'medium' | 'high';
+  trend: 'first' | 'stable' | 'improving' | 'declining';
 };
 
 export type RecoveryEstimate = {
@@ -18,6 +21,13 @@ export type RecoveryEstimate = {
   percent: number;
   label: string;
   lastTrainedAt: string;
+};
+
+type SessionPerformance = {
+  maxWeightKg: number;
+  totalReps: number;
+  averageRir: number | null;
+  validSets: number;
 };
 
 export function getExerciseSessions(records: WorkoutHistoryRecord[], exerciseId: string) {
@@ -52,37 +62,52 @@ export function calculateStrengthPr(records: WorkoutHistoryRecord[], exerciseId:
 }
 
 export function getProgressionAdvice(records: WorkoutHistoryRecord[], exerciseId: string): ProgressionAdvice {
-  const sessions = getExerciseSessions(records, exerciseId).filter(({ exercise }) => (exercise.exerciseType ?? 'strength') === 'strength');
-  if (!sessions.length) return { status: 'insufficient', title: 'Primeira referência', message: 'Conclua o exercício para o Coach criar uma referência de progressão.', suggestedWeightKg: null };
+  const sessions = getExerciseSessions(records, exerciseId)
+    .filter(({ exercise }) => (exercise.exerciseType ?? 'strength') === 'strength')
+    .slice(0, 3);
 
-  const latest = sessions[0].exercise;
-  const latestSets = latest.sets.filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
-  if (!latestSets.length) return { status: 'insufficient', title: 'Dados insuficientes', message: 'Registre carga e repetições para receber uma recomendação.', suggestedWeightKg: null };
+  if (!sessions.length) return advice('insufficient', 'Primeira referência', 'Conclua o exercício para o Coach criar uma referência de progressão.', null, null, 'low', 'first');
 
-  const latestWeight = Math.max(...latestSets.map((set) => set.weightKg ?? 0));
-  const latestReps = latestSets.reduce((total, set) => total + (set.repetitions ?? 0), 0);
-  const rirValues = latestSets.map((set) => set.rir).filter((value): value is number => value !== null && value !== undefined);
-  const averageRir = rirValues.length ? rirValues.reduce((a, b) => a + b, 0) / rirValues.length : null;
+  const performances = sessions.map(({ exercise }) => summarizeStrengthSession(exercise));
+  const latest = performances[0];
+  if (!latest.validSets) return advice('insufficient', 'Dados insuficientes', 'Registre carga e repetições para receber uma recomendação.', null, null, 'low', 'first');
 
   if (sessions.length < 2) {
-    return { status: 'maintain', title: 'Consolidar referência', message: `Última referência: ${formatWeight(latestWeight)}. Repita a sessão com técnica consistente antes de progredir automaticamente.`, suggestedWeightKg: latestWeight || null };
+    return advice('maintain', 'Consolidar referência', `Última referência: ${formatWeight(latest.maxWeightKg)}. Repita a sessão com técnica consistente antes de progredir automaticamente.`, latest.maxWeightKg || null, null, 'low', 'first');
   }
 
-  const previousSets = sessions[1].exercise.sets.filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
-  const previousWeight = previousSets.length ? Math.max(...previousSets.map((set) => set.weightKg ?? 0)) : 0;
-  const previousReps = previousSets.reduce((total, set) => total + (set.repetitions ?? 0), 0);
-  const performanceImproved = latestWeight > previousWeight || (latestWeight === previousWeight && latestReps > previousReps);
+  const previous = performances[1];
+  const third = performances[2] ?? null;
+  const recentTrend = comparePerformance(latest, previous);
+  const threeSessionTrend = third ? comparePerformance(previous, third) : 'stable';
+  const fatigueFlag = latest.averageRir !== null && latest.averageRir < 1;
+  const repDrop = previous.totalReps > 0 && latest.totalReps < previous.totalReps * 0.9 && latest.maxWeightKg <= previous.maxWeightKg;
 
-  if (performanceImproved && averageRir !== null && averageRir >= 1) {
-    const suggested = roundToIncrement(latestWeight * 1.025, 0.5);
-    return { status: 'progress', title: 'Progressão disponível', message: `Desempenho melhorou sem esgotar a margem de esforço. Próxima referência sugerida: ${formatWeight(suggested)} (+2,5%).`, suggestedWeightKg: suggested };
+  if (fatigueFlag || repDrop) {
+    const reason = fatigueFlag
+      ? 'A última sessão terminou muito próxima da falha.'
+      : 'As repetições caíram de forma relevante sem aumento de carga.';
+    return advice('review', 'Não aumentar agora', `${reason} Mantenha ${formatWeight(latest.maxWeightKg)} e recupere desempenho antes de subir a carga.`, latest.maxWeightKg, Math.max(1, Math.round(latest.totalReps / latest.validSets)), sessions.length >= 3 ? 'high' : 'medium', repDrop ? 'declining' : 'stable');
   }
 
-  if (averageRir !== null && averageRir < 1) {
-    return { status: 'review', title: 'Não aumentar agora', message: `A sessão terminou muito próxima da falha. Mantenha ${formatWeight(latestWeight)} e tente melhorar repetições e controle antes de subir a carga.`, suggestedWeightKg: latestWeight };
+  if (recentTrend === 'improving' && latest.maxWeightKg === previous.maxWeightKg) {
+    const perSet = Math.max(1, Math.ceil(latest.totalReps / latest.validSets));
+    return advice('maintain', 'Progredir repetições', `A carga está estável e as repetições melhoraram. Mantenha ${formatWeight(latest.maxWeightKg)} e tente acrescentar 1 repetição por série antes de aumentar a carga.`, latest.maxWeightKg, perSet + 1, sessions.length >= 3 ? 'high' : 'medium', 'improving');
   }
 
-  return { status: 'maintain', title: 'Manter e consolidar', message: `Mantenha ${formatWeight(latestWeight)}. O Coach ainda não detectou melhora suficiente para recomendar aumento de carga.`, suggestedWeightKg: latestWeight };
+  const sustainedImprovement = recentTrend === 'improving' && latest.maxWeightKg > previous.maxWeightKg && (threeSessionTrend === 'improving' || threeSessionTrend === 'stable');
+  const hasEffortMargin = latest.averageRir !== null && latest.averageRir >= 1;
+
+  if (sustainedImprovement && hasEffortMargin) {
+    const suggested = roundToIncrement(latest.maxWeightKg * 1.025, 0.5);
+    return advice('progress', 'Progressão disponível', `A evolução foi sustentada e ainda houve margem de esforço. Próxima referência sugerida: ${formatWeight(suggested)} (+2,5%).`, suggested, null, sessions.length >= 3 ? 'high' : 'medium', 'improving');
+  }
+
+  if (recentTrend === 'declining') {
+    return advice('review', 'Revisar desempenho', `O desempenho caiu em relação à sessão anterior. Mantenha ${formatWeight(latest.maxWeightKg)} e priorize técnica, recuperação e execução antes de progredir.`, latest.maxWeightKg, null, sessions.length >= 3 ? 'high' : 'medium', 'declining');
+  }
+
+  return advice('maintain', 'Manter e consolidar', `Mantenha ${formatWeight(latest.maxWeightKg)}. O Coach ainda não detectou melhora suficiente para recomendar aumento de carga.`, latest.maxWeightKg, null, sessions.length >= 3 ? 'high' : 'medium', 'stable');
 }
 
 export function calculateRecovery(records: WorkoutHistoryRecord[], now = new Date()): RecoveryEstimate[] {
@@ -111,6 +136,30 @@ export function formatLastStrengthSession(exercise: HistoryExercise) {
   const weight = Math.max(...sets.map((set) => set.weightKg ?? 0));
   const reps = sets.map((set) => set.repetitions ?? 0).join(' · ');
   return `${formatWeight(weight)} · ${reps} reps`;
+}
+
+function summarizeStrengthSession(exercise: HistoryExercise): SessionPerformance {
+  const sets = exercise.sets.filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
+  if (!sets.length) return { maxWeightKg: 0, totalReps: 0, averageRir: null, validSets: 0 };
+  const rirValues = sets.map((set) => set.rir).filter((value): value is number => value !== null && value !== undefined);
+  return {
+    maxWeightKg: Math.max(...sets.map((set) => set.weightKg ?? 0)),
+    totalReps: sets.reduce((total, set) => total + (set.repetitions ?? 0), 0),
+    averageRir: rirValues.length ? rirValues.reduce((a, b) => a + b, 0) / rirValues.length : null,
+    validSets: sets.length,
+  };
+}
+
+function comparePerformance(current: SessionPerformance, previous: SessionPerformance): 'stable' | 'improving' | 'declining' {
+  if (current.maxWeightKg > previous.maxWeightKg) return 'improving';
+  if (current.maxWeightKg < previous.maxWeightKg) return 'declining';
+  if (current.totalReps > previous.totalReps) return 'improving';
+  if (current.totalReps < previous.totalReps) return 'declining';
+  return 'stable';
+}
+
+function advice(status: ProgressionAdvice['status'], title: string, message: string, suggestedWeightKg: number | null, suggestedReps: number | null, confidence: ProgressionAdvice['confidence'], trend: ProgressionAdvice['trend']): ProgressionAdvice {
+  return { status, title, message, suggestedWeightKg, suggestedReps, confidence, trend };
 }
 
 function roundToIncrement(value: number, increment: number) { return Math.round(value / increment) * increment; }
