@@ -73,7 +73,15 @@ export function App() {
     if (tab !== 'workout') setDirectWorkoutId(null);
   }
   function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setDirectWorkoutId(null); setDemoMode(false); localStorage.removeItem('titan-fit:demo-mode'); navigate('today', true); }
-  function deletePlan() { if (!window.confirm('Remover o projeto ativo deste aparelho? O histórico e a evolução corporal serão preservados.')) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); }
+  function deletePlan() {
+    const message = demoMode
+      ? 'Remover apenas o projeto demonstrativo ativo? O histórico, cardio e avaliações da demonstração continuarão salvos. Para apagar toda a demonstração, use “Remover dados da demonstração” em Configurações.'
+      : 'Remover apenas o projeto ativo? Seu histórico de treinos, PRs, cardio, evolução corporal e fotos serão preservados.';
+    if (!window.confirm(message)) return;
+    removeActivePlan();
+    setActivePlan(null);
+    setShowImporter(false);
+  }
   function historyChanged() { setHistoryRefresh((value) => value + 1); navigate('history'); }
   function openTab(tab: NavigationTab) { navigate(tab); }
   function openProjectSettings() { setShowImporter(!activePlan); navigate('settings'); }
@@ -90,8 +98,21 @@ export function App() {
     navigate('today', true);
   }
 
+  async function removeDemoData() {
+    if (!demoMode) return;
+    if (!window.confirm('Remover todos os dados da demonstração? Projeto demo, histórico, cardio e avaliações corporais fictícias serão apagados.')) return;
+    await resetAllAppData();
+    setActivePlan(null);
+    setDemoMode(false);
+    setShowImporter(false);
+    setDirectWorkoutId(null);
+    setHistoryRefresh((value) => value + 1);
+    window.alert('Dados da demonstração removidos. O TITAN FIT voltou ao estado inicial.');
+    navigate('today', true);
+  }
+
   async function resetApp() {
-    const confirmation = window.prompt('Esta ação apaga projeto, treinos, evolução e preferências deste aparelho. Digite RESETAR para confirmar.');
+    const confirmation = window.prompt('Esta ação apaga permanentemente TODOS os dados deste aparelho: projeto, treinos, histórico, cardio, evolução corporal, fotos e preferências. Digite RESETAR para confirmar.');
     if (confirmation !== 'RESETAR') return;
     await resetAllAppData();
     window.location.reload();
@@ -106,9 +127,9 @@ export function App() {
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
       {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} />}
       {activeTab === 'settings' && <><EmptyPage title="Configurações" body="Projeto, dados, backup, instalação e manutenção do TITAN FIT." />
-        <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Substituir projeto</button><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar substituição</button>}</div>}</section>
-        <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.23</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section>
-        <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, semana programada, histórico de treino, cargas, cardio e três avaliações corporais fictícias.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button><div className="settings-danger-zone"><span className="info-label">Zona de segurança</span><strong>Apagar todos os dados</strong><small>Remove projeto, sessões, histórico, evolução corporal, cardio e preferências salvas neste aparelho.</small><button type="button" className="secondary-action danger-action" onClick={() => void resetApp()}>Resetar TITAN FIT</button></div></section><BackupPanel /></>}
+        <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Substituir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. Histórico, cardio e evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar substituição</button>}</div>}</section>
+        <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.23.1</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section>
+        <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, semana programada, histórico de treino, cargas, cardio e três avaliações corporais fictícias.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button>{demoMode && <button type="button" className="secondary-action" onClick={() => void removeDemoData()}>Remover dados da demonstração</button>}<div className="settings-danger-zone"><span className="info-label">Zona de segurança</span><strong>Apagar todos os dados</strong><small>Remove permanentemente projeto, sessões, histórico, evolução corporal, cardio, fotos e preferências salvas neste aparelho.</small><button type="button" className="secondary-action danger-action" onClick={() => void resetApp()}>Resetar TITAN FIT</button></div></section><BackupPanel /></>}
     </main>
     {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido aos seus treinos, mesmo offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
     {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
