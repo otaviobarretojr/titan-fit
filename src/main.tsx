@@ -23,6 +23,7 @@ import './styles/smart-progression-v026.css';
 import './styles/pr-hall-v0261.css';
 import './styles/live-pr-v0265.css';
 import './styles/workout-close-v0266.css';
+import './styles/coach-v027.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
