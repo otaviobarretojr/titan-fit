@@ -30,6 +30,6 @@ describe('ProgressPage v0.26.1', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Supino máquina/i }));
     expect(screen.getByText('Últimas referências')).toBeInTheDocument();
-    expect(screen.getByText(/06 de ago|06 ago|06 de ago\./i)).toBeInTheDocument();
+    expect(screen.getAllByText(/06 de ago|06 ago|06 de ago\./i).length).toBeGreaterThan(0);
   });
 });
