@@ -19,16 +19,21 @@ const viewer = await read('src/features/plan/PlanViewer.tsx');
 const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
 const validation = await read('src/features/plan/validation.ts');
 const readme = await read('README.md');
+const deploy = await read('.github/workflows/deploy-pages.yml');
 
-assert(pkg.version === '0.15.0', 'package.json deve usar a versão 0.15.0');
+assert(pkg.version === '0.16.0', 'package.json deve usar a versão 0.16.0');
 assert(vite.includes("base: '/titan-fit/'"), 'Vite deve usar base /titan-fit/');
 assert(vite.includes("start_url: '/titan-fit/'"), 'Manifest deve usar start_url /titan-fit/');
 assert(vite.includes("scope: '/titan-fit/'"), 'Manifest deve usar scope /titan-fit/');
+assert(vite.includes("display: 'standalone'"), 'Manifest deve permitir instalação como aplicativo');
+assert(vite.includes('cleanupOutdatedCaches') && vite.includes('navigateFallback'), 'PWA deve limpar cache antigo e funcionar offline');
+assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('actions/upload-pages-artifact@v3'), 'Deploy automático do GitHub Pages deve existir');
+assert(deploy.includes('npm run lint') && deploy.includes('npm run build') && deploy.includes('npm run validate'), 'Deploy deve validar o aplicativo antes da publicação');
 assert(app.includes('Hoje') && app.includes('Projeto') && app.includes('Progresso') && app.includes('Mais'), 'As quatro áreas principais devem existir');
 assert(!app.includes('CardioExecutionView') && !app.includes('startCardio'), 'Não deve existir fluxo separado de cardio');
 assert(!dashboard.includes('Iniciar cardio') && dashboard.includes('Iniciar treino'), 'O Dashboard deve iniciar apenas o treino completo');
 assert(dashboard.includes('cardioCount') && dashboard.includes('muscleGroup'), 'O cardio deve ser reconhecido como exercício do treino');
-assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.15.0'), 'Engine, backup e versão devem estar conectados ao app');
+assert(app.includes('migrateLegacyStorage') && app.includes('BackupPanel') && app.includes('v0.16.0'), 'Engine, backup e versão devem estar conectados ao app');
 assert(execution.includes('MODO TREINO') && execution.includes('Próximo exercício'), 'O modo treino deve guiar exercício por exercício');
 assert(execution.includes('DESCANSO AUTOMÁTICO') && execution.includes('Registrar série'), 'O modo treino deve oferecer descanso automático e registro rápido');
 assert(execution.includes('Última sessão') && execution.includes('Meta de hoje'), 'A progressão deve mostrar histórico e meta da sessão');
@@ -48,7 +53,7 @@ assert(backupPanel.includes('Exportar backup') && backupPanel.includes('Restaura
 assert(viewer.includes('WorkoutExecutionView'), 'A visualização do projeto deve manter o treino funcional');
 assert(validation.includes('schemaVersion') && validation.includes('extractYouTubeVideoId'), 'A validação do projeto e dos vídeos deve existir');
 assert(!/userProfile|login|signup|auth/i.test(app), 'O aplicativo não pode conter perfil ou autenticação');
-assert(readme.includes('v0.15.0') && readme.includes('Introdução por Vídeo'), 'README deve documentar a v0.15');
+assert(readme.includes('v0.16.0') && readme.includes('GitHub Pages'), 'README deve documentar a versão publicável');
 
 const forbidden = ['IronFit', 'TreinoFit', 'Projeto Titan', 'Titan App'];
 async function walk(dir) {
@@ -66,4 +71,4 @@ async function walk(dir) {
 await walk(root);
 
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.15.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.16.0 concluída com sucesso.');
