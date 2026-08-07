@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getExerciseVideo } from '../exercise-library/videos';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
 import type { ExerciseType, TitanExercise, TitanWorkoutDay } from '../plan/types';
@@ -45,7 +46,8 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const exerciseCompleted = activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
   const previousExercise = previousExercises.get(activeExercise.id) ?? null;
-  const videoIsRequired = Boolean(activeExercise.video) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
+  const exerciseVideo = getExerciseVideo(activeExercise);
+  const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
   function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
     setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [activeExercise.id]: { ...current.exercises[activeExercise.id], sets: current.exercises[activeExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
@@ -73,21 +75,28 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
 
   return <div className="workout-mode">
     <button type="button" className="secondary-action back-action" onClick={onBack}>← Sair do modo treino</button>
-    <section className="workout-progress-card"><div><span className="eyebrow">MODO TREINO · EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} registros · Volume {Math.round(totals.volume).toLocaleString('pt-BR')} kg · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
+    <section className="workout-progress-card compact-workout-progress"><div><span className="eyebrow">EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} concluídos · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
 
     <article className={`active-exercise-card ${exerciseType === 'cardio' ? 'cardio-exercise' : ''}`}>
       <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3></div></header>
+
+      {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
+        {videoIsRequired ? <>
+          <div className="exercise-video"><iframe title={exerciseVideo.title} src={`https://www.youtube-nocookie.com/embed/${exerciseVideo.videoId}?rel=0&modestbranding=1`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>
+          <div className="video-stage-meta"><strong>{exerciseVideo.title}</strong><small>{exerciseVideo.source}</small></div>
+          <button type="button" className="primary-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Já assisti · começar séries</button>
+          <button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Pular demonstração</button>
+        </> : <button type="button" className="video-replay-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: false }))}>▶ Rever execução</button>}
+      </section>}
+
       <Prescription exercise={activeExercise} />
       {exerciseType === 'strength' && <div className="progression-panel"><div><span>Última sessão</span><strong>{formatPrevious(previousExercise)}</strong></div><div><span>Meta de hoje</span><strong>{activeExercise.minReps ?? '—'}–{activeExercise.maxReps ?? '—'} reps</strong></div></div>}
       {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
       {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
 
-      {videoIsRequired ? <section className="video-introduction"><span className="eyebrow">VEJA ANTES DE COMEÇAR</span><div className="exercise-video"><iframe title={activeExercise.video?.title ?? `Execução de ${activeExercise.name}`} src={`https://www.youtube-nocookie.com/embed/${activeExercise.video?.videoId}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div><button type="button" className="primary-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Já assisti · iniciar séries</button><button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Pular demonstração</button></section> : <>
-        {activeExercise.video && <button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: false }))}>Assistir execução novamente</button>}
-        <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>
-      </>}
+      {!videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
     </article>
 
     {workout.exercises[activeExerciseIndex + 1] && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{workout.exercises[activeExerciseIndex + 1].name}</strong></aside>}
