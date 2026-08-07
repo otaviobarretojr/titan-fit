@@ -37,12 +37,12 @@ assert(validation.includes('explicitId') && validation.includes('pending-curatio
 assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas avançadas');
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
 assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional');
-assert(weeklyLibrary.includes('Grupos e exercícios') && weeklyLibrary.includes('exercise.video?.videoId') && weeklyLibrary.includes('ERROS COMUNS') && weeklyLibrary.includes('ALTERNATIVAS'), 'Aba semanal deve mostrar informações e vídeos');
+assert(weeklyLibrary.includes('Grupos e exercícios') && weeklyLibrary.includes('getExerciseVideo(exercise)') && weeklyLibrary.includes('youtube-nocookie.com/embed/') && weeklyLibrary.includes('ERROS COMUNS') && weeklyLibrary.includes('ALTERNATIVAS'), 'Aba semanal deve mostrar informações e vídeos com fallback interno');
 assert(historyPage.includes('BodyEvolutionPage') && historyPage.includes("'body' | 'training'") && historyPage.includes('ExerciseIntelligenceCard'), 'Progresso deve reunir evolução corporal e de treino');
 assert(evolution.includes('Seu físico ao longo do tempo') && evolution.includes('Bioimpedância') && evolution.includes('Fotos') && evolution.includes('Tendências'), 'Centro de evolução deve incluir peso, medidas, bioimpedância, fotos e tendências');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('EvolutionPhoto') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução corporal deve permanecer versionado');
 assert(evolutionStorage.includes('STORE_NAMES.preferences') && evolutionStorage.includes('body-evolution-v1'), 'Evolução corporal deve ser persistida no IndexedDB e incluída no backup');
-assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0'), 'Biblioteca interna de fallback deve permanecer funcional');
+assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0') && videoLibrary.toLowerCase().includes('eleva[cç][aã]o lateral unilateral na polia'), 'Biblioteca interna de fallback deve permanecer funcional e ampliada');
 assert(historyPage.includes('Recuperação estimada') && historyPage.includes('COACH TITAN'), 'Histórico deve exibir inteligência, PRs e recuperação');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível');
 assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'Persistência e backup devem permanecer funcionais');
