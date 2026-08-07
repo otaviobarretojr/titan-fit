@@ -1,0 +1,58 @@
+/* TITAN FIT v0.24 — native-feel polish */
+:root{--titan-ease:cubic-bezier(.2,.8,.2,1);--titan-shadow:0 12px 34px rgba(0,0,0,.22);--titan-glass:rgba(17,24,39,.86)}
+html{scroll-behavior:smooth;-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior-y:none}
+button,a,[role="button"]{touch-action:manipulation}
+button{transition:transform .14s var(--titan-ease),filter .18s ease,background .2s ease,border-color .2s ease}
+button:active:not(:disabled){transform:scale(.975)}
+
+.app-header{position:sticky;top:0;z-index:70;background:linear-gradient(180deg,rgba(8,13,22,.97),rgba(8,13,22,.88));backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);border-bottom-color:rgba(148,163,184,.09)}
+.app-main>*,.dashboard-page>*{animation:titan-enter .32s var(--titan-ease) both}
+.app-main>*>*:nth-child(2),.dashboard-page>*:nth-child(2){animation-delay:.025s}
+.app-main>*>*:nth-child(3),.dashboard-page>*:nth-child(3){animation-delay:.05s}
+@keyframes titan-enter{from{opacity:0;transform:translateY(7px) scale(.995)}to{opacity:1;transform:none}}
+
+.today-workout,.dashboard-tile,.settings-card,.history-session-card,.history-exercise-card,.hero-card,.evolution-summary-card,.evolution-chart-card,.evolution-comparison-card{box-shadow:var(--titan-shadow);border-color:rgba(148,163,184,.12)}
+.today-workout{background:radial-gradient(circle at 90% 5%,rgba(96,165,250,.2),transparent 38%),linear-gradient(145deg,#1559c4,#103e98 65%,#0c2f78)}
+.dashboard-tile{background:linear-gradient(180deg,rgba(25,35,53,.96),rgba(17,24,38,.96));transition:transform .18s var(--titan-ease),border-color .18s ease}
+.dashboard-tile:active{transform:scale(.97)}
+
+.primary-action{box-shadow:0 8px 20px rgba(37,99,235,.22)}
+.primary-action:active{filter:brightness(1.08)}
+.secondary-action{border-color:rgba(148,163,184,.16);background:rgba(255,255,255,.045)}
+.secondary-action:active{background:rgba(255,255,255,.08)}
+
+.bottom-navigation{left:8px;right:8px;bottom:8px;width:auto;border:1px solid rgba(148,163,184,.14);border-radius:24px;padding:6px 6px calc(6px + var(--safe-bottom));background:rgba(11,15,23,.9);box-shadow:0 12px 34px rgba(0,0,0,.38);backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2)}
+.bottom-navigation button{min-height:56px;border-radius:18px;color:rgba(203,213,225,.72)}
+.bottom-navigation button.active{color:#e5efff}
+.nav-icon-wrap{height:27px;transition:transform .2s var(--titan-ease),background .2s ease}
+.bottom-navigation button.active .nav-icon-wrap{transform:translateY(-1px);background:rgba(59,130,246,.2);box-shadow:inset 0 0 0 1px rgba(96,165,250,.08)}
+.bottom-navigation button.active .nav-icon{stroke-width:2.05}
+
+.status-pill,.demo-pill{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.status-pill.online{box-shadow:inset 0 0 0 1px rgba(74,222,128,.05)}
+
+.history-session-card{transition:transform .16s var(--titan-ease),border-color .2s ease,background .2s ease}
+.history-session-card:active{transform:scale(.985);border-color:rgba(96,165,250,.28)}
+.history-date{box-shadow:inset 0 0 0 1px rgba(96,165,250,.08)}
+
+.weekly-library-page button,.week-day-card,.exercise-library-card{transition:transform .16s var(--titan-ease),border-color .2s ease}
+.week-day-card:active,.exercise-library-card:active{transform:scale(.985)}
+
+.evolution-chart-card svg,.evolution-chart-card canvas{filter:drop-shadow(0 6px 12px rgba(0,0,0,.16))}
+.evolution-summary-card strong,.evolution-comparison-card strong{letter-spacing:-.015em}
+
+.settings-card{border-radius:24px;background:linear-gradient(180deg,rgba(24,34,52,.95),rgba(17,24,38,.95))}
+.settings-danger-zone{border-radius:18px}
+
+.pwa-prompt{border-radius:24px;box-shadow:0 18px 52px rgba(0,0,0,.48);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+
+/* Skeleton primitives for async/data-start states. */
+.titan-skeleton{position:relative;overflow:hidden;background:rgba(148,163,184,.1);border-radius:12px;color:transparent!important}
+.titan-skeleton::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:titan-shimmer 1.35s infinite}
+@keyframes titan-shimmer{100%{transform:translateX(100%)}}
+
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.app-main>*,.dashboard-page>*{animation:none!important}button,.dashboard-tile,.history-session-card,.week-day-card,.exercise-library-card{transition:none!important}.titan-skeleton::after{animation:none}}
+
+@media(max-width:430px){.app-main{padding-inline:16px}.today-workout{border-radius:26px}.dashboard-grid{gap:10px}.dashboard-tile{border-radius:20px}.bottom-navigation{left:6px;right:6px;bottom:6px}.settings-card{border-radius:22px}}
+@media(max-width:360px){.app-main{padding-inline:12px}.bottom-navigation{left:4px;right:4px}.bottom-navigation button{font-size:.55rem}.nav-icon-wrap{width:36px}}
