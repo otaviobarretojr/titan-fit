@@ -113,10 +113,40 @@ function ComparisonItem({ label, latest, previous, suffix }: { label: string; la
 function MetricTrendCard({ title, entries, getValue, suffix }: { title: string; entries: BodyEvolutionEntry[]; getValue: (entry: BodyEvolutionEntry) => number | undefined; suffix: string }) {
   const values = entries.map((entry) => ({ date: entry.recordedAt, value: getValue(entry) })).filter((item): item is { date: string; value: number } => item.value !== undefined);
   if (values.length < 2) return <article className="trend-card body-trend-card"><header><div><span className="info-label">{title}</span><strong>Sem dados suficientes</strong></div></header></article>;
-  const numeric = values.map((entry) => entry.value); const min = Math.min(...numeric); const max = Math.max(...numeric); const spread = Math.max(max - min, 0.1);
-  const points = values.map((entry, index) => `${(index / Math.max(values.length - 1, 1)) * 100},${44 - ((entry.value - min) / spread) * 38}`).join(' ');
-  const last = values[values.length - 1]; const first = values[0];
-  return <article className="trend-card body-trend-card"><header><div><span className="info-label">{title}</span><strong>{last.value.toFixed(1)} {suffix}</strong></div><small>{first.value.toFixed(1)} → {last.value.toFixed(1)} {suffix}</small></header><svg viewBox="0 0 100 48" role="img" aria-label={`Evolução de ${title}`} preserveAspectRatio="none"><polyline points={points} fill="none" vectorEffect="non-scaling-stroke" /></svg><div className="trend-dates">{values.map((entry) => <span key={entry.date}>{shortDate(entry.date)}</span>)}</div></article>;
+
+  const numeric = values.map((entry) => entry.value);
+  const min = Math.min(...numeric);
+  const max = Math.max(...numeric);
+  const rawSpread = Math.max(max - min, 0.1);
+  const padding = Math.max(rawSpread * .22, Math.abs(max) * .006, .1);
+  const plotMin = min - padding;
+  const plotMax = max + padding;
+  const plotSpread = plotMax - plotMin;
+  const points = values.map((entry, index) => ({
+    ...entry,
+    x: 7 + (index / Math.max(values.length - 1, 1)) * 86,
+    y: 88 - ((entry.value - plotMin) / plotSpread) * 72
+  }));
+  const pointString = points.map((point) => `${point.x},${point.y}`).join(' ');
+  const last = values[values.length - 1];
+  const first = values[0];
+  const tickValues = [plotMax, (plotMax + plotMin) / 2, plotMin];
+
+  return <article className="trend-card body-trend-card">
+    <header><div><span className="info-label">{title}</span><strong>{last.value.toFixed(1)} {suffix}</strong></div><small>{first.value.toFixed(1)} → {last.value.toFixed(1)} {suffix}</small></header>
+    <div className="trend-chart-shell">
+      <div className="trend-y-axis" aria-hidden="true">{tickValues.map((tick, index) => <span key={`${title}-tick-${index}`}>{tick.toFixed(1)}</span>)}</div>
+      <div className="trend-plot">
+        <div className="trend-grid" aria-hidden="true"><span /><span /><span /></div>
+        <svg viewBox="0 0 100 100" role="img" aria-label={`Evolução de ${title}`} preserveAspectRatio="none">
+          <polyline points={pointString} fill="none" vectorEffect="non-scaling-stroke" />
+          {points.map((point) => <circle key={point.date} cx={point.x} cy={point.y} r="2.4" vectorEffect="non-scaling-stroke" />)}
+        </svg>
+        {points.map((point) => <span key={`${point.date}-label`} className="trend-point-label" style={{ left: `${point.x}%`, top: `${point.y}%` }}>{point.value.toFixed(1)} {suffix}</span>)}
+        <div className="trend-months">{values.map((entry) => <span key={entry.date}>{shortDate(entry.date)}</span>)}</div>
+      </div>
+    </div>
+  </article>;
 }
 
 function EvaluationDetail({ entry, onClose, onRemove }: { entry: BodyEvolutionEntry; onClose: () => void; onRemove: () => void }) {
