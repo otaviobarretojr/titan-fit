@@ -22,8 +22,8 @@ button:active:not(:disabled){transform:scale(.975)}
 .secondary-action{border-color:rgba(148,163,184,.16);background:rgba(255,255,255,.045)}
 .secondary-action:active{background:rgba(255,255,255,.08)}
 
-.bottom-navigation{left:8px;right:8px;bottom:8px;width:auto;border:1px solid rgba(148,163,184,.14);border-radius:24px;padding:6px 6px calc(6px + var(--safe-bottom));background:rgba(11,15,23,.9);box-shadow:0 12px 34px rgba(0,0,0,.38);backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2)}
-.bottom-navigation button{min-height:56px;border-radius:18px;color:rgba(203,213,225,.72)}
+.bottom-navigation{left:50%;right:auto;bottom:8px;width:calc(100% - 12px);max-width:508px;transform:translateX(-50%);grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;overflow:hidden;border:1px solid rgba(148,163,184,.14);border-radius:24px;padding:6px 6px calc(6px + var(--safe-bottom));background:rgba(11,15,23,.9);box-shadow:0 12px 34px rgba(0,0,0,.38);backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2)}
+.bottom-navigation button{min-width:0;min-height:56px;border-radius:18px;color:rgba(203,213,225,.72)}
 .bottom-navigation button.active{color:#e5efff}
 .nav-icon-wrap{height:27px;transition:transform .2s var(--titan-ease),background .2s ease}
 .bottom-navigation button.active .nav-icon-wrap{transform:translateY(-1px);background:rgba(59,130,246,.2);box-shadow:inset 0 0 0 1px rgba(96,165,250,.08)}
@@ -54,5 +54,5 @@ button:active:not(:disabled){transform:scale(.975)}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.app-main>*,.dashboard-page>*{animation:none!important}button,.dashboard-tile,.history-session-card,.week-day-card,.exercise-library-card{transition:none!important}.titan-skeleton::after{animation:none}}
 
-@media(max-width:430px){.app-main{padding-inline:16px}.today-workout{border-radius:26px}.dashboard-grid{gap:10px}.dashboard-tile{border-radius:20px}.bottom-navigation{left:6px;right:6px;bottom:6px}.settings-card{border-radius:22px}}
-@media(max-width:360px){.app-main{padding-inline:12px}.bottom-navigation{left:4px;right:4px}.bottom-navigation button{font-size:.55rem}.nav-icon-wrap{width:36px}}
+@media(max-width:430px){.app-main{padding-inline:16px}.today-workout{border-radius:26px}.dashboard-grid{gap:10px}.dashboard-tile{border-radius:20px}.bottom-navigation{bottom:6px;width:calc(100% - 12px)}.settings-card{border-radius:22px}}
+@media(max-width:360px){.app-main{padding-inline:12px}.bottom-navigation{width:calc(100% - 8px)}.bottom-navigation button{font-size:.55rem}.nav-icon-wrap{width:36px}}
