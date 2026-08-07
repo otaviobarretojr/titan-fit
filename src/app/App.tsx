@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { BackupPanel } from '../core/backup/BackupPanel';
 import { migrateLegacyStorage } from '../core/database/migrateLegacyStorage';
+import { resetAllAppData } from '../core/database/resetAppData';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { demoBodyEvolution } from '../features/evolution/demoData';
+import { saveBodyEvolution } from '../features/evolution/storage';
 import { ProgressPage } from '../features/history/ProgressPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
 import { PlanViewer } from '../features/plan/PlanViewer';
@@ -17,7 +20,7 @@ const tabs: Array<{ id: TabId; label: string }> = [
   { id: 'plan', label: 'Projeto' },
   { id: 'week', label: 'Semana' },
   { id: 'progress', label: 'Progresso' },
-  { id: 'more', label: 'Mais' }
+  { id: 'more', label: 'Configurações' }
 ];
 
 function isTabId(value: unknown): value is TabId { return tabs.some((tab) => tab.id === value); }
@@ -73,6 +76,21 @@ export function App() {
   function openPlan() { setShowImporter(!activePlan); setDirectWorkoutId(null); navigate('plan'); }
   function startWorkout(workoutId: string) { setShowImporter(false); setDirectWorkoutId(workoutId); navigate('plan'); }
 
+  async function loadDemoData() {
+    if (!window.confirm('Carregar 3 meses de avaliações corporais fictícias? Isso substitui apenas os registros da área Corpo.')) return;
+    await saveBodyEvolution(demoBodyEvolution);
+    setHistoryRefresh((value) => value + 1);
+    window.alert('Dados de demonstração carregados. Abra Progresso → Corpo para visualizar.');
+    navigate('progress');
+  }
+
+  async function resetApp() {
+    const confirmation = window.prompt('Esta ação apaga projeto, treinos, evolução e preferências deste aparelho. Digite RESETAR para confirmar.');
+    if (confirmation !== 'RESETAR') return;
+    await resetAllAppData();
+    window.location.reload();
+  }
+
   return <div className="app-shell">
     <header className="app-header"><div><span className="eyebrow">TREINO E PROGRESSÃO</span><h1>TITAN FIT</h1></div><span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></header>
     <main className="app-main">
@@ -80,7 +98,7 @@ export function App() {
       {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para o projeto atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
       {activeTab === 'week' && <WeeklyLibraryPage plan={activePlan} />}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
-      {activeTab === 'more' && <><EmptyPage title="Configurações" body="Backup, instalação e atualização do seu aplicativo de treino." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.21.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
+      {activeTab === 'more' && <><EmptyPage title="Configurações" body="Dados, backup, instalação e manutenção do TITAN FIT." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.21.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Demonstração</span><strong>Visualizar evolução corporal</strong><small>Carrega três avaliações mensais fictícias completas para testar comparações e gráficos.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>Carregar dados de demonstração</button><div className="settings-danger-zone"><span className="info-label">Zona de segurança</span><strong>Apagar todos os dados</strong><small>Remove projeto, sessões, histórico, evolução corporal, cardio e preferências salvas neste aparelho.</small><button type="button" className="secondary-action danger-action" onClick={() => void resetApp()}>Resetar TITAN FIT</button></div></section><BackupPanel /></>}
     </main>
     {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido aos seus treinos, mesmo offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
     {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
@@ -93,7 +111,7 @@ function NavIcon({ id }: { id: TabId }) {
   if (id === 'plan') return <svg className="nav-icon" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>;
   if (id === 'week') return <svg className="nav-icon" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9h17M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg>;
   if (id === 'progress') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 18 9 13l3.5 3.5L20 8"/><path d="M15 8h5v5"/></svg>;
-  return <svg className="nav-icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>;
+  return <svg className="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.5v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.5h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4.1v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8c.14.42.36.77.6 1 .3.27.68.4 1.1.4h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>;
 }
 
 function EmptyPage({ title, body }: { title: string; body: string }) { return <section className="hero-card compact" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{title}</h2><p>{body}</p></section>; }
