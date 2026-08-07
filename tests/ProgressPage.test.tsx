@@ -22,7 +22,7 @@ describe('ProgressPage v0.21', () => {
     expect(screen.getByText('FOTOS')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar Bioimpedância' }));
     expect(screen.getByText('NOVO REGISTRO')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bioimpedância' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bioimpedância', level: 2 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '← Voltar' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '← Voltar' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Treino' }));
