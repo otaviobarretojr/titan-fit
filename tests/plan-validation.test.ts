@@ -24,6 +24,12 @@ describe('validação de ficha TITAN', () => {
     }
   });
 
+  it('aceita vídeo v2.4 usando videoId sem url', () => {
+    const result = validateTitanPlan({ ...validPlan, videoLibrary: { version: '1.0-final', curatedVideos: 45 }, workouts: [{ id: 'monday', day: 'Segunda', title: 'Peito', exercises: [{ id: 'incline-press', name: 'Supino inclinado', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 4, minReps: 6, maxReps: 9, videoPolicy: 'required', video: { provider: 'youtube', videoId: 'GhfwvlZbLGM', title: 'Execução', channel: 'Canal', status: 'curated' } }] }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) { expect(result.plan.workouts[0].exercises[0].video?.videoId).toBe('GhfwvlZbLGM'); expect(result.plan.videoLibrary?.curatedVideos).toBe(45); }
+  });
+
   it('aceita Farmer Walk por distância sem repetições', () => {
     const result = validateTitanPlan({ ...validPlan, workouts: [{ id: 'carry', day: 'Sábado', title: 'Carries', exercises: [{ id: 'farmer', name: "Farmer's Walk", muscleGroup: 'Corpo inteiro', exerciseType: 'distance', sets: 3, minDistanceMeters: 30, maxDistanceMeters: 40, restSeconds: 90 }] }] });
     expect(result.ok).toBe(true);
