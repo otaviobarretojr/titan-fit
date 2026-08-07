@@ -6,27 +6,20 @@ PWA mobile-first do ecossistema TITAN dedicado à execução de musculação, ca
 
 ## Estado atual
 
-Versão `v0.15.0 — Introdução por Vídeo` em desenvolvimento e validação.
+Versão `v0.16.0 — Publicação e Instalação`.
 
 Esta entrega inclui:
 
 - Dashboard diário com treino completo do dia.
-- Início direto da execução.
-- Progresso por séries, volume e tempo em tempo real.
-- Navegação exercício por exercício.
+- Modo treino com séries, carga, repetições, RIR, descanso e Coach TITAN.
 - Vídeo inicial incorporado do YouTube antes das séries, quando disponível.
-- Botão para confirmar a visualização e liberar o registro das séries.
-- Opção de pular ou assistir novamente à demonstração.
-- Registro rápido de carga, repetições e RIR.
-- Descanso automático após concluir séries.
-- Última carga e meta da sessão por exercício.
-- Identificação automática de novos recordes de carga.
-- Coach explicável com diagnóstico, recomendação, motivo e carga sugerida.
-- Cardio tratado como exercício válido dentro do treino.
-- Resumo final com duração, volume, séries, cardio e PRs.
-- Histórico local, backup e funcionamento PWA.
+- Histórico local, backup e continuidade de sessão.
+- Manifest PWA com instalação em tela cheia no celular.
+- Cache dos arquivos essenciais para abertura offline após o primeiro acesso.
+- Detecção de novas versões pelo próprio aplicativo.
+- Deploy automático para o GitHub Pages após validação completa.
 
-## Executar
+## Executar localmente
 
 ```bash
 npm install
@@ -43,9 +36,21 @@ npm run build
 npm run validate
 ```
 
-## Publicação
+## Publicação no GitHub Pages
 
-O aplicativo usa a base `/titan-fit/` para GitHub Pages.
+O workflow `.github/workflows/deploy-pages.yml` executa lint, typecheck, testes, build e validação antes de publicar a pasta `dist`.
+
+O aplicativo usa a base `/titan-fit/` e ficará disponível em:
+
+```text
+https://otaviobarretojr.github.io/titan-fit/
+```
+
+No repositório, configure **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+## Instalação no Android
+
+Abra o endereço publicado no Chrome, acesse o menu do navegador e selecione **Instalar aplicativo** ou **Adicionar à tela inicial**. Depois do primeiro carregamento, os recursos essenciais ficam disponíveis offline. Vídeos do YouTube continuam dependendo de internet.
 
 ## Roadmap
 
