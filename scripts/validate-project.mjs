@@ -50,14 +50,15 @@ assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKm
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
 assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional');
 assert(weeklyLibrary.includes('Grupos e exercícios') && weeklyLibrary.includes('getExerciseVideo(exercise)') && weeklyLibrary.includes('youtube-nocookie.com/embed/') && weeklyLibrary.includes('ERROS COMUNS') && weeklyLibrary.includes('ALTERNATIVAS'), 'Aba semanal deve mostrar informações e vídeos com fallback interno');
-assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes("'body' | 'training'") && progressPage.includes('ExerciseIntelligenceCard'), 'Progresso deve reunir evolução corporal e de treino');
+assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes("'body' | 'training'") && progressPage.includes('PrHall'), 'Progresso deve reunir evolução corporal e Hall dos PRs de treino');
 assert(evolution.includes('EVOLUÇÃO CORPORAL') && evolution.includes('Última vs. anterior') && evolution.includes('Evolução mensal') && evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa') && evolution.includes('evolution-register-screen'), 'Centro de evolução deve funcionar como dashboard corporal');
 assert(!progressPage.includes('🏆 Volume:') && !progressPage.includes('de volume'), 'Volume total não deve aparecer na interface de progresso');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('EvolutionPhoto') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução corporal deve permanecer versionado');
 assert(evolutionStorage.includes('STORE_NAMES.preferences') && evolutionStorage.includes('body-evolution-v1'), 'Evolução corporal deve ser persistida no IndexedDB e incluída no backup');
 assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0') && videoLibrary.toLowerCase().includes('eleva[cç][aã]o lateral unilateral na polia'), 'Biblioteca interna de fallback deve permanecer funcional');
-assert(progressPage.includes('Recuperação estimada') && progressPage.includes('COACH TITAN'), 'Progresso deve exibir inteligência, PRs e recuperação');
-assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível');
+assert(progressPage.includes('HALL DOS PRs') && progressPage.includes('PRs conquistados') && progressPage.includes('buildPrGroups') && progressPage.includes('ExercisePrHistory'), 'Progresso de treino deve exibir PRs agrupados com histórico sob demanda');
+assert(!progressPage.includes('Recuperação estimada') && !progressPage.includes('calculateRecovery'), 'Recuperação e fadiga não devem poluir o Hall dos PRs');
+assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível para uso contextual no treino');
 assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'Persistência e backup devem permanecer funcionais');
 
 const forbidden = ['IronFit', 'TreinoFit', 'Projeto Titan', 'Titan App'];
@@ -73,4 +74,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.23.1 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.26.1 concluída com sucesso.');

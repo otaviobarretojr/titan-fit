@@ -12,29 +12,24 @@ beforeEach(() => {
   }]));
 });
 
-describe('ProgressPage v0.22', () => {
-  it('usa um único fluxo de avaliação corporal e preserva inteligência do treino', () => {
+describe('ProgressPage v0.26.1', () => {
+  it('mantém evolução corporal e transforma treino em Hall dos PRs', () => {
     render(<ProgressPage refreshKey={0} />);
     expect(screen.getByText('Seu corpo hoje')).toBeInTheDocument();
-    expect(screen.getByText(/EVOLUÇÃO CORPORAL/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Adicionar Bioimpedância' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Adicionar Peso' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Nova avaliação corporal/i }));
-    expect(screen.getByText('NOVO REGISTRO')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Avaliação corporal completa', level: 2 })).toBeInTheDocument();
-    expect(screen.getByText('Circunferências')).toBeInTheDocument();
-    expect(screen.getByText('Bioimpedância')).toBeInTheDocument();
-    expect(screen.getByText('Fotos')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '← Voltar' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: '← Voltar' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Treino' }));
-    expect(screen.getByText('Inteligência do treino')).toBeInTheDocument();
-    expect(screen.getByText('Recuperação estimada')).toBeInTheDocument();
+
+    expect(screen.getByRole('heading', { name: 'PRs conquistados' })).toBeInTheDocument();
+    expect(screen.getByText('Peito')).toBeInTheDocument();
+    expect(screen.queryByText('Recuperação estimada')).not.toBeInTheDocument();
+    expect(screen.queryByText('Treinos concluídos')).not.toBeInTheDocument();
+    expect(screen.queryByText('Inteligência do treino')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Peito/i }));
     expect(screen.getByText('Supino máquina')).toBeInTheDocument();
-    expect(screen.getByText(/🏆 Carga: 82.5 kg/)).toBeInTheDocument();
-    expect(screen.getAllByText('COACH TITAN').length).toBeGreaterThan(0);
-    expect(screen.queryByText('1.5 t')).not.toBeInTheDocument();
-    expect(screen.queryByText(/Volume:/)).not.toBeInTheDocument();
-    expect(screen.getByText('Push A')).toBeInTheDocument();
+    expect(screen.getByText('80 kg × 10')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Supino máquina/i }));
+    expect(screen.getByText('Últimas referências')).toBeInTheDocument();
+    expect(screen.getAllByText(/06 de ago|06 ago|06 de ago\./i).length).toBeGreaterThan(0);
   });
 });
