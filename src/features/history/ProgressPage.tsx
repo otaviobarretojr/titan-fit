@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { calculateRecovery, calculateStrengthPr, formatLastStrengthSession, getExerciseSessions, getProgressionAdvice } from './intelligence';
 import { loadWorkoutHistory, removeWorkoutHistoryRecord } from './storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from './types';
 
@@ -30,13 +31,37 @@ export function ProgressPage({ refreshKey }: { refreshKey: number }) {
     return [...map.values()].sort((a, b) => b.latestAt.localeCompare(a.latestAt));
   }, [records]);
 
+  const recovery = useMemo(() => calculateRecovery(records).slice(0, 6), [records]);
+
   function removeRecord(recordId: string) { if (!window.confirm('Remover este treino do histórico?')) return; removeWorkoutHistoryRecord(recordId); setRecords(loadWorkoutHistory()); }
   if (!records.length) return <section className="hero-card compact"><span className="eyebrow">EVOLUÇÃO</span><h2>Nenhum treino concluído</h2><p>Finalize um treino para criar o primeiro registro permanente.</p></section>;
 
-  return <><section className="section-header"><span className="eyebrow">EVOLUÇÃO</span><h2>Seu histórico</h2><p>{records.length} treino{records.length === 1 ? '' : 's'} concluído{records.length === 1 ? '' : 's'}.</p></section>
+  return <>
+    <section className="section-header"><span className="eyebrow">COACH TITAN · v0.18</span><h2>Inteligência do treino</h2><p>PRs, progressão e recuperação estimada a partir do seu histórico real.</p></section>
     <section className="progress-summary"><div><span className="info-label">TREINOS</span><strong>{records.length}</strong></div><div><span className="info-label">REGISTROS</span><strong>{summary.totalSets}</strong></div><div><span className="info-label">VOLUME</span><strong>{formatVolume(summary.totalVolumeKg)}</strong></div></section>
-    <section className="progress-section"><h3>Progressão por exercício</h3><div className="progression-list">{exerciseProgress.map(({ exercise, sessions }) => <article className="progression-card" key={exercise.exerciseId}><div><span className="info-label">{sessions} sessão{sessions === 1 ? '' : 'ões'} · {exercise.exerciseType ?? 'strength'}</span><h3>{exercise.name}</h3></div><div><span className="info-label">MELHOR RESULTADO</span><strong>{formatBest(exercise)}</strong></div>{(exercise.exerciseType ?? 'strength') === 'cardio' && <small>{formatCardioDetail(exercise)}</small>}</article>)}</div></section>
-    <section className="progress-section"><h3>Treinos concluídos</h3><div className="history-list">{records.map((record) => <article className="history-card" key={record.id}><header><div><span className="info-label">{formatDate(record.completedAt)} • {record.workoutDay}</span><h3>{record.workoutTitle}</h3><p>{record.planName}</p></div><strong>{formatDuration(record.durationSeconds)}</strong></header><div className="history-metrics"><span>{record.totalSets} registros</span><span>{formatVolume(record.totalVolumeKg)} de volume</span></div><button type="button" className="text-action danger-text" onClick={() => removeRecord(record.id)}>Remover registro</button></article>)}</div></section></>;
+
+    {recovery.length > 0 && <section className="progress-section"><h3>Recuperação estimada</h3><p className="exercise-cue">Estimativa baseada apenas no tempo desde o último estímulo registrado. Não substitui sono, dor, desempenho ou percepção de recuperação.</p><div className="progression-list">{recovery.map((item) => <article className="progression-card" key={item.muscleGroup}><div><span className="info-label">{item.label}</span><h3>{item.muscleGroup}</h3></div><div><span className="info-label">RECUPERAÇÃO</span><strong>{item.percent}%</strong></div><small>Último estímulo: {formatDate(item.lastTrainedAt)}</small></article>)}</div></section>}
+
+    <section className="progress-section"><h3>Progressão por exercício</h3><div className="progression-list">{exerciseProgress.map(({ exercise, sessions }) => <ExerciseIntelligenceCard key={exercise.exerciseId} exercise={exercise} sessions={sessions} records={records} />)}</div></section>
+
+    <section className="progress-section"><h3>Treinos concluídos</h3><div className="history-list">{records.map((record) => <article className="history-card" key={record.id}><header><div><span className="info-label">{formatDate(record.completedAt)} • {record.workoutDay}</span><h3>{record.workoutTitle}</h3><p>{record.planName}</p></div><strong>{formatDuration(record.durationSeconds)}</strong></header><div className="history-metrics"><span>{record.totalSets} registros</span><span>{formatVolume(record.totalVolumeKg)} de volume</span></div><button type="button" className="text-action danger-text" onClick={() => removeRecord(record.id)}>Remover registro</button></article>)}</div></section>
+  </>;
+}
+
+function ExerciseIntelligenceCard({ exercise, sessions, records }: { exercise: HistoryExercise; sessions: number; records: WorkoutHistoryRecord[] }) {
+  const type = exercise.exerciseType ?? 'strength';
+  if (type !== 'strength') return <article className="progression-card"><div><span className="info-label">{sessions} sessão{sessions === 1 ? '' : 'ões'} · {type}</span><h3>{exercise.name}</h3></div><div><span className="info-label">MELHOR RESULTADO</span><strong>{formatBest(exercise)}</strong></div>{type === 'cardio' && <small>{formatCardioDetail(exercise)}</small>}</article>;
+
+  const pr = calculateStrengthPr(records, exercise.exerciseId);
+  const advice = getProgressionAdvice(records, exercise.exerciseId);
+  const latest = getExerciseSessions(records, exercise.exerciseId)[0]?.exercise;
+
+  return <article className="progression-card coach-progress-card">
+    <div><span className="info-label">{sessions} sessão{sessions === 1 ? '' : 'ões'} · MUSCULAÇÃO</span><h3>{exercise.name}</h3></div>
+    <div><span className="info-label">ÚLTIMA SESSÃO</span><strong>{latest ? formatLastStrengthSession(latest) : '—'}</strong></div>
+    <div className="history-metrics"><span>🏆 Carga: {pr.bestWeightKg ? `${pr.bestWeightKg} kg` : '—'}</span><span>🏆 Volume: {pr.bestSessionVolumeKg ? formatVolume(pr.bestSessionVolumeKg) : '—'}</span>{pr.bestSet && <span>🏆 Melhor série: {pr.bestSet.weightKg} × {pr.bestSet.repetitions}</span>}</div>
+    <div className={`coach-advice ${advice.status}`}><span className="info-label">COACH TITAN</span><strong>{advice.title}</strong><p>{advice.message}</p></div>
+  </article>;
 }
 
 function formatBest(exercise: HistoryExercise) {
