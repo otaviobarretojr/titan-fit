@@ -19,6 +19,11 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const [sessionSeconds, setSessionSeconds] = useState(() => secondsSince(execution.startedAt));
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
   const [prMessage, setPrMessage] = useState<string | null>(null);
+  const [releasedExercises, setReleasedExercises] = useState<Set<string>>(() => new Set(
+    workout.exercises
+      .filter((exercise) => !exercise.video || execution.exercises[exercise.id]?.sets.some((set) => set.completed))
+      .map((exercise) => exercise.id)
+  ));
 
   useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
   useEffect(() => {
@@ -45,10 +50,15 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const exerciseCompleted = activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
   const isCardio = activeExercise.muscleGroup.toLowerCase() === 'cardio';
+  const exerciseReleased = releasedExercises.has(activeExercise.id);
   const previousExercise = previousExercises.get(activeExercise.id) ?? null;
   const nextExerciseName = workout.exercises[activeExerciseIndex + 1]?.name ?? null;
   const coachRecommendation = !isCardio && exerciseCompleted ? buildCoachRecommendation(activeSets, activeExercise.minReps, activeExercise.maxReps, activeExercise.targetRir, previousExercise) : null;
 
+  function releaseExercise() {
+    setReleasedExercises((current) => new Set([...current, activeExercise.id]));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
   function updateSet(exerciseId: string, setNumber: number, patch: Partial<ExecutedSet>) {
     setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [exerciseId]: { ...current.exercises[exerciseId], sets: current.exercises[exerciseId].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
   }
@@ -79,7 +89,14 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }
   function resetSession() {
     if (!window.confirm('Apagar todos os registros desta sessão?')) return;
-    removeWorkoutExecution(planId, workout.id); setExecution(createExecution(planId, workout)); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setPrMessage(null); setSessionSeconds(0);
+    removeWorkoutExecution(planId, workout.id);
+    setExecution(createExecution(planId, workout));
+    setActiveExerciseIndex(0);
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    setPrMessage(null);
+    setSessionSeconds(0);
+    setReleasedExercises(new Set(workout.exercises.filter((exercise) => !exercise.video).map((exercise) => exercise.id)));
   }
 
   if (summary) return <section className="workout-summary"><span className="eyebrow">TREINO CONCLUÍDO</span><h2>{workout.title}</h2><p>Excelente. Sua sessão foi salva no histórico.</p><div className="summary-grid"><div><span>Tempo</span><strong>{formatDuration(summary.durationSeconds)}</strong></div><div><span>Volume</span><strong>{Math.round(summary.totalVolumeKg).toLocaleString('pt-BR')} kg</strong></div><div><span>Séries</span><strong>{summary.totalSets}</strong></div><div><span>Cardio</span><strong>{summary.cardioMinutes ? `${summary.cardioMinutes} min` : '—'}</strong></div></div>{summary.prs.length > 0 && <div className="pr-summary"><span className="eyebrow">NOVOS RECORDES</span>{summary.prs.map((pr) => <strong key={pr}>🏆 {pr}</strong>)}</div>}<button type="button" className="primary-action" onClick={onCompleted}>Ver progresso</button></section>;
@@ -97,14 +114,22 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {!isCardio && <div className="progression-panel"><div><span>Última sessão</span><strong>{formatPrevious(previousExercise)}</strong></div><div><span>Meta de hoje</span><strong>{formatTarget(previousExercise, activeExercise.minReps, activeExercise.maxReps)}</strong></div></div>}
       {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
 
-      <div className="set-entry-list">{activeSets.map((set) => <div className={`set-entry ${set.completed ? 'completed' : ''}`} key={set.setNumber}><div className="set-entry-title"><strong>{isCardio ? 'Cardio' : `Série ${set.setNumber} de ${activeSets.length}`}</strong><span>{set.completed ? 'Concluída' : 'Pendente'}</span></div>{!isCardio && <div className="set-entry-fields"><label>Carga (kg)<input aria-label={`${activeExercise.name} série ${set.setNumber} carga`} type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { weightKg: event.target.value === '' ? null : Number(event.target.value) })} /></label><label>Repetições<input aria-label={`${activeExercise.name} série ${set.setNumber} repetições`} type="number" inputMode="numeric" min="0" value={set.repetitions ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { repetitions: event.target.value === '' ? null : Number(event.target.value) })} /></label><label>RIR<input aria-label={`${activeExercise.name} série ${set.setNumber} RIR`} type="number" inputMode="numeric" min="0" max="10" value={set.rir ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { rir: event.target.value === '' ? null : Number(event.target.value) })} /></label></div>}<button type="button" className="complete-set-action" aria-pressed={set.completed} onClick={() => completeSet(set)}>{set.completed ? '✓ Série concluída' : isCardio ? 'Concluir cardio' : 'Registrar série'}</button></div>)}</div>
-
-      {!isCardio && activeExercise.restSeconds > 0 && <button type="button" className="text-action rest-shortcut" onClick={() => startRest(activeExercise.restSeconds)}>Iniciar descanso de {formatRest(activeExercise.restSeconds)}</button>}
+      {!exerciseReleased && activeExercise.video ? <section className="video-card exercise-video-intro" aria-label="Demonstração do exercício">
+        <div className="video-card-heading"><span className="eyebrow">VEJA ANTES DE COMEÇAR</span><strong>{activeExercise.video.title ?? `Execução de ${activeExercise.name}`}</strong></div>
+        <div className="video-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${activeExercise.video.videoId}?rel=0`} title={activeExercise.video.title ?? `Execução de ${activeExercise.name}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen /></div>
+        <p>Assista à demonstração, observe a técnica e depois libere o registro das séries.</p>
+        <button type="button" className="primary-action start-after-video" onClick={releaseExercise}>Já assisti · iniciar séries</button>
+        <button type="button" className="text-action skip-video" onClick={releaseExercise}>Pular demonstração</button>
+      </section> : <>
+        {activeExercise.video && <button type="button" className="secondary-action watch-again" onClick={() => setReleasedExercises((current) => { const next = new Set(current); next.delete(activeExercise.id); return next; })}>▶ Assistir execução novamente</button>}
+        <div className="set-entry-list">{activeSets.map((set) => <div className={`set-entry ${set.completed ? 'completed' : ''}`} key={set.setNumber}><div className="set-entry-title"><strong>{isCardio ? 'Cardio' : `Série ${set.setNumber} de ${activeSets.length}`}</strong><span>{set.completed ? 'Concluída' : 'Pendente'}</span></div>{!isCardio && <div className="set-entry-fields"><label>Carga (kg)<input aria-label={`${activeExercise.name} série ${set.setNumber} carga`} type="number" inputMode="decimal" min="0" step="0.5" value={set.weightKg ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { weightKg: event.target.value === '' ? null : Number(event.target.value) })} /></label><label>Repetições<input aria-label={`${activeExercise.name} série ${set.setNumber} repetições`} type="number" inputMode="numeric" min="0" value={set.repetitions ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { repetitions: event.target.value === '' ? null : Number(event.target.value) })} /></label><label>RIR<input aria-label={`${activeExercise.name} série ${set.setNumber} RIR`} type="number" inputMode="numeric" min="0" max="10" value={set.rir ?? ''} onChange={(event) => updateSet(activeExercise.id, set.setNumber, { rir: event.target.value === '' ? null : Number(event.target.value) })} /></label></div>}<button type="button" className="complete-set-action" aria-pressed={set.completed} onClick={() => completeSet(set)}>{set.completed ? '✓ Série concluída' : isCardio ? 'Concluir cardio' : 'Registrar série'}</button></div>)}</div>
+        {!isCardio && activeExercise.restSeconds > 0 && <button type="button" className="text-action rest-shortcut" onClick={() => startRest(activeExercise.restSeconds)}>Iniciar descanso de {formatRest(activeExercise.restSeconds)}</button>}
+      </>}
     </article>
 
-    {coachRecommendation && <aside className={`next-exercise-preview coach-explanation ${coachRecommendation.status}`} aria-label="Recomendação do Coach TITAN"><span>Coach TITAN · próxima sessão</span><strong>{coachRecommendation.diagnosis}</strong><p><b>Recomendação:</b> {coachRecommendation.action}</p><p><b>Motivo:</b> {coachRecommendation.reason}</p>{coachRecommendation.nextLoadKg !== null && <p><b>Carga sugerida:</b> {formatWeight(coachRecommendation.nextLoadKg)} kg</p>}</aside>}
-    {nextExerciseName && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{nextExerciseName}</strong></aside>}
-    <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
+    {exerciseReleased && coachRecommendation && <aside className={`next-exercise-preview coach-explanation ${coachRecommendation.status}`} aria-label="Recomendação do Coach TITAN"><span>Coach TITAN · próxima sessão</span><strong>{coachRecommendation.diagnosis}</strong><p><b>Recomendação:</b> {coachRecommendation.action}</p><p><b>Motivo:</b> {coachRecommendation.reason}</p>{coachRecommendation.nextLoadKg !== null && <p><b>Carga sugerida:</b> {formatWeight(coachRecommendation.nextLoadKg)} kg</p>}</aside>}
+    {exerciseReleased && nextExerciseName && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{nextExerciseName}</strong></aside>}
+    {exerciseReleased && <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>}
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
   </div>;
 }
@@ -119,14 +144,8 @@ function buildCoachRecommendation(sets: ExecutedSet[], minReps = 0, maxReps = mi
   const belowRange = valid.some((set) => (set.repetitions ?? 0) < minReps);
   const tooHard = valid.some((set) => (set.rir ?? 0) === 0);
   const currentBest = Math.max(...valid.map((set) => set.weightKg ?? 0));
-  if (allAtTop && currentBest > 0) {
-    const nextLoadKg = currentBest + suggestedIncrement(currentBest);
-    return { status: 'positive', diagnosis: 'Excelente execução', action: `Aumente a carga na próxima sessão para ${formatWeight(nextLoadKg)} kg.`, reason: `Você atingiu o topo da faixa em todas as séries mantendo RIR ${targetRir} ou maior.`, nextLoadKg };
-  }
-  if (belowRange && tooHard) {
-    const nextLoadKg = Math.max(0, currentBest - suggestedIncrement(currentBest));
-    return { status: 'attention', diagnosis: 'Carga acima do ideal', action: `Reduza para aproximadamente ${formatWeight(nextLoadKg)} kg ou repita com execução mais controlada.`, reason: `Houve série abaixo de ${minReps} repetições com RIR 0.`, nextLoadKg };
-  }
+  if (allAtTop && currentBest > 0) { const nextLoadKg = currentBest + suggestedIncrement(currentBest); return { status: 'positive', diagnosis: 'Excelente execução', action: `Aumente a carga na próxima sessão para ${formatWeight(nextLoadKg)} kg.`, reason: `Você atingiu o topo da faixa em todas as séries mantendo RIR ${targetRir} ou maior.`, nextLoadKg }; }
+  if (belowRange && tooHard) { const nextLoadKg = Math.max(0, currentBest - suggestedIncrement(currentBest)); return { status: 'attention', diagnosis: 'Carga acima do ideal', action: `Reduza para aproximadamente ${formatWeight(nextLoadKg)} kg ou repita com execução mais controlada.`, reason: `Houve série abaixo de ${minReps} repetições com RIR 0.`, nextLoadKg }; }
   if (belowRange) return { status: 'attention', diagnosis: 'Faixa mínima não consolidada', action: `Mantenha ${formatWeight(currentBest)} kg.`, reason: `Primeiro alcance pelo menos ${minReps} repetições em todas as séries.`, nextLoadKg: currentBest };
   if (previous && currentBest > (previous.bestWeightKg ?? 0)) return { status: 'positive', diagnosis: 'Novo patamar de carga', action: `Mantenha ${formatWeight(currentBest)} kg e aumente as repetições.`, reason: 'Você superou a melhor carga anterior, mas ainda pode consolidar desempenho antes de subir novamente.', nextLoadKg: currentBest };
   return { status: 'neutral', diagnosis: 'Boa execução', action: `Mantenha ${formatWeight(currentBest)} kg e busque ${maxReps} repetições.`, reason: `A carga está adequada, mas o topo da faixa com RIR ${targetRir} ainda não foi consolidado.`, nextLoadKg: currentBest };
