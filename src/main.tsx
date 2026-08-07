@@ -21,6 +21,7 @@ import './styles/polish-v0253.css';
 import './styles/navigation-hotfix-v0254.css';
 import './styles/smart-progression-v026.css';
 import './styles/pr-hall-v0261.css';
+import './styles/live-pr-v0265.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
