@@ -13,6 +13,7 @@ import './styles/evolution.css';
 import './styles/one-ui.css';
 import './styles/workout-mobile.css';
 import './styles/native-polish.css';
+import './styles/design-system-v025.css';
 
 enableTitanHaptics();
 

@@ -1,19 +1,40 @@
 :root {
   color-scheme: dark;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-bg: #0b0f17;
-  --color-surface: #121926;
-  --color-surface-strong: #182234;
-  --color-border: #263247;
-  --color-text: #f8fafc;
-  --color-muted: #94a3b8;
-  --color-primary: #3b82f6;
-  --color-primary-strong: #2563eb;
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 26px;
-  --shadow-card: 0 18px 50px rgba(0, 0, 0, 0.28);
+
+  /* TITAN Design System v0.25 — dark premium */
+  --color-bg: #0d1726;
+  --color-bg-soft: #122033;
+  --color-surface: #16263a;
+  --color-surface-strong: #1d3048;
+  --color-surface-elevated: #223750;
+  --color-border: rgba(148, 163, 184, 0.14);
+  --color-border-strong: rgba(148, 163, 184, 0.24);
+  --color-text: #f4f7fb;
+  --color-muted: #a7b2c3;
+  --color-subtle: #7f8da3;
+  --color-primary: #4c8dff;
+  --color-primary-strong: #2868e8;
+  --color-primary-soft: rgba(76, 141, 255, 0.14);
+  --color-success: #43c887;
+  --color-warning: #f1b85b;
+  --color-danger: #ef6a70;
+  --color-purple: #a78bfa;
+  --color-cyan: #59c6d2;
+
+  /* Legacy aliases kept so existing modules adopt the same visual language. */
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-strong);
+  --line: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-muted);
+  --accent: var(--color-primary);
+
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 32px;
+  --shadow-card: 0 14px 34px rgba(2, 8, 20, 0.18);
+  --shadow-elevated: 0 22px 60px rgba(2, 8, 20, 0.28);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
