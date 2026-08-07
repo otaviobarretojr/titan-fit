@@ -24,6 +24,9 @@
 .dashboard-tile-icon{margin-bottom:12px}
 .dashboard-tile small{display:none}
 
+/* O nome do exercício já aparece no cabeçalho. Não repetimos título/autor abaixo do player. */
+.video-meta,.video-stage-meta{display:none!important}
+
 .bottom-navigation{grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:7px 7px calc(7px + var(--safe-bottom));background:rgba(11,15,23,.96);border-top:1px solid rgba(148,163,184,.15)}
 .bottom-navigation button{min-width:0;min-height:60px;padding:3px 0;border-radius:18px;gap:4px;font-size:.62rem;font-weight:700;transition:color .18s ease,transform .12s ease}
 .bottom-navigation button:active{transform:scale(.96)}
