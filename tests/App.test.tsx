@@ -8,7 +8,7 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.23', () => {
+describe('TITAN FIT v0.23.1', () => {
   it('renderiza o estado vazio e oferece importação de projeto', () => {
     render(<App />);
     expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
@@ -27,10 +27,19 @@ describe('TITAN FIT v0.23', () => {
     fireEvent.click(nav.getByRole('button', { name: /^Histórico$/i }));
     expect(screen.getByRole('heading', { name: 'Histórico' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
-    expect(screen.getByText('v0.23')).toBeInTheDocument();
+    expect(screen.getByText('v0.23.1')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
+  });
+
+  it('exibe saída específica quando o modo demonstração está ativo', () => {
+    localStorage.setItem('titan-fit:demo-mode', 'true');
+    render(<App />);
+    const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
+    expect(screen.getByRole('button', { name: 'Remover dados da demonstração' })).toBeEnabled();
+    expect(screen.getByText('Demonstração ativa')).toBeInTheDocument();
   });
 });
