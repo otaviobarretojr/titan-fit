@@ -1,0 +1,52 @@
+/* TITAN FIT v0.25.4 — hotfix definitivo da navegação inferior */
+.bottom-navigation{
+  position:fixed;
+  left:max(12px,env(safe-area-inset-left)) !important;
+  right:max(12px,env(safe-area-inset-right)) !important;
+  bottom:max(10px,env(safe-area-inset-bottom)) !important;
+  width:auto !important;
+  max-width:none !important;
+  margin:0 !important;
+  transform:none !important;
+  box-sizing:border-box;
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  align-items:center;
+  gap:0;
+  padding:7px 6px calc(7px + env(safe-area-inset-bottom));
+}
+.bottom-navigation button{
+  width:100%;
+  min-width:0;
+  max-width:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:6px 2px;
+  margin:0;
+  box-sizing:border-box;
+  text-align:center;
+}
+.bottom-navigation .nav-icon-wrap{
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:34px;
+  margin:0 auto;
+}
+.bottom-navigation button span:last-child{
+  width:100%;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:center;
+}
+.dashboard-page-clean{padding-bottom:20px}
+@media(max-width:390px){
+  .bottom-navigation{left:8px !important;right:8px !important;border-radius:28px}
+  .bottom-navigation button{font-size:.68rem}
+  .bottom-navigation .nav-icon-wrap{width:38px;height:32px}
+}
