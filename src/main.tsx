@@ -9,6 +9,7 @@ import './styles/coach.css';
 import './styles/pwa.css';
 import './styles/weekly-library.css';
 import './styles/evolution.css';
+import './styles/one-ui.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
