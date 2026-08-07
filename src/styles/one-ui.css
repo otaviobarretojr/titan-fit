@@ -1,0 +1,41 @@
+/* One UI-inspired mobile refinements for TITAN FIT */
+.app-shell{padding-bottom:calc(82px + var(--safe-bottom))}
+.app-header{padding:calc(15px + env(safe-area-inset-top,0px)) 20px 13px}
+.app-header h1{font-size:1.16rem}
+.app-main{padding:18px 18px 24px}
+
+.dashboard-page{gap:12px}
+.dashboard-heading{padding:10px 4px 8px;border:0;background:transparent;border-radius:0}
+.dashboard-heading h2{margin:7px 0 3px;font-size:clamp(1.55rem,6.2vw,1.95rem);line-height:1.08}
+.dashboard-heading p{font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.today-workout{padding:20px;border-radius:28px;box-shadow:0 12px 30px rgba(2,6,23,.22)}
+.today-workout::after{width:145px;height:145px;right:-58px;top:-72px}
+.today-workout-topline{gap:8px}
+.today-workout .eyebrow{font-size:.62rem;letter-spacing:.1em}
+.today-workout-day{font-size:.68rem}
+.today-workout h3{margin:13px 0 6px;max-width:18ch;font-size:clamp(1.45rem,6.1vw,1.82rem);line-height:1.08}
+.today-workout p{font-size:.82rem;line-height:1.42;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.today-workout-metrics{gap:14px;margin:13px 0 0;font-size:.73rem;flex-wrap:wrap}
+.today-workout .primary-action{min-height:46px;margin-top:16px;padding:0 18px;border-radius:16px}
+
+.dashboard-grid{gap:8px}
+.dashboard-tile{min-height:116px;padding:14px;border-radius:22px}
+.dashboard-tile-icon{margin-bottom:12px}
+.dashboard-tile small{display:none}
+
+.bottom-navigation{grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;padding:7px 7px calc(7px + var(--safe-bottom));background:rgba(11,15,23,.96);border-top:1px solid rgba(148,163,184,.15)}
+.bottom-navigation button{min-width:0;min-height:60px;padding:3px 0;border-radius:18px;gap:4px;font-size:.62rem;font-weight:700;transition:color .18s ease,transform .12s ease}
+.bottom-navigation button:active{transform:scale(.96)}
+.bottom-navigation button.active{background:transparent;color:#bfdbfe}
+.nav-icon-wrap{width:42px;height:28px;display:grid;place-items:center;border-radius:999px;transition:background .18s ease,color .18s ease}
+.bottom-navigation button.active .nav-icon-wrap{background:rgba(59,130,246,.18);color:#dbeafe}
+.nav-icon{width:20px;height:20px;display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+@media(max-width:380px){
+  .app-main{padding-inline:14px}
+  .today-workout{padding:18px}
+  .today-workout h3{font-size:1.42rem}
+  .bottom-navigation button{font-size:.58rem}
+  .nav-icon-wrap{width:38px}
+}
