@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BodyEvolutionPage } from '../evolution/BodyEvolutionPage';
-import { calculateStrengthPr, getExerciseSessions } from './intelligence';
+import { getExerciseSessions } from './intelligence';
 import { loadWorkoutHistory } from './storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from './types';
 
 export function ProgressPage({ refreshKey }: { refreshKey: number }) {
   const [view, setView] = useState<'body' | 'training'>('body');
   return <>
-    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.26.1</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
+    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.26.2</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
     <div className="evolution-switch" role="tablist" aria-label="Centro de evolução">
       <button type="button" role="tab" aria-selected={view === 'body'} className={view === 'body' ? 'active' : ''} onClick={() => setView('body')}>Corpo</button>
       <button type="button" role="tab" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>
@@ -27,8 +27,8 @@ type PrEvent = {
 
 type ExercisePrSummary = {
   exercise: HistoryExercise;
-  currentWeightKg: number | null;
-  currentRepetitions: number | null;
+  currentWeightKg: number;
+  currentRepetitions: number;
   latestAt: string;
   events: PrEvent[];
 };
@@ -48,12 +48,12 @@ function PrHall({ refreshKey }: { refreshKey: number }) {
 
   const groups = useMemo(() => buildPrGroups(records), [records]);
 
-  if (!records.length) return <section className="hero-card compact"><span className="eyebrow">HALL DOS PRs</span><h2>Nenhum recorde ainda</h2><p>Finalize seus treinos para começar a construir seu painel de recordes pessoais.</p></section>;
+  if (!records.length) return <section className="hero-card compact"><span className="eyebrow">HALL DOS PRs</span><h2>Nenhum recorde ainda</h2><p>Finalize seus treinos para criar suas primeiras referências de carga.</p></section>;
 
   return <div className="pr-hall-view">
-    <section className="section-header pr-hall-heading"><span className="eyebrow">🏆 HALL DOS PRs</span><h2>PRs conquistados</h2><p>Seus recordes organizados por grupo muscular. Toque em um bloco para ver os exercícios.</p></section>
+    <section className="section-header pr-hall-heading"><span className="eyebrow">🏆 HALL DOS PRs</span><h2>PRs conquistados</h2><p>A primeira execução de cada exercício vira apenas sua linha de base. O PR aparece quando você supera essa referência.</p></section>
 
-    <div className="pr-muscle-grid">
+    {!groups.length ? <section className="hero-card compact"><span className="eyebrow">LINHAS DE BASE REGISTRADAS</span><h2>Seu primeiro PR ainda está por vir</h2><p>Você já tem referências iniciais salvas. Quando melhorar um exercício em uma próxima sessão, a conquista aparecerá aqui.</p></section> : <div className="pr-muscle-grid">
       {groups.map((group) => {
         const active = openGroup === group.name;
         return <section className={`pr-muscle-section ${active ? 'open' : ''}`} key={group.name}>
@@ -78,7 +78,7 @@ function PrHall({ refreshKey }: { refreshKey: number }) {
           </div>}
         </section>;
       })}
-    </div>
+    </div>}
   </div>;
 }
 
@@ -107,15 +107,14 @@ function buildPrGroups(records: WorkoutHistoryRecord[]): MusclePrGroup[] {
 
   const summaries: ExercisePrSummary[] = [];
   for (const exercise of strengthExercises.values()) {
-    const pr = calculateStrengthPr(records, exercise.exerciseId);
     const events = buildExercisePrEvents(records, exercise.exerciseId, exercise.name, canonicalMuscleGroup(exercise.muscleGroup));
-    const latestSession = getExerciseSessions(records, exercise.exerciseId)[0];
-    if (!pr.bestSet || !latestSession) continue;
+    if (!events.length) continue;
+    const current = events[0];
     summaries.push({
       exercise,
-      currentWeightKg: pr.bestSet.weightKg,
-      currentRepetitions: pr.bestSet.repetitions,
-      latestAt: events[0]?.completedAt ?? latestSession.completedAt,
+      currentWeightKg: current.weightKg,
+      currentRepetitions: current.repetitions,
+      latestAt: current.completedAt,
       events,
     });
   }
@@ -141,8 +140,8 @@ function buildPrGroups(records: WorkoutHistoryRecord[]): MusclePrGroup[] {
 function buildExercisePrEvents(records: WorkoutHistoryRecord[], exerciseId: string, exerciseName: string, muscleGroup: string): PrEvent[] {
   const chronological = getExerciseSessions(records, exerciseId).slice().reverse();
   const events: PrEvent[] = [];
-  let bestScore = -1;
-  let bestWeight = -1;
+  let bestScore: number | null = null;
+  let bestWeight: number | null = null;
 
   for (const { exercise, completedAt } of chronological) {
     const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
@@ -155,6 +154,13 @@ function buildExercisePrEvents(records: WorkoutHistoryRecord[], exerciseId: stri
     const weightKg = best.weightKg ?? 0;
     const repetitions = best.repetitions ?? 0;
     const score = weightKg * repetitions;
+
+    if (bestScore === null || bestWeight === null) {
+      bestScore = score;
+      bestWeight = weightKg;
+      continue;
+    }
+
     if (weightKg > bestWeight || score > bestScore) {
       events.push({ exerciseId, exerciseName, muscleGroup, completedAt, weightKg, repetitions });
       bestWeight = Math.max(bestWeight, weightKg);
@@ -189,7 +195,7 @@ function muscleIcon(group: string) {
   return '●';
 }
 
-function formatPr(weight: number | null, reps: number | null) { return weight && reps ? `${weight} kg × ${reps}` : weight ? `${weight} kg` : '—'; }
+function formatPr(weight: number, reps: number) { return `${weight} kg × ${reps}`; }
 function formatSessionBest(exercise: HistoryExercise) { const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0); if (!valid.length) return '—'; const best = [...valid].sort((a, b) => ((b.weightKg ?? 0) * (b.repetitions ?? 0)) - ((a.weightKg ?? 0) * (a.repetitions ?? 0)))[0]; return `${best.weightKg ?? 0} kg × ${best.repetitions ?? 0}`; }
 function formatDate(value: string) { return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value)); }
 function formatShortDate(value: string) { return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(new Date(value)); }
