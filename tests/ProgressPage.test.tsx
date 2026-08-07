@@ -13,18 +13,26 @@ beforeEach(() => {
 });
 
 describe('ProgressPage v0.21', () => {
-  it('abre o centro de evolução física e preserva inteligência do treino', () => {
+  it('abre o painel corporal, usa tela dedicada de registro e preserva inteligência do treino', () => {
     render(<ProgressPage refreshKey={0} />);
-    expect(screen.getByText('Seu físico ao longo do tempo')).toBeInTheDocument();
-    expect(screen.getByText('Peso atual')).toBeInTheDocument();
-    expect(screen.getByText('Novo registro físico', { exact: false })).toBeInTheDocument();
+    expect(screen.getByText('Seu corpo hoje')).toBeInTheDocument();
+    expect(screen.getByText('PESO')).toBeInTheDocument();
+    expect(screen.getByText('CIRCUNFERÊNCIAS')).toBeInTheDocument();
+    expect(screen.getByText('BIOIMPEDÂNCIA')).toBeInTheDocument();
+    expect(screen.getByText('FOTOS')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar Bioimpedância' }));
+    expect(screen.getByText('NOVO REGISTRO')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bioimpedância', level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '← Voltar' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '← Voltar' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Treino' }));
     expect(screen.getByText('Inteligência do treino')).toBeInTheDocument();
     expect(screen.getByText('Recuperação estimada')).toBeInTheDocument();
     expect(screen.getByText('Supino máquina')).toBeInTheDocument();
     expect(screen.getByText(/🏆 Carga: 82.5 kg/)).toBeInTheDocument();
     expect(screen.getAllByText('COACH TITAN').length).toBeGreaterThan(0);
-    expect(screen.getByText('1.5 t')).toBeInTheDocument();
+    expect(screen.queryByText('1.5 t')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Volume:/)).not.toBeInTheDocument();
     expect(screen.getByText('Push A')).toBeInTheDocument();
   });
 });
