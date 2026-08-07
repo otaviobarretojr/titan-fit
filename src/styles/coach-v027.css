@@ -1,0 +1,92 @@
+.dashboard-coach-card {
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(120, 135, 160, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 30px rgba(26, 46, 78, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.dashboard-coach-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dashboard-coach-topline > span:last-child {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(63, 112, 232, 0.1);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.dashboard-coach-card > strong {
+  display: block;
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.dashboard-coach-card > p,
+.dashboard-coach-card details p {
+  margin: 7px 0 0;
+  color: var(--text-secondary, #687386);
+  line-height: 1.45;
+}
+
+.dashboard-coach-card details {
+  margin-top: 12px;
+  border-top: 1px solid rgba(120, 135, 160, 0.14);
+  padding-top: 10px;
+}
+
+.dashboard-coach-card summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.dashboard-coach-card.status-progress .dashboard-coach-topline > span:last-child {
+  background: rgba(23, 160, 101, 0.12);
+  color: #117a50;
+}
+
+.dashboard-coach-card.status-review .dashboard-coach-topline > span:last-child {
+  background: rgba(220, 75, 75, 0.12);
+  color: #b43838;
+}
+
+.dashboard-coach-card.status-maintain .dashboard-coach-topline > span:last-child,
+.dashboard-coach-card.status-insufficient .dashboard-coach-topline > span:last-child {
+  background: rgba(63, 112, 232, 0.1);
+  color: #365fba;
+}
+
+.coach-titan-view { display: grid; gap: 16px; }
+.coach-priority-stack { display: grid; gap: 12px; }
+.coach-priority-card {
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(120, 135, 160, 0.16);
+  background: rgba(255,255,255,.78);
+}
+.coach-priority-topline { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.coach-priority-rank { display:grid; place-items:center; width:28px; height:28px; border-radius:10px; background:rgba(63,112,232,.1); font-weight:800; }
+.coach-priority-status { font-size:10px; font-weight:800; letter-spacing:.08em; }
+.coach-priority-main { display:grid; gap:4px; margin-top:12px; }
+.coach-priority-main small { color:var(--text-secondary, #687386); }
+.coach-priority-main h3 { margin:0; font-size:17px; }
+.coach-priority-details { margin-top:12px; border-top:1px solid rgba(120,135,160,.14); padding-top:10px; }
+
+@media (prefers-color-scheme: dark) {
+  .dashboard-coach-card,
+  .coach-priority-card {
+    background: rgba(24, 29, 38, 0.86);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+  }
+}
