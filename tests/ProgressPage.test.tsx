@@ -20,22 +20,30 @@ beforeEach(() => {
       exerciseId: 'bench',
       name: 'Supino máquina',
       muscleGroup: 'Peitoral',
+      exerciseType: 'strength',
       volumeKg: 1460,
       bestWeightKg: 82.5,
+      totalDistanceMeters: 0,
+      totalDurationSeconds: 0,
+      bestSpeedKmh: null,
+      bestInclinePercent: null,
+      averageHeartRate: null,
       sets: [
-        { setNumber: 1, weightKg: 80, repetitions: 10, rir: 1 },
-        { setNumber: 2, weightKg: 82.5, repetitions: 8, rir: 1 }
+        { setNumber: 1, weightKg: 80, repetitions: 10, rir: 1, durationSeconds: null, distanceMeters: null, speedKmh: null, inclinePercent: null, averagePace: null, averageHeartRate: null, calories: null, notes: null },
+        { setNumber: 2, weightKg: 82.5, repetitions: 8, rir: 1, durationSeconds: null, distanceMeters: null, speedKmh: null, inclinePercent: null, averagePace: null, averageHeartRate: null, calories: null, notes: null }
       ]
     }]
   }]));
 });
 
-describe('ProgressPage', () => {
-  it('mostra resumo, melhor carga e treino concluído', () => {
+describe('ProgressPage v0.18', () => {
+  it('mostra inteligência, PRs, recuperação e treino concluído', () => {
     render(<ProgressPage refreshKey={0} />);
-    expect(screen.getByText('Seu histórico')).toBeInTheDocument();
+    expect(screen.getByText('Inteligência do treino')).toBeInTheDocument();
+    expect(screen.getByText('Recuperação estimada')).toBeInTheDocument();
     expect(screen.getByText('Supino máquina')).toBeInTheDocument();
-    expect(screen.getByText('82.5 kg')).toBeInTheDocument();
+    expect(screen.getByText(/🏆 Carga: 82.5 kg/)).toBeInTheDocument();
+    expect(screen.getByText('COACH TITAN')).toBeInTheDocument();
     expect(screen.getByText('1.5 t')).toBeInTheDocument();
     expect(screen.getByText('Push A')).toBeInTheDocument();
   });
