@@ -26,7 +26,7 @@ describe('ProgressPage v0.26.1', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Peito/i }));
     expect(screen.getByText('Supino máquina')).toBeInTheDocument();
-    expect(screen.getByText('82.5 kg × 8')).toBeInTheDocument();
+    expect(screen.getByText('80 kg × 10')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Supino máquina/i }));
     expect(screen.getByText('Últimas referências')).toBeInTheDocument();
