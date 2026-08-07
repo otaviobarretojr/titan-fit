@@ -1,0 +1,24 @@
+.comparison-item[data-trend-tone]{position:relative;overflow:hidden;transition:border-color .2s ease,background .2s ease,transform .2s ease}
+.comparison-item[data-trend-tone]::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 999px 999px 0;opacity:.95}
+.comparison-item[data-trend-tone] strong::before{display:inline-block;margin-right:5px;font-size:.78em;vertical-align:.08em}
+
+.comparison-item[data-trend-tone="favorable"]{background:linear-gradient(180deg,rgba(62,207,142,.08),rgba(255,255,255,.03));border-color:rgba(62,207,142,.16)}
+.comparison-item[data-trend-tone="favorable"]::before{background:#4fd39a;box-shadow:0 0 14px rgba(79,211,154,.35)}
+.comparison-item[data-trend-tone="favorable"] strong{color:#79e6b6}
+.comparison-item[data-trend-tone="favorable"][data-trend-direction="up"] strong::before{content:"▲"}
+.comparison-item[data-trend-tone="favorable"][data-trend-direction="down"] strong::before{content:"▼"}
+
+.comparison-item[data-trend-tone="unfavorable"]{background:linear-gradient(180deg,rgba(244,100,110,.075),rgba(255,255,255,.03));border-color:rgba(244,100,110,.16)}
+.comparison-item[data-trend-tone="unfavorable"]::before{background:#ef6a73;box-shadow:0 0 14px rgba(239,106,115,.3)}
+.comparison-item[data-trend-tone="unfavorable"] strong{color:#ff969d}
+.comparison-item[data-trend-tone="unfavorable"][data-trend-direction="up"] strong::before{content:"▲"}
+.comparison-item[data-trend-tone="unfavorable"][data-trend-direction="down"] strong::before{content:"▼"}
+
+.comparison-item[data-trend-tone="neutral"]{background:linear-gradient(180deg,rgba(93,151,255,.055),rgba(255,255,255,.03));border-color:rgba(113,158,231,.11)}
+.comparison-item[data-trend-tone="neutral"]::before{background:#7089ad;opacity:.55}
+.comparison-item[data-trend-tone="neutral"] strong{color:#e9f1ff}
+.comparison-item[data-trend-tone="neutral"][data-trend-direction="up"] strong::before{content:"↑";color:#91a7c4}
+.comparison-item[data-trend-tone="neutral"][data-trend-direction="down"] strong::before{content:"↓";color:#91a7c4}
+.comparison-item[data-trend-tone="neutral"][data-trend-direction="flat"] strong::before{content:"—";color:#91a7c4}
+
+@media (prefers-reduced-motion:reduce){.comparison-item[data-trend-tone]{transition:none}}
