@@ -25,7 +25,7 @@ export type TitanExercise = {
   id: string;
   name: string;
   muscleGroup: string;
-  exerciseType: ExerciseType;
+  exerciseType?: ExerciseType;
   sets?: number;
   minReps?: number;
   maxReps?: number;
