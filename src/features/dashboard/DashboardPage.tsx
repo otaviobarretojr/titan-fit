@@ -1,8 +1,11 @@
-import { getProgressionAdvice } from '../history/intelligence';
+import { getExerciseSessions, getProgressionAdvice } from '../history/intelligence';
 import { loadWorkoutHistory } from '../history/storage';
+import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanPlan, TitanWorkoutDay } from '../plan/types';
 
 type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; onOpenProgress: () => void; };
+type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
+type CoachPriority = { status: CoachStatus; badge: string; title: string; message: string; detail: string; context?: string };
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
@@ -30,34 +33,127 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       <button type="button" className="primary-action" disabled={!workout} onClick={() => workout && onStartWorkout(workout.id)}>Iniciar treino</button>
     </section>
     <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN">
-      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN</span><span>{coach.badge}</span></div>
+      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.27.1</span><span>{coach.badge}</span></div>
       <strong>{coach.title}</strong>
       <p>{coach.message}</p>
+      {coach.context && <small className="coach-context">{coach.context}</small>}
       {coach.detail && <details><summary>Ver orientação</summary><p>{coach.detail}</p></details>}
     </section>
   </div>;
 }
 
-function getTodayCoachPriority(workout: TitanWorkoutDay | null) {
+function getTodayCoachPriority(workout: TitanWorkoutDay | null): CoachPriority {
   if (!workout) return { status: 'insufficient', badge: 'SEM TREINO', title: 'Nenhuma prioridade hoje', message: 'Importe ou selecione um treino para o Coach analisar.', detail: '' };
   const records = loadWorkoutHistory();
   if (!records.length) return { status: 'insufficient', badge: 'CRIANDO BASE', title: 'Primeiro treino de referência', message: 'Hoje o objetivo é registrar cargas, repetições e RIR com consistência.', detail: 'A primeira execução cria sua linha de base e não conta como PR.' };
 
   const strengthExercises = workout.exercises.filter((exercise) => (exercise.exerciseType ?? 'strength') === 'strength');
-  const candidates = strengthExercises.map((exercise) => ({ exercise, advice: getProgressionAdvice(records, exercise.id) }));
-  const priority = { review: 0, progress: 1, maintain: 2, insufficient: 3 } as const;
-  candidates.sort((a, b) => priority[a.advice.status] - priority[b.advice.status]);
-  const selected = candidates[0];
-  if (!selected || selected.advice.status === 'insufficient') return { status: 'insufficient', badge: 'CRIANDO BASE', title: 'Continue registrando', message: 'Ainda faltam comparações suficientes no treino de hoje.', detail: 'Depois de repetir os exercícios, o Coach passa a sugerir quando manter, progredir ou revisar.' };
+  const analyses = strengthExercises.map((exercise) => {
+    const advice = getProgressionAdvice(records, exercise.id);
+    const sessions = getExerciseSessions(records, exercise.id).slice(0, 3);
+    return { exercise, advice, sessions, stagnant: isStagnant(sessions) };
+  });
 
-  const badge = selected.advice.status === 'review' ? 'ATENÇÃO' : selected.advice.status === 'progress' ? 'PROGREDIR' : 'MANTER';
+  const review = analyses.find((item) => item.advice.status === 'review');
+  if (review) return {
+    status: 'review', badge: 'ATENÇÃO',
+    title: `${review.exercise.name} · ${review.advice.title}`,
+    message: compactCoachMessage(review.advice.message),
+    detail: review.advice.message,
+    context: buildContext(records),
+  };
+
+  const stagnant = analyses.find((item) => item.stagnant);
+  if (stagnant) return {
+    status: 'stagnant', badge: 'ESTAGNAÇÃO',
+    title: `${stagnant.exercise.name} · destravar progresso`,
+    message: 'As últimas 3 sessões ficaram praticamente no mesmo nível.',
+    detail: `Mantenha a carga atual e tente ganhar 1 repetição total ou melhorar a execução antes de subir o peso. O Coach só vai liberar progressão quando houver uma melhora objetiva.`,
+    context: buildContext(records),
+  };
+
+  const progressItems = analyses.filter((item) => item.advice.status === 'progress');
+  if (progressItems.length) {
+    const selected = progressItems[0];
+    return {
+      status: 'progress', badge: 'PROGREDIR',
+      title: `${selected.exercise.name} · ${selected.advice.title}`,
+      message: compactCoachMessage(selected.advice.message),
+      detail: progressItems.length > 1 ? `${selected.advice.message} Há ${progressItems.length} exercícios do treino de hoje com sinal positivo de progressão.` : selected.advice.message,
+      context: buildContext(records),
+    };
+  }
+
+  const improvingReps = analyses.find((item) => item.advice.trend === 'improving');
+  if (improvingReps) return {
+    status: 'maintain', badge: 'EVOLUINDO',
+    title: `${improvingReps.exercise.name} · consolidar evolução`,
+    message: compactCoachMessage(improvingReps.advice.message),
+    detail: improvingReps.advice.message,
+    context: buildContext(records),
+  };
+
+  const selected = analyses.find((item) => item.advice.status !== 'insufficient');
+  if (!selected) return { status: 'insufficient', badge: 'CRIANDO BASE', title: 'Continue registrando', message: 'Ainda faltam comparações suficientes no treino de hoje.', detail: 'Depois de repetir os exercícios, o Coach passa a sugerir quando manter, progredir ou revisar.', context: buildContext(records) };
+
   return {
-    status: selected.advice.status,
-    badge,
+    status: 'maintain', badge: 'MANTER',
     title: `${selected.exercise.name} · ${selected.advice.title}`,
     message: compactCoachMessage(selected.advice.message),
     detail: selected.advice.message,
+    context: buildContext(records),
   };
+}
+
+function isStagnant(sessions: ReturnType<typeof getExerciseSessions>) {
+  if (sessions.length < 3) return false;
+  const performance = sessions.slice(0, 3).map(({ exercise }) => {
+    const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
+    return {
+      maxWeight: valid.length ? Math.max(...valid.map((set) => set.weightKg ?? 0)) : 0,
+      totalReps: valid.reduce((sum, set) => sum + (set.repetitions ?? 0), 0),
+    };
+  });
+  if (performance.some((item) => item.maxWeight <= 0 || item.totalReps <= 0)) return false;
+  const sameLoad = performance.every((item) => item.maxWeight === performance[0].maxWeight);
+  const repSpread = Math.max(...performance.map((item) => item.totalReps)) - Math.min(...performance.map((item) => item.totalReps));
+  return sameLoad && repSpread <= 1;
+}
+
+function buildContext(records: WorkoutHistoryRecord[]) {
+  const last30 = records.filter((record) => Date.now() - new Date(record.completedAt).getTime() <= 30 * 24 * 60 * 60 * 1000);
+  const sessions = last30.length;
+  const prs = countPrEvents(last30);
+  if (!sessions) return undefined;
+  return `${sessions} treino${sessions === 1 ? '' : 's'} nos últimos 30 dias · ${prs} PR${prs === 1 ? '' : 's'} conquistado${prs === 1 ? '' : 's'}`;
+}
+
+function countPrEvents(records: WorkoutHistoryRecord[]) {
+  const byExercise = new Map<string, Array<{ completedAt: string; weight: number; reps: number }>>();
+  for (const record of [...records].sort((a, b) => a.completedAt.localeCompare(b.completedAt))) {
+    for (const exercise of record.exercises) {
+      if ((exercise.exerciseType ?? 'strength') !== 'strength') continue;
+      const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
+      if (!valid.length) continue;
+      const best = [...valid].sort((a, b) => ((b.weightKg ?? 0) * (b.repetitions ?? 0)) - ((a.weightKg ?? 0) * (a.repetitions ?? 0)))[0];
+      const list = byExercise.get(exercise.exerciseId) ?? [];
+      list.push({ completedAt: record.completedAt, weight: best.weightKg ?? 0, reps: best.repetitions ?? 0 });
+      byExercise.set(exercise.exerciseId, list);
+    }
+  }
+  let count = 0;
+  for (const sessions of byExercise.values()) {
+    let bestWeight = -1;
+    let bestScore = -1;
+    sessions.forEach((session, index) => {
+      const score = session.weight * session.reps;
+      if (index === 0) { bestWeight = session.weight; bestScore = score; return; }
+      if (session.weight > bestWeight || score > bestScore) count += 1;
+      bestWeight = Math.max(bestWeight, session.weight);
+      bestScore = Math.max(bestScore, score);
+    });
+  }
+  return count;
 }
 
 function compactCoachMessage(message: string) {
