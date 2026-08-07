@@ -1,0 +1,48 @@
+/* Ajustes mobile do modo treino: ação única após o vídeo e melhor uso da largura. */
+.video-stage.expanded .text-action { display: none; }
+.video-stage.expanded .primary-action { font-size: 0; }
+.video-stage.expanded .primary-action::after { content: 'Iniciar séries'; font-size: 1rem; }
+
+@media (max-width: 520px) {
+  .workout-mode .active-exercise-card {
+    padding: 16px 12px;
+    border-radius: 22px;
+  }
+
+  .workout-mode .active-exercise-card > header {
+    padding-inline: 4px;
+  }
+
+  .workout-mode .video-stage.expanded {
+    margin-top: 14px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  .workout-mode .exercise-video {
+    border-radius: 16px;
+  }
+
+  .workout-mode .video-stage-meta {
+    padding: 11px 6px 0;
+  }
+
+  .workout-mode .video-stage.expanded .primary-action {
+    min-height: 54px;
+    margin-top: 12px;
+    border-radius: 16px;
+  }
+
+  .workout-mode .exercise-prescription,
+  .workout-mode .progression-panel,
+  .workout-mode .set-entry-list,
+  .workout-mode .exercise-cue,
+  .workout-mode .exercise-details {
+    margin-inline: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .workout-mode .active-exercise-card { padding-inline: 10px; }
+  .workout-mode .video-stage.expanded { padding: 6px; }
+}
