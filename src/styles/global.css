@@ -63,6 +63,11 @@ h3 { line-height: 1.25; }
 .detail-card ul { margin: 10px 0 0; padding-left: 20px; }
 .detail-card li + li { margin-top: 7px; }
 .settings-card { margin-top: 14px; padding: 16px; display: grid; gap: 12px; }
+.settings-card small { color: var(--color-muted); line-height: 1.45; }
+.settings-data-card > div { display: grid; gap: 4px; }
+.settings-data-card .secondary-action { width: 100%; }
+.settings-danger-zone { margin-top: 6px; padding-top: 16px; border-top: 1px solid rgba(239,68,68,.18); }
+.settings-danger-zone .danger-action { margin-top: 10px; width: 100%; }
 .rest-timer { position: sticky; top: 92px; z-index: 6; margin-bottom: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; backdrop-filter: blur(14px); }
 .rest-timer strong { font-size: 1.55rem; color: #bfdbfe; }
 .timer-actions { display: flex; gap: 8px; }

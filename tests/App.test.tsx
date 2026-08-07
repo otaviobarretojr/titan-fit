@@ -16,7 +16,7 @@ describe('TITAN FIT v0.21', () => {
     expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
   });
 
-  it('mantém a navegação focada no treino, inclui semana, evolução e backup local', () => {
+  it('mantém a navegação focada no treino, inclui evolução, configurações e backup local', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     expect(nav.getByRole('button', { name: /^Hoje$/i })).toBeInTheDocument();
@@ -28,8 +28,10 @@ describe('TITAN FIT v0.21', () => {
     expect(screen.getByRole('heading', { name: 'Evolução' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Corpo' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Treino' })).toBeInTheDocument();
-    fireEvent.click(nav.getByRole('button', { name: /^Mais$/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
     expect(screen.getByText('v0.21.0')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Carregar dados de demonstração' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
   });
