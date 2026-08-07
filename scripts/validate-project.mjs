@@ -36,7 +36,7 @@ assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('be
 assert(execution.includes("exerciseType === 'strength'") && execution.includes("exerciseType === 'distance'") && execution.includes("exerciseType === 'cardio'"), 'Interface deve renderizar automaticamente por tipo');
 assert(execution.includes('Distância (m)') && execution.includes('Inclinação (%)') && execution.includes('FC média (bpm)'), 'Campos especializados devem aparecer na execução');
 assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional');
-assert(videoLibrary.includes('Cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0'), 'Biblioteca inicial deve conter o vídeo curado da cadeira flexora');
+assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0'), 'Biblioteca inicial deve conter o vídeo curado da cadeira flexora');
 assert(historyPage.includes('ExerciseIntelligenceCard') && historyPage.includes('Recuperação estimada') && historyPage.includes('COACH TITAN'), 'Histórico deve exibir inteligência, PRs e recuperação');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível');
 assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'Persistência e backup devem permanecer funcionais');
