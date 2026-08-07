@@ -12,17 +12,19 @@ beforeEach(() => {
   }]));
 });
 
-describe('ProgressPage v0.21', () => {
-  it('abre o painel corporal, usa tela dedicada de registro e preserva inteligência do treino', () => {
+describe('ProgressPage v0.22', () => {
+  it('usa um único fluxo de avaliação corporal e preserva inteligência do treino', () => {
     render(<ProgressPage refreshKey={0} />);
     expect(screen.getByText('Seu corpo hoje')).toBeInTheDocument();
-    expect(screen.getByText('PESO')).toBeInTheDocument();
-    expect(screen.getByText('CIRCUNFERÊNCIAS')).toBeInTheDocument();
-    expect(screen.getByText('BIOIMPEDÂNCIA')).toBeInTheDocument();
-    expect(screen.getByText('FOTOS')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar Bioimpedância' }));
+    expect(screen.getByText(/EVOLUÇÃO CORPORAL/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Adicionar Bioimpedância' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Adicionar Peso' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Nova avaliação corporal/i }));
     expect(screen.getByText('NOVO REGISTRO')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bioimpedância', level: 2 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Avaliação corporal completa', level: 2 })).toBeInTheDocument();
+    expect(screen.getByText('Circunferências')).toBeInTheDocument();
+    expect(screen.getByText('Bioimpedância')).toBeInTheDocument();
+    expect(screen.getByText('Fotos')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '← Voltar' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '← Voltar' }));
     fireEvent.click(screen.getByRole('tab', { name: 'Treino' }));
