@@ -1,10 +1,10 @@
 .live-pr-celebration {
   position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  top: 55%;
   left: 50%;
   z-index: 1200;
   width: min(calc(100vw - 32px), 420px);
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -15,7 +15,9 @@
   box-shadow: 0 16px 42px rgba(13, 34, 78, 0.34);
   backdrop-filter: blur(18px);
   color: #fff;
-  animation: titan-pr-enter 280ms cubic-bezier(.2,.8,.2,1), titan-pr-glow 1.4s ease-in-out 300ms 2;
+  pointer-events: none;
+  animation: titan-pr-float-away 2.35s cubic-bezier(.2,.8,.2,1) forwards,
+    titan-pr-glow 1.15s ease-in-out 220ms 2;
 }
 
 .live-pr-trophy {
@@ -55,9 +57,23 @@
   font-weight: 800;
 }
 
-@keyframes titan-pr-enter {
-  from { opacity: 0; transform: translate(-50%, -18px) scale(.96); }
-  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+@keyframes titan-pr-float-away {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 24px)) scale(.94);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  58% {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% - 8px)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 96px)) scale(.98);
+  }
 }
 
 @keyframes titan-pr-glow {
@@ -71,7 +87,22 @@
   100% { transform: scale(1) rotate(0); }
 }
 
+@media (max-width: 480px) {
+  .live-pr-celebration {
+    top: 57%;
+    width: min(calc(100vw - 28px), 390px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .live-pr-celebration,
+  .live-pr-celebration {
+    animation: titan-pr-reduced 1.8s ease-out forwards;
+  }
   .live-pr-trophy { animation: none; }
+}
+
+@keyframes titan-pr-reduced {
+  0% { opacity: 0; }
+  15%, 70% { opacity: 1; }
+  100% { opacity: 0; }
 }
