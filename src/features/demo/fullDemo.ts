@@ -128,6 +128,43 @@ export const demoWorkoutHistory: WorkoutHistoryRecord[] = [
     exercise('levantamento-romeno', 'Levantamento terra romeno com halteres', 'Posterior e glúteos', [set(1, 28, 12, 2), set(2, 32, 10, 2), set(3, 34, 9, 1)]),
     exercise('hip-thrust', 'Hip thrust', 'Glúteos', [set(1, 80, 12, 2), set(2, 100, 11, 1), set(3, 110, 10, 1), set(4, 110, 9, 1)]),
     exercise('caminhada-inclinada', 'Cardio — Caminhada inclinada em Zona 2', 'Cardio', [cardioSet(1200, 1900, 5.8, 8, 136, 160)], 'cardio')
+  ]),
+
+  // Semana anterior: primeira execução de cada exercício = linha de base, não PR.
+  history('demo-baseline-shoulders', 'demo-shoulders', 'OMBROS — Deltoides e core', 'Quinta-feira', '2026-07-30', 55, [
+    exercise('desenvolvimento-maquina', 'Desenvolvimento na máquina', 'Ombros', [set(1, 40, 12, 2), set(2, 45, 10, 2), set(3, 45, 9, 1)]),
+    exercise('elevacao-lateral', 'Elevação lateral com halteres', 'Deltoide lateral', [set(1, 8, 16, 2), set(2, 10, 14, 1), set(3, 10, 13, 1), set(4, 10, 12, 1)]),
+    exercise('crucifixo-inverso', 'Crucifixo inverso na máquina', 'Deltoide posterior', [set(1, 30, 15, 2), set(2, 35, 13, 1), set(3, 35, 12, 1)])
+  ]),
+  history('demo-baseline-legs-a', 'demo-legs-a', 'LEGS A — Quadríceps e panturrilhas', 'Quarta-feira', '2026-07-29', 64, [
+    exercise('agachamento-hack', 'Agachamento Hack', 'Quadríceps', [set(1, 65, 10, 2), set(2, 75, 9, 2), set(3, 80, 8, 1), set(4, 80, 8, 1)]),
+    exercise('leg-press', 'Leg press 45°', 'Quadríceps', [set(1, 170, 15, 2), set(2, 190, 13, 1), set(3, 200, 12, 1), set(4, 200, 11, 1)]),
+    exercise('cadeira-extensora', 'Cadeira extensora', 'Quadríceps', [set(1, 50, 15, 2), set(2, 55, 14, 1), set(3, 60, 12, 1)]),
+    exercise('panturrilha-leg', 'Panturrilha no leg press', 'Panturrilhas', [set(1, 90, 15, 2), set(2, 100, 14, 1), set(3, 100, 13, 1), set(4, 100, 12, 1)])
+  ]),
+  history('demo-baseline-pull-a', 'demo-pull-a', 'PULL A — Costas e bíceps', 'Terça-feira', '2026-07-28', 61, [
+    exercise('puxada-frente', 'Puxada frente pegada neutra', 'Dorsais', [set(1, 50, 12, 2), set(2, 55, 11, 2), set(3, 60, 10, 1), set(4, 60, 9, 1)]),
+    exercise('remada-baixa', 'Remada baixa neutra', 'Costas', [set(1, 55, 12, 2), set(2, 65, 11, 1), set(3, 70, 10, 1), set(4, 70, 9, 1)]),
+    exercise('remada-unilateral', 'Remada unilateral com halter', 'Costas', [set(1, 30, 12, 2), set(2, 32, 11, 1), set(3, 32, 10, 1)]),
+    exercise('rosca-inclinada', 'Rosca inclinada com halteres', 'Bíceps', [set(1, 10, 12, 2), set(2, 12, 10, 1), set(3, 12, 9, 1)]),
+    exercise('rosca-martelo', 'Rosca martelo', 'Bíceps e braquial', [set(1, 14, 14, 2), set(2, 16, 12, 1), set(3, 16, 11, 1)])
+  ]),
+  history('demo-baseline-push-a', 'demo-push-a', 'PUSH A — Peitoral superior e tríceps', 'Segunda-feira', '2026-07-27', 59, [
+    exercise('supino-inclinado-halteres', 'Supino inclinado com halteres', 'Peitoral superior', [set(1, 30, 12, 2), set(2, 34, 11, 2), set(3, 36, 10, 1), set(4, 38, 9, 1)]),
+    exercise('chest-press', 'Chest press convergente', 'Peitoral', [set(1, 55, 15, 2), set(2, 65, 13, 1), set(3, 70, 11, 1)]),
+    exercise('crucifixo-polia', 'Crucifixo na polia baixa', 'Peitoral superior', [set(1, 12.5, 15, 2), set(2, 15, 14, 1), set(3, 15, 13, 1)]),
+    exercise('elevacao-lateral-polia', 'Elevação lateral unilateral na polia', 'Deltoide lateral', [set(1, 5, 18, 2), set(2, 7.5, 15, 1), set(3, 7.5, 14, 1)]),
+    exercise('triceps-corda', 'Tríceps na corda', 'Tríceps', [set(1, 25, 15, 2), set(2, 30, 13, 1), set(3, 35, 11, 1)])
+  ]),
+  history('demo-baseline-upper-b', 'demo-upper-b', 'UPPER B + CORRIDA', 'Domingo', '2026-07-26', 67, [
+    exercise('supino-maquina', 'Supino máquina', 'Peitoral', [set(1, 50, 12, 2), set(2, 60, 11, 1), set(3, 65, 9, 1)]),
+    exercise('remada-maquina', 'Remada máquina articulada', 'Costas', [set(1, 50, 12, 2), set(2, 60, 10, 1), set(3, 65, 9, 1)]),
+    exercise('elevacao-lateral-upper', 'Elevação lateral na máquina', 'Deltoide lateral', [set(1, 25, 16, 2), set(2, 30, 14, 1), set(3, 30, 13, 1)])
+  ]),
+  history('demo-baseline-legs-b', 'demo-legs-b', 'LEGS B — Posterior, glúteos e panturrilhas', 'Sexta-feira', '2026-07-24', 65, [
+    exercise('cadeira-flexora', 'Cadeira flexora', 'Posterior de coxa', [set(1, 35, 12, 2), set(2, 40, 11, 2), set(3, 45, 10, 1), set(4, 45, 9, 1)]),
+    exercise('levantamento-romeno', 'Levantamento terra romeno com halteres', 'Posterior e glúteos', [set(1, 26, 12, 2), set(2, 30, 10, 2), set(3, 32, 9, 1)]),
+    exercise('hip-thrust', 'Hip thrust', 'Glúteos', [set(1, 70, 12, 2), set(2, 90, 11, 1), set(3, 100, 10, 1), set(4, 100, 9, 1)])
   ])
 ];
 
