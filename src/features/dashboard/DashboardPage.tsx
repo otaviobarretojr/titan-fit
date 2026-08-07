@@ -13,8 +13,8 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout, onOpenProgress
 
   const workout = getTodayWorkout(plan);
   const exerciseCount = workout?.exercises.length ?? 0;
-  const setCount = workout?.exercises.reduce((total, exercise) => total + exercise.sets, 0) ?? 0;
-  const cardioCount = workout?.exercises.filter((exercise) => normalize(exercise.muscleGroup).includes('cardio')).length ?? 0;
+  const setCount = workout?.exercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0) ?? 0;
+  const cardioCount = workout?.exercises.filter((exercise) => (exercise.exerciseType ?? 'strength') === 'cardio').length ?? 0;
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
 
   return <div className="dashboard-page">
@@ -23,9 +23,9 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout, onOpenProgress
       <div className="today-workout-topline"><span className="eyebrow">TREINO COMPLETO · {strengthStart}</span><span className="today-workout-day">{workout?.day ?? 'Hoje'}</span></div>
       <h3 id="today-workout-title">{workout?.title ?? 'Treino disponível'}</h3>
       <p>{workout?.focus ?? 'Siga o projeto e registre cada exercício.'}</p>
-      <div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> séries</span>{cardioCount > 0 && <span><strong>{cardioCount}</strong> cardio</span>}</div>
+      <div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> registros</span>{cardioCount > 0 && <span><strong>{cardioCount}</strong> cardio</span>}</div>
       <button type="button" className="primary-action" disabled={!workout} onClick={() => workout && onStartWorkout(workout.id)}>Iniciar treino</button>
     </section>
-    <section className="dashboard-grid" aria-label="Resumo de treino"><button type="button" className="dashboard-tile" onClick={onOpenPlan}><span className="dashboard-tile-icon">▤</span><span>Projeto completo</span><strong>Ver exercícios</strong><small>Musculação e cardio na mesma sessão</small></button><button type="button" className="dashboard-tile" onClick={onOpenProgress}><span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Acompanhar evolução</strong><small>Cargas, volume e histórico</small></button></section>
+    <section className="dashboard-grid" aria-label="Resumo de treino"><button type="button" className="dashboard-tile" onClick={onOpenPlan}><span className="dashboard-tile-icon">▤</span><span>Projeto completo</span><strong>Ver exercícios</strong><small>Musculação, cardio e mobilidade na mesma sessão</small></button><button type="button" className="dashboard-tile" onClick={onOpenProgress}><span className="dashboard-tile-icon">↗</span><span>Progresso</span><strong>Acompanhar evolução</strong><small>Cargas, distância, cardio e histórico</small></button></section>
   </div>;
 }

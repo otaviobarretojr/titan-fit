@@ -5,7 +5,7 @@ import type { TitanWorkoutDay } from '../src/features/plan/types';
 
 const workout: TitanWorkoutDay = {
   id: 'push-a', day: 'Segunda', title: 'Push A',
-  exercises: [{ id: 'bench', name: 'Supino máquina', muscleGroup: 'Peitoral', sets: 2, minReps: 8, maxReps: 10, targetRir: 2, restSeconds: 90 }]
+  exercises: [{ id: 'bench', name: 'Supino máquina', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 8, maxReps: 10, targetRir: 2, restSeconds: 90 }]
 };
 
 beforeEach(() => {
@@ -14,8 +14,8 @@ beforeEach(() => {
   vi.stubGlobal('scrollTo', vi.fn());
 });
 
-describe('WorkoutExecutionView v0.12', () => {
-  it('registra carga, repetições, RIR e atualiza progresso e volume', () => {
+describe('WorkoutExecutionView v0.19', () => {
+  it('registra carga, repetições e RIR mantendo o cabeçalho compacto', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
@@ -23,7 +23,8 @@ describe('WorkoutExecutionView v0.12', () => {
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '1' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
 
-    expect(screen.getByText(/1\s*\/\s*2 séries · Volume 720 kg/i)).toBeInTheDocument();
+    expect(screen.getByText(/1\s*\/\s*2 concluídos · Tempo/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Volume 720 kg/i)).not.toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     const saved = localStorage.getItem('titan-fit:execution:plan-1:push-a');
     expect(saved).toContain('"weightKg":80');

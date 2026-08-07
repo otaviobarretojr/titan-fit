@@ -6,14 +6,16 @@ import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { ProgressPage } from '../features/history/ProgressPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
 import { PlanViewer } from '../features/plan/PlanViewer';
+import { WeeklyLibraryPage } from '../features/plan/WeeklyLibraryPage';
 import { loadActivePlan, removeActivePlan, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
 
-type TabId = 'today' | 'plan' | 'progress' | 'more';
+type TabId = 'today' | 'plan' | 'week' | 'progress' | 'more';
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
 const tabs: Array<{ id: TabId; label: string; icon: string }> = [
   { id: 'today', label: 'Hoje', icon: '⌂' },
   { id: 'plan', label: 'Projeto', icon: '▤' },
+  { id: 'week', label: 'Semana', icon: '▦' },
   { id: 'progress', label: 'Progresso', icon: '↗' },
   { id: 'more', label: 'Mais', icon: '•••' }
 ];
@@ -53,8 +55,9 @@ export function App() {
     <main className="app-main">
       {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openPlan} onStartWorkout={startWorkout} onOpenProgress={() => openTab('progress')} />}
       {activeTab === 'plan' && (showImporter || !activePlan ? <>{activePlan && <button type="button" className="secondary-action back-action" onClick={() => setShowImporter(false)}>Voltar para o projeto atual</button>}<PlanImporter onImport={importPlan} /></> : <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => setShowImporter(true)} onRemove={deletePlan} onHistoryChange={historyChanged} />)}
+      {activeTab === 'week' && <WeeklyLibraryPage plan={activePlan} />}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
-      {activeTab === 'more' && <><EmptyPage title="Configurações" body="Backup, instalação e atualização do seu aplicativo de treino." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.16.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
+      {activeTab === 'more' && <><EmptyPage title="Configurações" body="Backup, instalação e atualização do seu aplicativo de treino." /><section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.21.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section><BackupPanel /></>}
     </main>
     {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido aos seus treinos, mesmo offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
     {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}

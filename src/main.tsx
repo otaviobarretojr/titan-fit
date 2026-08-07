@@ -7,6 +7,8 @@ import './styles/dashboard.css';
 import './styles/history.css';
 import './styles/coach.css';
 import './styles/pwa.css';
+import './styles/weekly-library.css';
+import './styles/evolution.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
