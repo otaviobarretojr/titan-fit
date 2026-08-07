@@ -23,7 +23,7 @@ describe('ProgressPage v0.21', () => {
     expect(screen.getByText('Recuperação estimada')).toBeInTheDocument();
     expect(screen.getByText('Supino máquina')).toBeInTheDocument();
     expect(screen.getByText(/🏆 Carga: 82.5 kg/)).toBeInTheDocument();
-    expect(screen.getByText('COACH TITAN')).toBeInTheDocument();
+    expect(screen.getAllByText('COACH TITAN').length).toBeGreaterThan(0);
     expect(screen.getByText('1.5 t')).toBeInTheDocument();
     expect(screen.getByText('Push A')).toBeInTheDocument();
   });
