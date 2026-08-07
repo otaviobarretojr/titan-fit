@@ -33,9 +33,10 @@ const deploy = await read('.github/workflows/deploy-pages.yml');
 assert(pkg.version === '0.21.0', 'package.json deve manter a versão técnica atual');
 assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'"), 'PWA e base do GitHub Pages devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes('Hoje') && app.includes('Histórico') && app.includes('Semana') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.23'), 'Navegação v0.23 deve usar Histórico no lugar de Projeto');
+assert(app.includes('Hoje') && app.includes('Histórico') && app.includes('Semana') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.23.1'), 'Navegação v0.23.1 deve permanecer disponível');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
-assert(app.includes('Ativar demonstração completa') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve oferecer demo completa e reset protegido');
+assert(app.includes('Ativar demonstração completa') && app.includes('Remover dados da demonstração') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve separar demo, remoção da demo e reset protegido');
+assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
 assert(fullDemo.includes('demoPlan') && fullDemo.includes('demoWorkoutHistory') && fullDemo.includes('loadFullDemo') && fullDemo.includes('saveWorkoutHistory') && fullDemo.includes('saveBodyEvolution'), 'Modo demonstração deve popular projeto, histórico e evolução corporal');
 assert(fullDemo.includes('caminhada-inclinada') && fullDemo.includes('corrida-demo') && fullDemo.includes('averageHeartRate'), 'Modo demonstração deve incluir cardio com métricas reais');
 assert(sessionHistoryPage.includes('Histórico') && sessionHistoryPage.includes('loadWorkoutHistory') && sessionHistoryPage.includes('history-session-card'), 'Aba Histórico deve listar e detalhar sessões concluídas');
@@ -72,4 +73,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.23 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.23.1 concluída com sucesso.');
