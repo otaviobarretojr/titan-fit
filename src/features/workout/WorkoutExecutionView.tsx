@@ -9,10 +9,10 @@ import type { ExecutedSet, WorkoutExecution } from './types';
 type Props = { planId: string; planName: string; workout: TitanWorkoutDay; onBack: () => void; onCompleted: () => void };
 type WorkoutSummary = { durationSeconds: number; totalVolumeKg: number; totalSets: number; cardioMinutes: number };
 type NumericField = 'weightKg' | 'repetitions' | 'rir' | 'durationSeconds' | 'distanceMeters' | 'speedKmh' | 'inclinePercent' | 'averageHeartRate' | 'calories';
+type StrengthReference = { weightKg: number; repetitions: number };
 
 export function WorkoutExecutionView({ planId, planName, workout, onBack, onCompleted }: Props) {
   const previousHistory = useMemo(() => loadWorkoutHistory(), []);
-  const previousExercises = useMemo(() => getPreviousExercises(previousHistory, workout.id), [previousHistory, workout.id]);
   const initial = useMemo(() => normalizeExecution(loadWorkoutExecution(planId, workout.id), planId, workout), [planId, workout]);
   const [execution, setExecution] = useState<WorkoutExecution>(initial);
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => findFirstPendingExercise(workout, initial));
@@ -45,7 +45,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const activeSets = execution.exercises[activeExercise.id].sets;
   const exerciseCompleted = activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
-  const previousExercise = previousExercises.get(activeExercise.id) ?? null;
+  const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
   const exerciseVideo = getExerciseVideo(activeExercise);
   const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
@@ -91,7 +91,11 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       </section>}
 
       <Prescription exercise={activeExercise} />
-      {exerciseType === 'strength' && <div className="progression-panel"><div><span>Última sessão</span><strong>{formatPrevious(previousExercise)}</strong></div><div><span>Meta de hoje</span><strong>{activeExercise.minReps ?? '—'}–{activeExercise.maxReps ?? '—'} reps</strong></div></div>}
+      {exerciseType === 'strength' && <div className="progression-panel workout-pr-panel">
+        <div><span>Última sessão</span><strong>{strengthSnapshot.last}</strong></div>
+        <div><span>🏆 PR válido</span><strong>{strengthSnapshot.pr}</strong></div>
+        <div><span>Meta de hoje</span><strong>{strengthSnapshot.target}</strong></div>
+      </div>}
       {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
       {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
@@ -144,8 +148,68 @@ function normalizeExecution(saved: WorkoutExecution | null, planId: string, work
   return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, updatedAt: saved.updatedAt ?? fresh.updatedAt };
 }
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
-function getPreviousExercises(history: WorkoutHistoryRecord[], workoutId: string) { const record = history.find((item) => item.workoutId === workoutId); return new Map((record?.exercises ?? []).map((exercise) => [exercise.exerciseId, exercise])); }
-function formatPrevious(previous: HistoryExercise | null) { if (!previous) return 'Sem histórico'; const best = [...previous.sets].filter((set) => set.weightKg !== null && set.repetitions !== null).sort((a, b) => (b.weightKg ?? 0) - (a.weightKg ?? 0))[0]; return best ? `${best.weightKg} kg × ${best.repetitions}` : 'Sem carga registrada'; }
+
+function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
+  const sessions = history
+    .flatMap((record) => record.exercises.filter((item) => item.exerciseId === exercise.id).map((item) => ({ exercise: item, completedAt: record.completedAt })))
+    .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+  if (!sessions.length) return { last: 'Sem histórico', pr: 'Ainda sem PR', target: 'Criar referência inicial' };
+
+  const lastBest = bestStrengthSet(sessions[0].exercise);
+  const last = lastBest ? formatStrengthReference(lastBest) : 'Sem carga registrada';
+  const pr = findValidPr(sessions);
+  const target = buildTodayTarget(lastBest, exercise);
+  return { last, pr: pr ? formatStrengthReference(pr) : 'Ainda sem PR', target };
+}
+
+function bestStrengthSet(exercise: HistoryExercise): StrengthReference | null {
+  const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
+  if (!valid.length) return null;
+  const best = [...valid].sort((a, b) => {
+    const scoreA = (a.weightKg ?? 0) * (a.repetitions ?? 0);
+    const scoreB = (b.weightKg ?? 0) * (b.repetitions ?? 0);
+    return scoreB - scoreA || (b.weightKg ?? 0) - (a.weightKg ?? 0);
+  })[0];
+  return { weightKg: best.weightKg ?? 0, repetitions: best.repetitions ?? 0 };
+}
+
+function findValidPr(sessionsDescending: { exercise: HistoryExercise; completedAt: string }[]): StrengthReference | null {
+  const chronological = [...sessionsDescending].reverse();
+  let bestWeight = -1;
+  let bestScore = -1;
+  let validSessions = 0;
+  let currentPr: StrengthReference | null = null;
+
+  for (const session of chronological) {
+    const best = bestStrengthSet(session.exercise);
+    if (!best) continue;
+    validSessions += 1;
+    const score = best.weightKg * best.repetitions;
+    if (validSessions === 1) {
+      bestWeight = best.weightKg;
+      bestScore = score;
+      continue;
+    }
+    if (best.weightKg > bestWeight || score > bestScore) {
+      currentPr = best;
+      bestWeight = Math.max(bestWeight, best.weightKg);
+      bestScore = Math.max(bestScore, score);
+    }
+  }
+  return currentPr;
+}
+
+function buildTodayTarget(last: StrengthReference | null, exercise: TitanExercise) {
+  if (!last) return 'Criar referência inicial';
+  const minReps = exercise.minReps ?? 6;
+  const maxReps = exercise.maxReps ?? Math.max(minReps, last.repetitions + 1);
+  if (last.repetitions < maxReps) return `${last.weightKg} kg × ${Math.min(maxReps, last.repetitions + 1)}`;
+  return `${formatWeight(last.weightKg + 2.5)} kg × ${minReps}`;
+}
+
+function formatStrengthReference(value: StrengthReference) { return `${formatWeight(value.weightKg)} kg × ${value.repetitions}`; }
+function formatWeight(value: number) { return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(1))); }
+
 function createHistoryRecord(planId: string, planName: string, workout: TitanWorkoutDay, execution: WorkoutExecution, completedAt: string): WorkoutHistoryRecord {
   const exercises = workout.exercises.map((exercise) => {
     const exerciseType = resolveExerciseType(exercise); const sets = execution.exercises[exercise.id].sets.map(({ completed: _completed, ...set }) => set);
