@@ -1,7 +1,7 @@
 import type { ExerciseType } from '../plan/types';
 
 export type ExecutedSet = {
-  [key: string]: number | string | boolean | null;
+  [key: string]: number | string | boolean | null | undefined;
   setNumber: number;
   weightKg: number | null;
   repetitions: number | null;
