@@ -17,14 +17,15 @@ const workoutTypes = await read('src/features/workout/types.ts');
 const historyTypes = await read('src/features/history/types.ts');
 const historyPage = await read('src/features/history/ProgressPage.tsx');
 const intelligence = await read('src/features/history/intelligence.ts');
+const videoLibrary = await read('src/features/exercise-library/videos.ts');
 const database = await read('src/core/database/indexedDb.ts');
 const backup = await read('src/core/backup/backup.ts');
 const deploy = await read('.github/workflows/deploy-pages.yml');
 
-assert(pkg.version === '0.18.0', 'package.json deve usar a versão 0.18.0');
+assert(pkg.version === '0.19.0', 'package.json deve usar a versão 0.19.0');
 assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'"), 'PWA e base do GitHub Pages devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes('Hoje') && app.includes('Projeto') && app.includes('Progresso') && app.includes('Mais') && app.includes('v0.18.0'), 'Navegação e versão v0.18 devem permanecer disponíveis');
+assert(app.includes('Hoje') && app.includes('Projeto') && app.includes('Progresso') && app.includes('Mais') && app.includes('v0.19.0'), 'Navegação e versão v0.19 devem permanecer disponíveis');
 assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve suportar os cinco tipos');
 assert(types.includes('durationSeconds') && types.includes('distanceMeters') && types.includes('inclinePercent') && types.includes('averageHeartRate'), 'Campos avançados devem existir no plano');
 assert(types.includes('CardioProgressionStep') && types.includes('progression?'), 'Progressão planejada de cardio deve existir');
@@ -34,7 +35,8 @@ assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKm
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
 assert(execution.includes("exerciseType === 'strength'") && execution.includes("exerciseType === 'distance'") && execution.includes("exerciseType === 'cardio'"), 'Interface deve renderizar automaticamente por tipo');
 assert(execution.includes('Distância (m)') && execution.includes('Inclinação (%)') && execution.includes('FC média (bpm)'), 'Campos especializados devem aparecer na execução');
-assert(execution.includes('VEJA ANTES DE COMEÇAR') && execution.includes('youtube-nocookie.com/embed/'), 'Introdução por vídeo deve permanecer funcional');
+assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional');
+assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0'), 'Biblioteca inicial deve conter o vídeo curado da cadeira flexora');
 assert(historyPage.includes('ExerciseIntelligenceCard') && historyPage.includes('Recuperação estimada') && historyPage.includes('COACH TITAN'), 'Histórico deve exibir inteligência, PRs e recuperação');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível');
 assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'Persistência e backup devem permanecer funcionais');
@@ -52,4 +54,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.18.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.19.0 concluída com sucesso.');
