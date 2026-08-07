@@ -90,17 +90,17 @@ export function getProgressionAdvice(records: WorkoutHistoryRecord[], exerciseId
     return advice('review', 'Não aumentar agora', `${reason} Mantenha ${formatWeight(latest.maxWeightKg)} e recupere desempenho antes de subir a carga.`, latest.maxWeightKg, Math.max(1, Math.round(latest.totalReps / latest.validSets)), sessions.length >= 3 ? 'high' : 'medium', repDrop ? 'declining' : 'stable');
   }
 
-  const sustainedImprovement = recentTrend === 'improving' && (threeSessionTrend === 'improving' || threeSessionTrend === 'stable');
+  if (recentTrend === 'improving' && latest.maxWeightKg === previous.maxWeightKg) {
+    const perSet = Math.max(1, Math.ceil(latest.totalReps / latest.validSets));
+    return advice('maintain', 'Progredir repetições', `A carga está estável e as repetições melhoraram. Mantenha ${formatWeight(latest.maxWeightKg)} e tente acrescentar 1 repetição por série antes de aumentar a carga.`, latest.maxWeightKg, perSet + 1, sessions.length >= 3 ? 'high' : 'medium', 'improving');
+  }
+
+  const sustainedImprovement = recentTrend === 'improving' && latest.maxWeightKg > previous.maxWeightKg && (threeSessionTrend === 'improving' || threeSessionTrend === 'stable');
   const hasEffortMargin = latest.averageRir !== null && latest.averageRir >= 1;
 
   if (sustainedImprovement && hasEffortMargin) {
     const suggested = roundToIncrement(latest.maxWeightKg * 1.025, 0.5);
     return advice('progress', 'Progressão disponível', `A evolução foi sustentada e ainda houve margem de esforço. Próxima referência sugerida: ${formatWeight(suggested)} (+2,5%).`, suggested, null, sessions.length >= 3 ? 'high' : 'medium', 'improving');
-  }
-
-  if (recentTrend === 'improving' && latest.maxWeightKg === previous.maxWeightKg) {
-    const perSet = Math.max(1, Math.ceil(latest.totalReps / latest.validSets));
-    return advice('maintain', 'Progredir repetições', `A carga está estável e as repetições melhoraram. Mantenha ${formatWeight(latest.maxWeightKg)} e tente acrescentar 1 repetição por série antes de aumentar a carga.`, latest.maxWeightKg, perSet + 1, sessions.length >= 3 ? 'high' : 'medium', 'improving');
   }
 
   if (recentTrend === 'declining') {
