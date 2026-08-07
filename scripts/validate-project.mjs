@@ -28,7 +28,7 @@ assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobil
 assert(types.includes('durationSeconds') && types.includes('distanceMeters') && types.includes('inclinePercent') && types.includes('averageHeartRate'), 'Campos avançados devem existir no plano');
 assert(types.includes('CardioProgressionStep') && types.includes('progression?'), 'Progressão planejada de cardio deve existir');
 assert(validation.includes("readString(value.exerciseType) || 'strength'"), 'Ficha antiga sem exerciseType deve assumir strength');
-assert(validation.includes("exerciseType === 'distance'") && validation.includes("exerciseType === 'cardio'"), 'Validação deve variar conforme o tipo');
+assert(validation.includes("exerciseType === 'distance'") && validation.includes("['cardio', 'isometric', 'mobility'].includes(exerciseType)"), 'Validação deve variar conforme o tipo');
 assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas avançadas');
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
 assert(execution.includes("exerciseType === 'strength'") && execution.includes("exerciseType === 'distance'") && execution.includes("exerciseType === 'cardio'"), 'Interface deve renderizar automaticamente por tipo');
