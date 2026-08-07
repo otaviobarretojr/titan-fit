@@ -1,12 +1,25 @@
 export const TITAN_PLAN_SCHEMA_VERSION = 1 as const;
 
 export type ExerciseType = 'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility';
+export type ExerciseVideoPolicy = 'required' | 'not-required' | 'optional';
 
 export type TitanVideo = {
   provider: 'youtube';
-  url: string;
-  videoId: string;
+  url?: string;
+  videoId?: string;
   title?: string;
+  channel?: string;
+  status?: 'curated' | 'pending-curation';
+  searchQuery?: string;
+};
+
+export type TitanVideoLibrary = {
+  version?: string;
+  policy?: Partial<Record<ExerciseType, string>>;
+  priority?: string[];
+  curatedVideos?: number;
+  pendingCuration?: number;
+  cardioWithoutVideo?: number;
 };
 
 export type CardioProgressionStep = {
@@ -51,6 +64,7 @@ export type TitanExercise = {
   commonMistakes?: string[];
   alternatives?: string[];
   video?: TitanVideo;
+  videoPolicy?: ExerciseVideoPolicy;
 };
 
 export type TitanWorkoutDay = {
@@ -92,6 +106,7 @@ export type TitanPlan = {
   createdAt: string;
   author?: string;
   project?: TitanProject;
+  videoLibrary?: TitanVideoLibrary;
   workouts: TitanWorkoutDay[];
 };
 
