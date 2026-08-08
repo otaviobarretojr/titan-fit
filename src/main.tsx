@@ -11,6 +11,7 @@ import './styles/history.css';
 import './styles/coach.css';
 import './styles/pwa.css';
 import './styles/weekly-library.css';
+import './styles/week-library-v0282.css';
 import './styles/evolution.css';
 import './styles/one-ui.css';
 import './styles/workout-mobile.css';
