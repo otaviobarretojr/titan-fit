@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './app/App';
+import { TitanEntry } from './app/TitanEntry';
 import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
 import { enablePostWorkoutCoach } from './ui/post-workout-coach';
@@ -41,6 +41,7 @@ import './styles/score-alignment-v0322.css';
 import './styles/programming-v033.css';
 import './styles/exercise-alternatives-v036.css';
 import './styles/workout-mode-v038.css';
+import './styles/profile-onboarding.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
@@ -48,6 +49,6 @@ enablePostWorkoutCoach();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <TitanEntry />
   </React.StrictMode>
 );
