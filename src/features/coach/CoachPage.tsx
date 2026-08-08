@@ -25,7 +25,7 @@ export function CoachPage() {
 
     <section className="coach-disclaimer">
       <strong>Escopo atual</strong>
-      <p>O cardio integrado conta como exercício dentro do treino. Não existe análise ou histórico separado de cardio nesta versão.</p>
+      <p>O cardio integrado conta como exercício dentro do treino. A análise utiliza apenas os dados que já foram registrados no TITAN FIT.</p>
     </section>
 
     <section className="progress-section">

@@ -10,11 +10,12 @@ const workout: TitanWorkoutDay = {
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
   vi.stubGlobal('confirm', vi.fn(() => true));
   vi.stubGlobal('scrollTo', vi.fn());
 });
 
-describe('WorkoutExecutionView v0.19', () => {
+describe('WorkoutExecutionView', () => {
   it('registra carga, repetições e RIR mantendo o cabeçalho compacto', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
 
