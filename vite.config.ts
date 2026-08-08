@@ -18,8 +18,8 @@ export default defineConfig({
         scope: '/titan-fit/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0b0f17',
-        theme_color: '#0b0f17',
+        background_color: '#f4f6f9',
+        theme_color: '#f4f6f9',
         icons: [
           { src: '/titan-fit/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: '/titan-fit/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
@@ -27,7 +27,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cacheId: 'titan-fit',
+        cacheId: 'titan-fit-v0.36.0',
         cleanupOutdatedCaches: true,
         navigateFallback: '/titan-fit/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png}'],

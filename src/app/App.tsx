@@ -16,6 +16,7 @@ import { ProgrammingPage } from '../features/programming/ProgrammingPage';
 type TabId = 'today' | 'programming' | 'cardio' | 'progress' | 'settings' | 'workout';
 type NavigationTab = Exclude<TabId, 'workout'>;
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
+const APP_VERSION = '0.36.0';
 const tabs: Array<{ id: NavigationTab; label: string }> = [
   { id: 'today', label: 'Hoje' },
   { id: 'programming', label: 'Programação' },
@@ -63,6 +64,18 @@ export function App() {
   }, []);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
+  async function checkForUpdate() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        await registration?.update();
+      }
+    } catch (error) {
+      console.warn('Não foi possível verificar a atualização do PWA.', error);
+    } finally {
+      window.location.reload();
+    }
+  }
   function navigate(tab: TabId, replace = false) {
     if (tab !== activeTab || directWorkoutId || showImporter) {
       const state = { ...window.history.state, titanTab: tab };
@@ -128,11 +141,11 @@ export function App() {
       {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} />}
       {activeTab === 'settings' && <><EmptyPage title="Configurações" body="Projeto, dados, backup, instalação e manutenção do TITAN FIT." />
         <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Substituir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. Histórico, cardio e evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar substituição</button>}</div>}</section>
-        <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v0.33.0</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => window.location.reload()}>Verificar atualização</button></section>
+        <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v{APP_VERSION}</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => void checkForUpdate()}>Verificar atualização</button></section>
         <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, histórico de treino, cargas, cardio e evolução corporal fictícios para testar todas as funções.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button>{demoMode && <button type="button" className="secondary-action" onClick={() => void removeDemoData()}>Remover dados da demonstração</button>}<div className="settings-danger-zone"><span className="info-label">Zona de segurança</span><strong>Apagar todos os dados</strong><small>Remove permanentemente projeto, sessões, histórico, evolução corporal, cardio, fotos e preferências salvas neste aparelho.</small><button type="button" className="secondary-action danger-action" onClick={() => void resetApp()}>Resetar TITAN FIT</button></div></section><BackupPanel /></>}
     </main>
     {installPrompt && !installDismissed && <aside className="pwa-prompt" role="dialog" aria-label="Instalar TITAN FIT"><div><strong>Instale o TITAN FIT</strong><p>Acesso rápido aos seus treinos, mesmo offline.</p></div><div className="prompt-actions"><button type="button" onClick={installApp}>Instalar</button><button type="button" className="text-action" onClick={() => setInstallDismissed(true)}>Depois</button></div></aside>}
-    {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
+    {needRefresh && <aside className="pwa-prompt" role="alert" aria-live="polite"><div><strong>Nova versão disponível</strong><p>Atualize para v{APP_VERSION} quando for conveniente.</p></div><div className="prompt-actions"><button type="button" onClick={() => updateServiceWorker(true)}>Atualizar agora</button><button type="button" className="text-action" onClick={() => setNeedRefresh(false)}>Depois</button></div></aside>}
     {activeTab !== 'workout' && <nav className="bottom-navigation" aria-label="Navegação principal">{tabs.map((tab) => <button key={tab.id} type="button" className={activeTab === tab.id ? 'active' : ''} onClick={() => openTab(tab.id)} aria-current={activeTab === tab.id ? 'page' : undefined}><span className="nav-icon-wrap" aria-hidden="true"><NavIcon id={tab.id} /></span><span>{tab.label}</span></button>)}</nav>}
   </div>;
 }
