@@ -1,0 +1,87 @@
+/* TITAN FIT v0.27.2 — Premium UI Refresh da Home */
+.dashboard-page-clean{gap:18px;padding-bottom:18px}
+.dashboard-heading{border:0;background:transparent;padding:18px 6px 4px}
+.dashboard-heading .eyebrow{color:#8fb8ff;letter-spacing:.09em}
+.dashboard-heading h2{margin:8px 0 4px;font-size:clamp(2rem,8vw,2.8rem);line-height:1.02;letter-spacing:-.035em}
+.dashboard-heading p{font-size:1rem;color:#aab4c7}
+
+.today-workout{
+  position:relative;
+  isolation:isolate;
+  padding:26px 28px 28px;
+  border:1px solid rgba(45,125,255,.7);
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 82% 42%,rgba(44,111,255,.16),transparent 26%),
+    linear-gradient(145deg,rgba(7,20,39,.98),rgba(5,14,28,.98) 60%,rgba(4,10,20,.99));
+  box-shadow:0 0 0 1px rgba(20,99,255,.08),0 18px 50px rgba(0,0,0,.28),-10px 0 30px rgba(28,104,255,.10);
+}
+.today-workout::before{
+  content:'♟';
+  position:absolute;
+  right:26px;
+  top:86px;
+  z-index:-1;
+  font-size:8rem;
+  line-height:1;
+  color:rgba(42,102,214,.12);
+  transform:scaleX(.72) rotate(2deg);
+  filter:drop-shadow(0 0 22px rgba(36,109,255,.16));
+  pointer-events:none;
+}
+.today-workout::after{content:'';position:absolute;inset:auto auto 0 0;width:5px;height:70%;border-radius:30px;background:linear-gradient(180deg,#2f8cff,rgba(47,140,255,0));box-shadow:0 0 18px rgba(47,140,255,.8);pointer-events:none}
+.today-workout-topline{position:relative;z-index:1}
+.today-workout-topline .eyebrow{color:#4d9cff;display:flex;align-items:center;gap:8px;font-size:.78rem}
+.today-workout-topline .eyebrow::before{content:'◫';display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(48,132,255,.5);color:#4d9cff;font-size:1rem;background:rgba(19,74,153,.16)}
+.today-workout-day{padding:8px 12px;border-radius:18px;border:1px solid rgba(58,132,255,.25);background:rgba(20,64,124,.18);color:#69a8ff;font-size:.76rem;font-weight:800}
+.today-workout h3{position:relative;z-index:1;margin:28px 0 14px;max-width:18ch;font-size:clamp(2rem,8vw,2.75rem);line-height:1.05;letter-spacing:-.03em;color:#f8fbff}
+.today-workout p{position:relative;z-index:1;max-width:31ch;padding-top:16px;border-top:1px solid rgba(144,170,214,.14);color:#aeb9cb;line-height:1.55;font-size:.98rem}
+.today-workout-metrics{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0 22px;color:#aab4c5;font-size:.75rem}
+.today-workout-metrics span{display:flex;align-items:center;gap:7px}
+.today-workout-metrics span:nth-child(1)::before{content:'♙';color:#2e85ff;font-size:1.15rem}
+.today-workout-metrics span:nth-child(2)::before{content:'▣';color:#2e85ff;font-size:1rem}
+.today-workout-metrics span:nth-child(3)::before{content:'♡';color:#63e58c;font-size:1.15rem}
+.today-workout-metrics strong{font-size:1.1rem;color:#fff}
+.today-workout .primary-action{position:relative;z-index:1;min-height:56px;padding:0 24px;border-radius:18px;background:linear-gradient(135deg,#2f8cff,#1559df);color:#fff;box-shadow:0 10px 28px rgba(24,96,229,.28);font-size:1rem;font-weight:800}
+.today-workout .primary-action::before{content:'▶';margin-right:10px}
+
+.dashboard-coach-card{
+  margin-top:0;
+  padding:22px 22px 20px;
+  border:1px solid rgba(214,153,38,.34);
+  border-radius:28px;
+  background:linear-gradient(150deg,rgba(13,18,25,.98),rgba(8,13,20,.98));
+  box-shadow:0 14px 34px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.015);
+  backdrop-filter:none;
+}
+.dashboard-coach-topline{margin-bottom:16px}
+.dashboard-coach-topline .eyebrow{color:#e8ab36;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.dashboard-coach-topline .eyebrow::before{content:'♛';display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(226,164,49,.45);background:rgba(170,112,16,.08);color:#f0b53f;font-size:1rem}
+.dashboard-coach-topline>span:last-child{padding:9px 14px;border-radius:999px;border:1px solid rgba(49,181,95,.35);background:rgba(35,151,79,.12);color:#67e391;font-size:.72rem}
+.dashboard-coach-card>strong{font-size:1.25rem;line-height:1.28;color:#f8fbff}
+.dashboard-coach-card>p{font-size:.98rem;color:#9ea8b8;line-height:1.55}
+.coach-context{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:18px;padding:18px 4px 4px;border-top:1px solid rgba(210,154,46,.16);color:#eef3fa;font-size:.8rem}
+.coach-context strong{font-size:1.08rem;color:#fff}
+.coach-context span{display:block;padding:0 14px}
+.coach-context span+span{border-left:1px solid rgba(210,154,46,.18)}
+.dashboard-coach-card details{margin-top:18px;padding-top:0;border-top:0}
+.dashboard-coach-card summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 16px;border:1px solid rgba(210,154,46,.22);border-radius:18px;background:rgba(119,77,9,.09);color:#e9b450;font-size:.88rem;font-weight:800}
+.dashboard-coach-card summary::-webkit-details-marker{display:none}
+.dashboard-coach-card summary::after{content:'›';font-size:1.5rem}
+.dashboard-coach-card details[open] summary::after{transform:rotate(90deg)}
+
+.bottom-navigation{background:rgba(8,14,24,.96)!important;border:1px solid rgba(110,135,170,.22)!important;border-radius:30px!important;box-shadow:0 14px 40px rgba(0,0,0,.35)!important;backdrop-filter:blur(18px)}
+.bottom-navigation button{color:#7f8ca1}
+.bottom-navigation button.active{color:#3a8cff}
+.bottom-navigation button.active .nav-icon-wrap{width:48px;height:38px;border:1px solid rgba(56,135,255,.32);border-radius:18px;background:rgba(39,111,226,.15);box-shadow:inset 0 0 18px rgba(44,119,235,.08)}
+.bottom-navigation .nav-icon{width:23px;height:23px;stroke-width:1.8}
+.bottom-navigation button span:last-child{font-weight:700}
+
+@media(max-width:390px){
+  .today-workout{padding:22px 22px 24px;border-radius:26px}
+  .today-workout::before{right:10px;top:100px;font-size:6.7rem}
+  .today-workout h3{font-size:1.9rem;max-width:16ch}
+  .today-workout-metrics{gap:8px}
+  .today-workout-metrics span{gap:4px;font-size:.68rem}
+  .dashboard-coach-card{padding:20px 18px;border-radius:24px}
+}
