@@ -2,6 +2,7 @@ import { getExerciseSessions, getProgressionAdvice } from '../history/intelligen
 import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanPlan, TitanWorkoutDay } from '../plan/types';
+import { getWorkoutVisual, WorkoutMuscleArt } from './WorkoutMuscleArt';
 
 type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; onOpenProgress: () => void; };
 type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
@@ -22,10 +23,12 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const cardioCount = workout?.exercises.filter((exercise) => (exercise.exerciseType ?? 'strength') === 'cardio').length ?? 0;
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
   const coach = getTodayCoachPriority(workout);
+  const visual = getWorkoutVisual(workout?.title, workout?.focus);
 
   return <div className="dashboard-page dashboard-page-clean">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
     <section className="today-workout" aria-labelledby="today-workout-title">
+      <WorkoutMuscleArt visual={visual} />
       <div className="today-workout-topline"><span className="eyebrow">TREINO COMPLETO · {strengthStart}</span><span className="today-workout-day">{workout?.day ?? 'Hoje'}</span></div>
       <h3 id="today-workout-title">{workout?.title ?? 'Treino disponível'}</h3>
       <p>{workout?.focus ?? 'Siga o projeto e registre cada exercício.'}</p>
@@ -68,7 +71,7 @@ function getTodayCoachPriority(workout: TitanWorkoutDay | null): CoachPriority {
     status: 'stagnant', badge: 'ESTAGNAÇÃO',
     title: `${stagnant.exercise.name} · destravar progresso`,
     message: 'As últimas 3 sessões ficaram praticamente no mesmo nível.',
-    detail: `Mantenha a carga atual e tente ganhar 1 repetição total ou melhorar a execução antes de subir o peso. O Coach só vai liberar progressão quando houver uma melhora objetiva.`,
+    detail: 'Mantenha a carga atual e tente ganhar 1 repetição total ou melhorar a execução antes de subir o peso. O Coach só vai liberar progressão quando houver uma melhora objetiva.',
     context: buildContext(records),
   };
 
