@@ -34,6 +34,38 @@ export type CardioProgressionStep = {
   note?: string;
 };
 
+export type TitanExerciseAlternative = {
+  id: string;
+  name: string;
+  muscleGroup?: string;
+  exerciseType?: ExerciseType;
+  sets?: number;
+  minReps?: number;
+  maxReps?: number;
+  targetRir?: number;
+  restSeconds?: number;
+  durationSeconds?: number;
+  distanceMeters?: number;
+  minDistanceMeters?: number;
+  maxDistanceMeters?: number;
+  speedKmh?: number;
+  speedMinKmh?: number;
+  speedMaxKmh?: number;
+  inclinePercent?: number;
+  averagePace?: string;
+  averageHeartRate?: number;
+  targetHeartRateMin?: number;
+  targetHeartRateMax?: number;
+  calories?: number;
+  cardioZone?: string;
+  notes?: string;
+  progression?: CardioProgressionStep[];
+  technique?: string;
+  commonMistakes?: string[];
+  video?: TitanVideo;
+  videoPolicy?: ExerciseVideoPolicy;
+};
+
 export type TitanExercise = {
   id: string;
   name: string;
@@ -63,6 +95,7 @@ export type TitanExercise = {
   technique?: string;
   commonMistakes?: string[];
   alternatives?: string[];
+  alternativeExercises?: TitanExerciseAlternative[];
   video?: TitanVideo;
   videoPolicy?: ExerciseVideoPolicy;
 };
