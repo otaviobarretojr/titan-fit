@@ -8,7 +8,7 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.29.0', () => {
+describe('TITAN FIT v0.33.0', () => {
   it('renderiza o estado vazio e oferece importação de projeto', () => {
     render(<App />);
     expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
@@ -16,21 +16,22 @@ describe('TITAN FIT v0.29.0', () => {
     expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
   });
 
-  it('usa Histórico, Cardio e concentra gestão em Configurações', () => {
+  it('usa Programação, Cardio e concentra gestão em Configurações', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     expect(nav.getByRole('button', { name: /^Hoje$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Histórico$/i })).toBeInTheDocument();
+    expect(nav.getByRole('button', { name: /^Programação$/i })).toBeInTheDocument();
+    expect(nav.queryByRole('button', { name: /^Histórico$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Projeto$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Semana$/i })).not.toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Cardio$/i })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Progresso$/i })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Cardio$/i }));
     expect(screen.getByRole('heading', { name: 'Condicionamento + 5 km' })).toBeInTheDocument();
-    fireEvent.click(nav.getByRole('button', { name: /^Histórico$/i }));
-    expect(screen.getByRole('heading', { name: 'Histórico' })).toBeInTheDocument();
+    fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
+    expect(screen.getByRole('heading', { name: 'Nenhum projeto ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
-    expect(screen.getByText('v0.29.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.33.0')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();

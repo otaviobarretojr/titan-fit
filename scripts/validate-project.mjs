@@ -14,6 +14,7 @@ const types = await read('src/features/plan/types.ts');
 const validation = await read('src/features/plan/validation.ts');
 const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
 const cardioPage = await read('src/features/cardio/CardioPage.tsx');
+const programmingPage = await read('src/features/programming/ProgrammingPage.tsx');
 const workoutTypes = await read('src/features/workout/types.ts');
 const historyTypes = await read('src/features/history/types.ts');
 const progressPage = await read('src/features/history/ProgressPage.tsx');
@@ -33,14 +34,15 @@ const deploy = await read('.github/workflows/deploy-pages.yml');
 assert(pkg.version === '0.21.0', 'package.json deve manter a versão técnica atual');
 assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'"), 'PWA e base do GitHub Pages devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes('Hoje') && app.includes('Histórico') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.29.0') && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação v0.29.0 deve usar Cardio no lugar de Semana');
+assert(app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.33.0') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação v0.33 deve usar Programação no lugar de Histórico e manter Cardio');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
 assert(app.includes('Ativar demonstração completa') && app.includes('Remover dados da demonstração') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve separar demo, remoção da demo e reset protegido');
 assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
 assert(fullDemo.includes('demoPlan') && fullDemo.includes('demoWorkoutHistory') && fullDemo.includes('loadFullDemo') && fullDemo.includes('saveWorkoutHistory') && fullDemo.includes('saveBodyEvolution'), 'Modo demonstração deve popular projeto, histórico e evolução corporal');
 assert(fullDemo.includes('cardioSchedule') && fullDemo.includes('buildCardioHistory') && fullDemo.includes('averageHeartRate') && fullDemo.includes('distanceMeters'), 'Modo demonstração deve incluir cardio diário com métricas reais');
 assert(fullDemo.includes('buildStrengthHistory') && fullDemo.includes('sequenceIndex') && fullDemo.includes("exercise.id === 'chest-press'"), 'Modo demonstração deve incluir histórico suficiente para progressão, PR e estagnação');
-assert(sessionHistoryPage.includes('Histórico') && sessionHistoryPage.includes('loadWorkoutHistory') && sessionHistoryPage.includes('history-session-card'), 'Aba Histórico deve listar e detalhar sessões concluídas');
+assert(sessionHistoryPage.includes('Histórico') && sessionHistoryPage.includes('loadWorkoutHistory') && sessionHistoryPage.includes('history-session-card'), 'Histórico interno deve continuar disponível para PR, Coach, Score e diagnóstico');
+assert(programmingPage.includes('Treinos da semana') && programmingPage.includes('Cardio da semana') && programmingPage.includes('Erros comuns') && programmingPage.includes('Alternativas'), 'Programação deve reunir semana de musculação, cardio e consulta de execução');
 assert(demoEvolution.includes("Array.from({ length: 6 }") && demoEvolution.includes('bodyFatPercent') && demoEvolution.includes('muscleMassKg') && demoEvolution.includes('measurements'), 'Dados demo devem conter série mensal completa de evolução corporal');
 assert(resetData.includes('localStorage.clear()') && resetData.includes('clearStore') && resetData.includes('STORE_NAMES'), 'Reset total deve limpar LocalStorage e todas as stores IndexedDB');
 assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve suportar os cinco tipos');
@@ -75,4 +77,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.29.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.33.0 concluída com sucesso.');
