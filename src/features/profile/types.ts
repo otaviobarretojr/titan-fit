@@ -3,6 +3,8 @@ export type PrimaryGoal = 'hypertrophy' | 'fat-loss' | 'recomposition' | 'streng
 export type TrainingExperience = 'beginner' | 'intermediate' | 'advanced';
 export type EquipmentAccess = 'full-gym' | 'home-gym' | 'minimal' | 'bodyweight';
 export type CardioGoal = 'health' | 'conditioning' | '5k' | '10k' | 'fat-loss-support' | 'none';
+export type CardioLevel = 'low' | 'moderate' | 'high';
+export type MusclePriority = 'chest' | 'back' | 'shoulders' | 'arms' | 'quadriceps' | 'hamstrings-glutes' | 'calves' | 'core';
 
 export type TitanProfile = {
   id: string;
@@ -25,34 +27,19 @@ export type TitanTrainingAssessment = {
   preferredSessionMinutes: number;
   equipmentAccess: EquipmentAccess;
   availableEquipment?: string[];
-  limitations?: Array<{
-    area: string;
-    note?: string;
-  }>;
+  limitations?: Array<{ area: string; note?: string }>;
+  musclePriorities?: MusclePriority[];
+  preferredExerciseIds?: string[];
+  avoidedExerciseIds?: string[];
+  availableTrainingDays?: string[];
   cardioGoal: CardioGoal;
   cardioDaysPerWeek?: number;
-  currentCardioLevel?: 'low' | 'moderate' | 'high';
+  currentCardioLevel?: CardioLevel;
   createdAt: string;
   updatedAt: string;
 };
 
 export type PlanSource = 'titan-generated' | 'imported' | 'manual';
-
-export type PlanGenerationRequest = {
-  profile: TitanProfile;
-  assessment: TitanTrainingAssessment;
-  requestedAt: string;
-};
-
+export type PlanGenerationRequest = { profile: TitanProfile; assessment: TitanTrainingAssessment; requestedAt: string };
 export type PlanCandidateStrategy = 'adherence' | 'balanced' | 'availability';
-
-export type GeneratedPlanCandidate<TPlan = unknown> = {
-  id: string;
-  profileId: string;
-  strategy: PlanCandidateStrategy;
-  title: string;
-  rationale: string[];
-  source: 'titan-generated';
-  plan: TPlan;
-  createdAt: string;
-};
+export type GeneratedPlanCandidate<TPlan = unknown> = { id: string; profileId: string; strategy: PlanCandidateStrategy; title: string; rationale: string[]; source: 'titan-generated'; plan: TPlan; createdAt: string };
