@@ -6,6 +6,7 @@ import {
   type PlanValidationResult,
   type TitanCardioSession,
   type TitanExercise,
+  type TitanExerciseAlternative,
   type TitanPlan,
   type TitanProject,
   type TitanVideo,
@@ -68,6 +69,46 @@ function validateProgression(value: unknown, path: string, errors: string[]): Ca
   });
 }
 
+function validateAlternativeExercise(value: unknown, path: string, errors: string[]): TitanExerciseAlternative | null {
+  if (!isRecord(value)) { errors.push(`${path} deve ser um objeto.`); return null; }
+  const id = readString(value.id); const name = readString(value.name);
+  if (!id) errors.push(`${path}.id é obrigatório.`); if (!name) errors.push(`${path}.name é obrigatório.`);
+  if (!id || !name) return null;
+  const rawType = readString(value.exerciseType); const exerciseType = rawType ? rawType as ExerciseType : undefined;
+  if (exerciseType && !TYPES.includes(exerciseType)) errors.push(`${path}.exerciseType é inválido.`);
+  const commonMistakes = Array.isArray(value.commonMistakes) ? value.commonMistakes.map(readString).filter(Boolean) : undefined;
+  const video = validateVideo(value.video, path, errors); const progression = validateProgression(value.progression, path, errors); const rawPolicy = readString(value.videoPolicy); const videoPolicy = VIDEO_POLICIES.includes(rawPolicy as ExerciseVideoPolicy) ? rawPolicy as ExerciseVideoPolicy : undefined;
+  return {
+    id, name,
+    ...(readString(value.muscleGroup) ? { muscleGroup: readString(value.muscleGroup) } : {}),
+    ...(exerciseType && TYPES.includes(exerciseType) ? { exerciseType } : {}),
+    ...(optionalNumber(value, 'sets') !== undefined ? { sets: optionalNumber(value, 'sets') } : {}),
+    ...(optionalNumber(value, 'minReps') !== undefined ? { minReps: optionalNumber(value, 'minReps') } : {}),
+    ...(optionalNumber(value, 'maxReps') !== undefined ? { maxReps: optionalNumber(value, 'maxReps') } : {}),
+    ...(optionalNumber(value, 'targetRir') !== undefined ? { targetRir: optionalNumber(value, 'targetRir') } : {}),
+    ...(optionalNumber(value, 'restSeconds') !== undefined ? { restSeconds: optionalNumber(value, 'restSeconds') } : {}),
+    ...(optionalNumber(value, 'durationSeconds') !== undefined ? { durationSeconds: optionalNumber(value, 'durationSeconds') } : {}),
+    ...(optionalNumber(value, 'distanceMeters') !== undefined ? { distanceMeters: optionalNumber(value, 'distanceMeters') } : {}),
+    ...(optionalNumber(value, 'minDistanceMeters') !== undefined ? { minDistanceMeters: optionalNumber(value, 'minDistanceMeters') } : {}),
+    ...(optionalNumber(value, 'maxDistanceMeters') !== undefined ? { maxDistanceMeters: optionalNumber(value, 'maxDistanceMeters') } : {}),
+    ...(optionalNumber(value, 'speedKmh') !== undefined ? { speedKmh: optionalNumber(value, 'speedKmh') } : {}),
+    ...(optionalNumber(value, 'speedMinKmh') !== undefined ? { speedMinKmh: optionalNumber(value, 'speedMinKmh') } : {}),
+    ...(optionalNumber(value, 'speedMaxKmh') !== undefined ? { speedMaxKmh: optionalNumber(value, 'speedMaxKmh') } : {}),
+    ...(optionalNumber(value, 'inclinePercent') !== undefined ? { inclinePercent: optionalNumber(value, 'inclinePercent') } : {}),
+    ...(readString(value.averagePace) ? { averagePace: readString(value.averagePace) } : {}),
+    ...(optionalNumber(value, 'averageHeartRate') !== undefined ? { averageHeartRate: optionalNumber(value, 'averageHeartRate') } : {}),
+    ...(optionalNumber(value, 'targetHeartRateMin') !== undefined ? { targetHeartRateMin: optionalNumber(value, 'targetHeartRateMin') } : {}),
+    ...(optionalNumber(value, 'targetHeartRateMax') !== undefined ? { targetHeartRateMax: optionalNumber(value, 'targetHeartRateMax') } : {}),
+    ...(optionalNumber(value, 'calories') !== undefined ? { calories: optionalNumber(value, 'calories') } : {}),
+    ...(readString(value.cardioZone) ? { cardioZone: readString(value.cardioZone) } : {}),
+    ...(readString(value.notes) ? { notes: readString(value.notes) } : {}),
+    ...(progression?.length ? { progression } : {}),
+    ...(readString(value.technique) ? { technique: readString(value.technique) } : {}),
+    ...(commonMistakes?.length ? { commonMistakes } : {}),
+    ...(video ? { video } : {}), ...(videoPolicy ? { videoPolicy } : {})
+  };
+}
+
 function validateExercise(value: unknown, path: string, errors: string[]): TitanExercise | null {
   if (!isRecord(value)) { errors.push(`${path} deve ser um objeto.`); return null; }
   const id = readString(value.id); const name = readString(value.name); const muscleGroup = readString(value.muscleGroup);
@@ -83,6 +124,7 @@ function validateExercise(value: unknown, path: string, errors: string[]): Titan
   if (exerciseType === 'distance' && distanceMeters === undefined && minDistanceMeters === undefined) errors.push(`${path} precisa de distanceMeters ou minDistanceMeters.`);
   if (['cardio', 'isometric', 'mobility'].includes(exerciseType) && durationSeconds === undefined) errors.push(`${path}.durationSeconds é obrigatório para ${exerciseType}.`);
   const targetRir = optionalNumber(value, 'targetRir'); const alternatives = Array.isArray(value.alternatives) ? value.alternatives.map(readString).filter(Boolean) : undefined; const commonMistakes = Array.isArray(value.commonMistakes) ? value.commonMistakes.map(readString).filter(Boolean) : undefined;
+  const alternativeExercises = Array.isArray(value.alternativeExercises) ? value.alternativeExercises.map((item, index) => validateAlternativeExercise(item, `${path}.alternativeExercises[${index}]`, errors)).filter((item): item is TitanExerciseAlternative => item !== null) : undefined;
   const video = validateVideo(value.video, path, errors); const progression = validateProgression(value.progression, path, errors); const rawPolicy = readString(value.videoPolicy); const videoPolicy = VIDEO_POLICIES.includes(rawPolicy as ExerciseVideoPolicy) ? rawPolicy as ExerciseVideoPolicy : undefined;
   if (!id || !name || !muscleGroup || !TYPES.includes(exerciseType)) return null;
   return { id, name, muscleGroup, exerciseType,
@@ -92,7 +134,7 @@ function validateExercise(value: unknown, path: string, errors: string[]): Titan
     ...(optionalNumber(value, 'inclinePercent') !== undefined ? { inclinePercent: optionalNumber(value, 'inclinePercent') } : {}), ...(readString(value.averagePace) ? { averagePace: readString(value.averagePace) } : {}), ...(optionalNumber(value, 'averageHeartRate') !== undefined ? { averageHeartRate: optionalNumber(value, 'averageHeartRate') } : {}),
     ...(optionalNumber(value, 'targetHeartRateMin') !== undefined ? { targetHeartRateMin: optionalNumber(value, 'targetHeartRateMin') } : {}), ...(optionalNumber(value, 'targetHeartRateMax') !== undefined ? { targetHeartRateMax: optionalNumber(value, 'targetHeartRateMax') } : {}), ...(optionalNumber(value, 'calories') !== undefined ? { calories: optionalNumber(value, 'calories') } : {}),
     ...(readString(value.cardioZone) ? { cardioZone: readString(value.cardioZone) } : {}), ...(readString(value.notes) ? { notes: readString(value.notes) } : {}), ...(progression?.length ? { progression } : {}), ...(readString(value.technique) ? { technique: readString(value.technique) } : {}),
-    ...(alternatives?.length ? { alternatives } : {}), ...(commonMistakes?.length ? { commonMistakes } : {}), ...(video ? { video } : {}), ...(videoPolicy ? { videoPolicy } : {}) };
+    ...(alternatives?.length ? { alternatives } : {}), ...(alternativeExercises?.length ? { alternativeExercises } : {}), ...(commonMistakes?.length ? { commonMistakes } : {}), ...(video ? { video } : {}), ...(videoPolicy ? { videoPolicy } : {}) };
 }
 
 function validateWorkout(value: unknown, index: number, errors: string[]): TitanWorkoutDay | null {
@@ -127,8 +169,8 @@ export function validateTitanPlan(input: unknown): PlanValidationResult {
   if (input.schemaVersion !== TITAN_PLAN_SCHEMA_VERSION) errors.push(`schemaVersion deve ser ${TITAN_PLAN_SCHEMA_VERSION}.`);
   const id = readString(input.id); const name = readString(input.name); const createdAt = readString(input.createdAt); const workouts = Array.isArray(input.workouts) ? input.workouts.map((workout, index) => validateWorkout(workout, index, errors)).filter((workout): workout is TitanWorkoutDay => workout !== null) : [];
   if (!id) errors.push('id é obrigatório.'); if (!name) errors.push('name é obrigatório.'); if (!createdAt || Number.isNaN(Date.parse(createdAt))) errors.push('createdAt deve ser data ISO.'); if (!workouts.length) errors.push('workouts deve ter treinos.');
-  const exerciseIds = workouts.flatMap((workout) => workout.exercises.map((exercise) => exercise.id)); if (new Set(exerciseIds).size !== exerciseIds.length) errors.push('Os IDs dos exercícios precisam ser únicos.');
-  if (!workouts.some((workout) => workout.exercises.some((exercise) => exercise.video?.videoId))) warnings.push('O projeto não possui vídeos reproduzíveis vinculados.');
+  const exerciseIds = workouts.flatMap((workout) => workout.exercises.flatMap((exercise) => [exercise.id, ...(exercise.alternativeExercises ?? []).map((alternative) => alternative.id)])); if (new Set(exerciseIds).size !== exerciseIds.length) errors.push('Os IDs dos exercícios e alternativas precisam ser únicos.');
+  if (!workouts.some((workout) => workout.exercises.some((exercise) => exercise.video?.videoId || exercise.alternativeExercises?.some((alternative) => alternative.video?.videoId)))) warnings.push('O projeto não possui vídeos reproduzíveis vinculados.');
   const project = validateProject(input.project, errors); const videoLibrary = validateVideoLibrary(input.videoLibrary);
   if (errors.length || !id || !name || !createdAt || !workouts.length) return { ok: false, errors };
   return { ok: true, plan: { schemaVersion: TITAN_PLAN_SCHEMA_VERSION, id, name, createdAt, workouts, ...(readString(input.description) ? { description: readString(input.description) } : {}), ...(readString(input.author) ? { author: readString(input.author) } : {}), ...(project ? { project } : {}), ...(videoLibrary ? { videoLibrary } : {}) }, warnings };
