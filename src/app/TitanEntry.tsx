@@ -1,18 +1,33 @@
 import { useEffect, useState } from 'react';
 import { ProfileOnboarding } from '../features/profile/ProfileOnboarding';
-import { loadActiveProfile } from '../features/profile/repository';
+import { loadActiveAssessment, loadActiveProfile } from '../features/profile/repository';
+import type { TitanProfile, TitanTrainingAssessment } from '../features/profile/types';
+import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { loadActivePlan } from '../features/plan/storage';
 import { App } from './App';
 
-type EntryState = 'loading' | 'onboarding' | 'app';
+type EntryState = 'loading' | 'onboarding' | 'candidates' | 'app';
 
 export function TitanEntry() {
   const [entryState, setEntryState] = useState<EntryState>(() => loadActivePlan() ? 'app' : 'loading');
+  const [profile, setProfile] = useState<TitanProfile | null>(null);
+  const [assessment, setAssessment] = useState<TitanTrainingAssessment | null>(null);
+
+  async function loadPlanningContext() {
+    const [nextProfile, nextAssessment] = await Promise.all([loadActiveProfile(), loadActiveAssessment()]);
+    setProfile(nextProfile);
+    setAssessment(nextAssessment);
+    return { profile: nextProfile, assessment: nextAssessment };
+  }
 
   useEffect(() => {
     if (entryState !== 'loading') return;
-    void loadActiveProfile()
-      .then((profile) => setEntryState(profile?.onboardingCompleted ? 'app' : 'onboarding'))
+    void loadPlanningContext()
+      .then(({ profile: loadedProfile, assessment: loadedAssessment }) => {
+        if (!loadedProfile?.onboardingCompleted) return setEntryState('onboarding');
+        if (!loadActivePlan() && loadedAssessment) return setEntryState('candidates');
+        setEntryState('app');
+      })
       .catch(() => setEntryState('onboarding'));
   }, [entryState]);
 
@@ -22,12 +37,18 @@ export function TitanEntry() {
 
   if (entryState === 'onboarding') {
     return <ProfileOnboarding
-      onComplete={() => setEntryState('app')}
+      onComplete={() => {
+        void loadPlanningContext().then(() => setEntryState('candidates'));
+      }}
       onImportProject={() => {
         window.history.replaceState({ ...window.history.state, titanTab: 'settings' }, '');
         setEntryState('app');
       }}
     />;
+  }
+
+  if (entryState === 'candidates' && profile && assessment) {
+    return <PlanCandidatesPage profile={profile} assessment={assessment} onActivate={() => setEntryState('app')} />;
   }
 
   return <App />;
