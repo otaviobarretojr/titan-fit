@@ -84,6 +84,24 @@
   color: #365fba;
 }
 
+.coach-weekly-snapshot {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(120, 135, 160, 0.14);
+  background: rgba(255, 255, 255, 0.42);
+}
+.coach-weekly-head { display:grid; gap:4px; }
+.coach-weekly-head span { font-size:10px; font-weight:900; letter-spacing:.09em; color:var(--text-secondary, #687386); }
+.coach-weekly-head strong { font-size:14px; line-height:1.25; }
+.coach-weekly-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin-top:12px; }
+.coach-weekly-metrics span { min-width:0; padding:9px 7px; border-radius:13px; background:rgba(255,255,255,.5); text-align:center; }
+.coach-weekly-metrics small { display:block; font-size:9px; color:var(--text-secondary, #687386); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.coach-weekly-metrics strong { display:block; margin-top:3px; font-size:16px; }
+.coach-weekly-snapshot > p { margin:10px 0 0; color:var(--text-secondary, #687386); font-size:12px; line-height:1.45; }
+.coach-weekly-snapshot.status-good { border-color:rgba(23,160,101,.2); }
+.coach-weekly-snapshot.status-attention { border-color:rgba(224,143,46,.25); }
+
 .coach-titan-view { display: grid; gap: 16px; }
 .coach-priority-stack { display: grid; gap: 12px; }
 .coach-priority-card {
@@ -107,4 +125,10 @@
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow: none;
   }
+  .coach-weekly-snapshot { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.08); }
+  .coach-weekly-metrics span { background:rgba(255,255,255,.045); }
+}
+
+@media (max-width: 390px) {
+  .coach-weekly-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
