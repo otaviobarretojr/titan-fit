@@ -20,6 +20,8 @@ export type ExecutedSet = {
 export type ExerciseExecution = {
   exerciseId: string;
   exerciseType: ExerciseType;
+  selectedExerciseId?: string;
+  selectedExerciseName?: string;
   sets: ExecutedSet[];
 };
 
