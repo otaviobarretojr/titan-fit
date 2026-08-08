@@ -30,7 +30,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const exerciseCount = strengthExercises.length;
   const setCount = strengthExercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0);
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
-  const history = loadWorkoutHistory();
+  const _history = loadWorkoutHistory();
   const todayCardio = getTodayCardio(plan, dayPlan);
   const cardioDisplay: TodayCardio = todayCardio ?? { title: 'Cardio diário', day: 'Hoje', durationMinutes: null, zone: undefined, detail: 'O cardio faz parte da rotina diária. Tempo e zona ainda não estão definidos no projeto.' };
   const coach = getTodayCoachPriority(hasStrengthToday ? dayPlan : null, Boolean(todayCardio));
