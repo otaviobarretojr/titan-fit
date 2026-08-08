@@ -1,11 +1,16 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
+import { saveGeneratedPlanCandidates } from './candidateRepository';
 import { generateTitanPlanCandidates } from './generator';
 import { saveActivePlan } from './storage';
 import type { TitanPlan } from './types';
 
 export function PlanCandidatesPage({ profile, assessment, onActivate }: { profile: TitanProfile; assessment: TitanTrainingAssessment; onActivate: () => void }) {
   const candidates = useMemo(() => generateTitanPlanCandidates(profile, assessment), [profile, assessment]);
+
+  useEffect(() => {
+    void saveGeneratedPlanCandidates(candidates).catch((error) => console.warn('Não foi possível salvar as propostas TITAN.', error));
+  }, [candidates]);
 
   function activate(candidate: GeneratedPlanCandidate<TitanPlan>) {
     saveActivePlan(candidate.plan);
