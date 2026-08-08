@@ -3,51 +3,62 @@ import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage'
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanExercise, TitanPlan } from '../plan/types';
 
-type Props = { plan: TitanPlan | null; refreshKey?: number };
+type Props = { plan: TitanPlan | null; refreshKey?: number; onHistoryChange?: () => void };
 type CardioMode = 'zone2' | 'run' | 'walk' | 'hiit';
 type CardioItem = { id: string; day: string; title: string; durationMinutes: number | null; zone?: string; detail?: string; };
 
-export function CardioPage({ plan, refreshKey = 0 }: Props) {
+export function CardioPage({ plan, refreshKey = 0, onHistoryChange }: Props) {
   const [localRefresh, setLocalRefresh] = useState(0);
+  const [sessionActive, setSessionActive] = useState(false);
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [pausedSeconds, setPausedSeconds] = useState(0);
   const [mode, setMode] = useState<CardioMode>('zone2');
   const [distanceKm, setDistanceKm] = useState('');
   const [heartRate, setHeartRate] = useState('');
   const [effort, setEffort] = useState('5');
+  const [notes, setNotes] = useState('');
   const history = useMemo(() => loadWorkoutHistory(), [refreshKey, localRefresh]);
   const planned = useMemo(() => buildPlannedCardio(plan), [plan]);
 
   useEffect(() => {
     if (!running || !startedAt) return;
-    const update = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)));
+    const update = () => setElapsedSeconds(pausedSeconds + Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)));
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [running, startedAt]);
+  }, [running, startedAt, pausedSeconds]);
 
   const recent = useMemo(() => history.flatMap((record) => record.exercises
     .filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance')
-    .map((exercise) => ({ id: `${record.id}:${exercise.exerciseId}`, title: exercise.name, completedAt: record.completedAt, durationSeconds: exercise.totalDurationSeconds, distanceMeters: exercise.totalDistanceMeters, speedKmh: exercise.bestSpeedKmh, heartRate: exercise.averageHeartRate })))
+    .map((exercise) => ({ id: `${record.id}:${exercise.exerciseId}`, title: exercise.name, completedAt: record.completedAt, durationSeconds: exercise.totalDurationSeconds, distanceMeters: exercise.totalDistanceMeters, speedKmh: exercise.bestSpeedKmh, heartRate: exercise.averageHeartRate, pace: exercise.sets.find((set) => set.averagePace)?.averagePace ?? null })))
     .sort((a, b) => b.completedAt.localeCompare(a.completedAt)).slice(0, 8), [history]);
   const latest = recent[0] ?? null;
 
   function startCardio() {
-    const now = new Date().toISOString();
-    setStartedAt(now); setElapsedSeconds(0); setRunning(true);
+    setSessionActive(true); setRunning(true); setPausedSeconds(0); setElapsedSeconds(0); setStartedAt(new Date().toISOString());
   }
-
+  function pauseCardio() {
+    setPausedSeconds(elapsedSeconds); setRunning(false); setStartedAt(null);
+  }
+  function resumeCardio() {
+    setStartedAt(new Date().toISOString()); setRunning(true);
+  }
   function cancelCardio() {
     if (elapsedSeconds > 10 && !window.confirm('Cancelar esta sessão de cardio? O registro atual será descartado.')) return;
-    setRunning(false); setStartedAt(null); setElapsedSeconds(0); setDistanceKm(''); setHeartRate('');
+    resetSession();
+  }
+  function resetSession() {
+    setSessionActive(false); setRunning(false); setStartedAt(null); setElapsedSeconds(0); setPausedSeconds(0); setDistanceKm(''); setHeartRate(''); setEffort('5'); setNotes('');
   }
 
   function finishCardio() {
-    if (!startedAt || elapsedSeconds < 1) return;
+    if (!sessionActive || elapsedSeconds < 1) return;
     const distanceMeters = Math.max(0, Number(distanceKm.replace(',', '.')) || 0) * 1000;
     const avgHeartRate = Math.max(0, Number(heartRate) || 0) || null;
     const speedKmh = distanceMeters > 0 ? (distanceMeters / 1000) / (elapsedSeconds / 3600) : null;
+    const pace = distanceMeters > 0 ? paceFrom(elapsedSeconds, distanceMeters) : null;
     const title = modeLabel(mode);
     const now = new Date().toISOString();
     const record: WorkoutHistoryRecord = {
@@ -57,7 +68,7 @@ export function CardioPage({ plan, refreshKey = 0 }: Props) {
       workoutId: `cardio-${mode}`,
       workoutTitle: title,
       workoutDay: new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(new Date()),
-      startedAt,
+      startedAt: new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
       completedAt: now,
       durationSeconds: elapsedSeconds,
       totalSets: 1,
@@ -67,7 +78,7 @@ export function CardioPage({ plan, refreshKey = 0 }: Props) {
         name: title,
         muscleGroup: 'Cardio',
         exerciseType: distanceMeters > 0 ? 'distance' : 'cardio',
-        sets: [{ setNumber: 1, weightKg: null, repetitions: null, rir: null, durationSeconds: elapsedSeconds, distanceMeters: distanceMeters || null, speedKmh, inclinePercent: null, averagePace: distanceMeters > 0 ? paceFrom(elapsedSeconds, distanceMeters) : null, averageHeartRate: avgHeartRate, calories: null, notes: `RPE ${effort}/10` }],
+        sets: [{ setNumber: 1, weightKg: null, repetitions: null, rir: null, durationSeconds: elapsedSeconds, distanceMeters: distanceMeters || null, speedKmh, inclinePercent: null, averagePace: pace, averageHeartRate: avgHeartRate, calories: null, notes: [`RPE ${effort}/10`, notes.trim()].filter(Boolean).join(' · ') }],
         volumeKg: 0,
         bestWeightKg: null,
         totalDistanceMeters: distanceMeters,
@@ -78,7 +89,9 @@ export function CardioPage({ plan, refreshKey = 0 }: Props) {
       }],
     };
     addWorkoutHistoryRecord(record);
-    setRunning(false); setStartedAt(null); setElapsedSeconds(0); setDistanceKm(''); setHeartRate(''); setLocalRefresh((value) => value + 1);
+    resetSession();
+    setLocalRefresh((value) => value + 1);
+    onHistoryChange?.();
     window.alert('Cardio salvo com sucesso.');
   }
 
@@ -86,8 +99,8 @@ export function CardioPage({ plan, refreshKey = 0 }: Props) {
     <header className="cardio-hero"><span className="eyebrow">CARDIO TITAN</span><h2>Condicionamento + 5 km</h2><p>Registre Zona 2, caminhada, corrida ou HIIT e acompanhe sua evolução sem misturar com a musculação.</p></header>
 
     <section className="cardio-session-card" aria-label="Sessão de cardio">
-      <div className="cardio-section-title"><div><span className="eyebrow">SESSÃO ATUAL</span><h3>{running ? modeLabel(mode) : 'Pronto para começar'}</h3></div><strong>{formatClock(elapsedSeconds)}</strong></div>
-      {!running ? <>
+      <div className="cardio-section-title"><div><span className="eyebrow">SESSÃO ATUAL</span><h3>{sessionActive ? modeLabel(mode) : 'Pronto para começar'}</h3></div><strong>{formatClock(elapsedSeconds)}</strong></div>
+      {!sessionActive ? <>
         <div className="cardio-mode-grid">{(['zone2','walk','run','hiit'] as CardioMode[]).map((item) => <button type="button" key={item} className={mode === item ? 'active' : ''} onClick={() => setMode(item)}>{modeLabel(item)}</button>)}</div>
         <button type="button" className="primary-action" onClick={startCardio}>Iniciar cardio</button>
       </> : <>
@@ -96,14 +109,19 @@ export function CardioPage({ plan, refreshKey = 0 }: Props) {
           <label><span>Distância (km)</span><input inputMode="decimal" value={distanceKm} onChange={(event) => setDistanceKm(event.target.value)} placeholder="Ex.: 3,2" /></label>
           <label><span>FC média</span><input inputMode="numeric" value={heartRate} onChange={(event) => setHeartRate(event.target.value)} placeholder="bpm" /></label>
           <label><span>Esforço percebido</span><select value={effort} onChange={(event) => setEffort(event.target.value)}>{Array.from({ length: 10 }, (_, index) => index + 1).map((value) => <option key={value} value={value}>{value}/10</option>)}</select></label>
+          <label><span>Observações</span><input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Como foi a sessão?" /></label>
         </div>
-        <div className="cardio-session-actions"><button type="button" className="primary-action" onClick={finishCardio}>Finalizar e salvar</button><button type="button" className="text-action" onClick={cancelCardio}>Cancelar</button></div>
+        <div className="cardio-session-actions">
+          {running ? <button type="button" className="secondary-action" onClick={pauseCardio}>Pausar</button> : <button type="button" className="secondary-action" onClick={resumeCardio}>Continuar</button>}
+          <button type="button" className="primary-action" onClick={finishCardio}>Finalizar e salvar</button>
+          <button type="button" className="text-action" onClick={cancelCardio}>Cancelar</button>
+        </div>
       </>}
     </section>
 
     <section className="cardio-highlight-card"><div><span className="info-label">PRÓXIMA SESSÃO</span>{planned[0] ? <><h3>{planned[0].title}</h3><p>{planned[0].day}{planned[0].detail ? ` · ${planned[0].detail}` : ''}</p></> : <><h3>Cardio livre</h3><p>Você pode registrar uma sessão manual mesmo sem cardio programado no projeto.</p></>}</div><span className="cardio-pulse" aria-hidden="true">♡</span></section>
 
-    {latest && <section className="cardio-section"><div className="cardio-section-title"><div><span className="eyebrow">DESEMPENHO</span><h3>Último cardio</h3></div></div><article className="cardio-last-card"><div className="cardio-last-header"><div><span>{formatDate(latest.completedAt)}</span><h3>{latest.title}</h3></div></div><div className="cardio-stats-grid"><div><span>Tempo</span><strong>{formatDuration(latest.durationSeconds)}</strong></div><div><span>Distância</span><strong>{formatDistance(latest.distanceMeters)}</strong></div><div><span>Velocidade</span><strong>{latest.speedKmh ? `${latest.speedKmh.toFixed(1)} km/h` : '—'}</strong></div><div><span>FC média</span><strong>{latest.heartRate ? `${latest.heartRate} bpm` : '—'}</strong></div></div></article></section>}
+    {latest && <section className="cardio-section"><div className="cardio-section-title"><div><span className="eyebrow">DESEMPENHO</span><h3>Último cardio</h3></div></div><article className="cardio-last-card"><div className="cardio-last-header"><div><span>{formatDate(latest.completedAt)}</span><h3>{latest.title}</h3></div></div><div className="cardio-stats-grid"><div><span>Tempo</span><strong>{formatDuration(latest.durationSeconds)}</strong></div><div><span>Distância</span><strong>{formatDistance(latest.distanceMeters)}</strong></div><div><span>Ritmo</span><strong>{latest.pace ?? '—'}</strong></div><div><span>FC média</span><strong>{latest.heartRate ? `${latest.heartRate} bpm` : '—'}</strong></div></div></article></section>}
 
     {recent.length > 1 && <section className="cardio-section"><div className="cardio-section-title"><div><span className="eyebrow">HISTÓRICO</span><h3>Últimas sessões</h3></div></div><div className="cardio-history-list">{recent.slice(1).map((item) => <article key={item.id}><div><strong>{item.title}</strong><span>{formatDate(item.completedAt)}</span></div><span>{formatDuration(item.durationSeconds)} · {formatDistance(item.distanceMeters)}</span></article>)}</div></section>}
   </section>;
