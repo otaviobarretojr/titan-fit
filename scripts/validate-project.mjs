@@ -13,7 +13,7 @@ const app = await read('src/app/App.tsx');
 const types = await read('src/features/plan/types.ts');
 const validation = await read('src/features/plan/validation.ts');
 const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
-const weeklyLibrary = await read('src/features/plan/WeeklyLibraryPage.tsx');
+const cardioPage = await read('src/features/cardio/CardioPage.tsx');
 const workoutTypes = await read('src/features/workout/types.ts');
 const historyTypes = await read('src/features/history/types.ts');
 const progressPage = await read('src/features/history/ProgressPage.tsx');
@@ -33,7 +33,7 @@ const deploy = await read('.github/workflows/deploy-pages.yml');
 assert(pkg.version === '0.21.0', 'package.json deve manter a versão técnica atual');
 assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'"), 'PWA e base do GitHub Pages devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes('Hoje') && app.includes('Histórico') && app.includes('Semana') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.23.1'), 'Navegação v0.23.1 deve permanecer disponível');
+assert(app.includes('Hoje') && app.includes('Histórico') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.29.0') && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação v0.29.0 deve usar Cardio no lugar de Semana');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
 assert(app.includes('Ativar demonstração completa') && app.includes('Remover dados da demonstração') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve separar demo, remoção da demo e reset protegido');
 assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
@@ -48,8 +48,8 @@ assert(validation.includes("readString(value.exerciseType) || 'strength'"), 'Fic
 assert(validation.includes('explicitId') && validation.includes('pending-curation') && validation.includes('videoLibrary'), 'Importação deve aceitar videoId e metadados da biblioteca');
 assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas avançadas');
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
-assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional');
-assert(weeklyLibrary.includes('Grupos e exercícios') && weeklyLibrary.includes('getExerciseVideo(exercise)') && weeklyLibrary.includes('youtube-nocookie.com/embed/') && weeklyLibrary.includes('ERROS COMUNS') && weeklyLibrary.includes('ALTERNATIVAS'), 'Aba semanal deve mostrar informações e vídeos com fallback interno');
+assert(execution.includes('youtube-nocookie.com/embed/') && execution.includes('Rever execução') && execution.includes('começar séries'), 'Experiência visual por vídeo deve permanecer funcional dentro do treino');
+assert(cardioPage.includes('Condicionamento + 5 km') && cardioPage.includes('loadWorkoutHistory') && cardioPage.includes('cardioSchedule') && cardioPage.includes("exercise.exerciseType === 'cardio'") && cardioPage.includes('Último cardio'), 'Aba Cardio deve reunir planejamento e histórico cardiovascular');
 assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes("'body' | 'training'") && progressPage.includes('PrHall'), 'Progresso deve reunir evolução corporal e Hall dos PRs de treino');
 assert(evolution.includes('EVOLUÇÃO CORPORAL') && evolution.includes('Última vs. anterior') && evolution.includes('Evolução mensal') && evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa') && evolution.includes('evolution-register-screen'), 'Centro de evolução deve funcionar como dashboard corporal');
 assert(!progressPage.includes('🏆 Volume:') && !progressPage.includes('de volume'), 'Volume total não deve aparecer na interface de progresso');
@@ -74,4 +74,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.26.1 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.29.0 concluída com sucesso.');
