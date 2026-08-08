@@ -1,0 +1,32 @@
+/* TITAN FIT v0.27.4 — Coach TITAN no pós-treino */
+.post-workout-coach-card{
+  margin:18px 0 20px;
+  padding:20px;
+  border:1px solid rgba(214,153,38,.34);
+  border-radius:24px;
+  background:linear-gradient(150deg,rgba(13,18,25,.98),rgba(8,13,20,.98));
+  box-shadow:0 14px 34px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.015);
+}
+.post-coach-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.post-coach-heading>div{display:grid;gap:5px}
+.post-coach-kicker{color:#e8ab36;font-size:.68rem;font-weight:900;letter-spacing:.08em}
+.post-coach-heading strong{font-size:1.15rem;color:#f8fbff}
+.post-coach-status{padding:7px 10px;border:1px solid rgba(49,181,95,.35);border-radius:999px;background:rgba(35,151,79,.12);color:#67e391;font-size:.64rem;font-weight:900}
+.post-coach-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.post-coach-metric{min-width:0;padding:12px 10px;border:1px solid rgba(120,143,177,.13);border-radius:16px;background:rgba(18,27,40,.64)}
+.post-coach-metric strong,.post-coach-metric span{display:block}
+.post-coach-metric strong{font-size:1.35rem;color:#fff}
+.post-coach-metric span{margin-top:2px;color:#8f9bad;font-size:.68rem}
+.post-coach-metric.pr strong{color:#f1b642}.post-coach-metric.up strong{color:#61df8c}.post-coach-metric.steady strong{color:#78aaff}
+.post-coach-results{display:grid;gap:8px;padding:14px 0;border-top:1px solid rgba(210,154,46,.14);border-bottom:1px solid rgba(210,154,46,.14)}
+.post-coach-result{display:flex;align-items:center;gap:10px;padding:8px 2px}
+.post-coach-result>span{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#6f7e92;box-shadow:0 0 12px rgba(111,126,146,.3)}
+.post-coach-result.status-pr>span{background:#f1b642;box-shadow:0 0 14px rgba(241,182,66,.5)}
+.post-coach-result.status-improved>span{background:#61df8c;box-shadow:0 0 14px rgba(97,223,140,.42)}
+.post-coach-result.status-below>span{background:#f06f6f;box-shadow:0 0 14px rgba(240,111,111,.42)}
+.post-coach-result.status-stable>span{background:#78aaff}
+.post-coach-result div{min-width:0}.post-coach-result strong,.post-coach-result small{display:block}.post-coach-result strong{color:#f4f7fb;font-size:.86rem}.post-coach-result small{margin-top:2px;color:#909bad;font-size:.7rem}
+.post-coach-next{padding-top:15px}.post-coach-next>span{color:#dca846;font-size:.64rem;font-weight:900;letter-spacing:.08em}.post-coach-next p{margin:7px 0 0;color:#b5bfce;font-size:.82rem;line-height:1.5}
+.workout-summary .summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.workout-summary .summary-grid>div:nth-child(2){display:none}
+@media(max-width:390px){.post-workout-coach-card{padding:18px 16px;border-radius:22px}.post-coach-metrics{gap:6px}.post-coach-metric{padding:10px 8px}.post-coach-heading strong{font-size:1.05rem}}
