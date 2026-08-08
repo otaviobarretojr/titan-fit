@@ -4,6 +4,7 @@ import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanCardioSession, TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
 import { buildWeeklyCoachSummary } from './weeklyCoach';
+import { buildTitanScore } from './titanScore';
 
 type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; onOpenProgress: () => void; };
 type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
@@ -36,6 +37,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const cardioDisplay: TodayCardio = todayCardio ?? { title: 'Cardio diário', day: 'Hoje', durationMinutes: null, zone: undefined, detail: 'O cardio faz parte da rotina diária. Tempo e zona ainda não estão definidos no projeto.' };
   const coach = getTodayCoachPriority(hasStrengthToday ? dayPlan : null, Boolean(todayCardio));
   const weeklyCoach = buildWeeklyCoachSummary(plan, history);
+  const titanScore = buildTitanScore(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
 
   const cardioCard = <section className={`dashboard-cardio-card today-cardio-highlight${!todayCardio ? ' cardio-unconfigured' : ''}`} aria-label="Cardio de hoje">
@@ -66,8 +68,21 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       </section>
     </>}
 
+    <section className={`titan-score-card status-${titanScore.status}`} aria-label="Score TITAN">
+      <div className="titan-score-main">
+        <div><span className="eyebrow">SCORE TITAN</span><strong>{titanScore.label}</strong><p>{titanScore.message}</p></div>
+        <div className="titan-score-value">{titanScore.score ?? '—'}<small>{titanScore.score === null ? 'BASE' : '/100'}</small></div>
+      </div>
+      {titanScore.score !== null && <div className="titan-score-pillars">
+        <span><small>Musculação</small><strong>{titanScore.strengthScore}/35</strong></span>
+        <span><small>Cardio</small><strong>{titanScore.cardioScore}/30</strong></span>
+        <span><small>Progressão</small><strong>{titanScore.performanceScore}/20</strong></span>
+        <span><small>Consistência</small><strong>{titanScore.consistencyScore}/15</strong></span>
+      </div>}
+    </section>
+
     <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN">
-      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.30</span><span>{coach.badge}</span></div>
+      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.30.3</span><span>{coach.badge}</span></div>
       <strong>{coach.title}</strong><p>{coach.message}</p>{coach.context && <small className="coach-context">{coach.context}</small>}
       <div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}>
         <div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div>
