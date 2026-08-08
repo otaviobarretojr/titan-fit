@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getExerciseVideo } from '../exercise-library/videos';
+import { getProgressionAdvice } from '../history/intelligence';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
 import type { ExerciseType, TitanExercise, TitanWorkoutDay } from '../plan/types';
@@ -107,11 +108,17 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       </section>}
 
       <Prescription exercise={activeExercise} />
-      {exerciseType === 'strength' && <div className="progression-panel workout-pr-panel">
-        <div><span>Última sessão</span><strong>{strengthSnapshot.last}</strong></div>
-        <div><span>🏆 PR válido</span><strong>{strengthSnapshot.pr}</strong></div>
-        <div><span>Meta de hoje</span><strong>{strengthSnapshot.target}</strong></div>
-      </div>}
+      {exerciseType === 'strength' && <>
+        <div className="progression-panel workout-pr-panel">
+          <div><span>Última sessão</span><strong>{strengthSnapshot.last}</strong></div>
+          <div><span>🏆 PR válido</span><strong>{strengthSnapshot.pr}</strong></div>
+          <div><span>Meta de hoje</span><strong>{strengthSnapshot.target}</strong></div>
+        </div>
+        <div className={`smart-workout-target ${strengthSnapshot.status}`}>
+          <div><span className="smart-target-label">COACH TITAN · {strengthSnapshot.statusLabel}</span><strong>{strengthSnapshot.title}</strong></div>
+          <p>{strengthSnapshot.message}</p>
+        </div>
+      </>}
       {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
       {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
@@ -167,13 +174,14 @@ function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutEx
 
 function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
   const sessions = getStrengthSessions(history, exercise.id);
-  if (!sessions.length) return { last: 'Sem histórico', pr: 'Ainda sem PR', target: 'Criar referência inicial' };
+  const advice = getProgressionAdvice(history, exercise.id);
+  if (!sessions.length) return { last: 'Sem histórico', pr: 'Ainda sem PR', target: 'Criar referência inicial', status: 'insufficient', statusLabel: 'CRIANDO BASE', title: advice.title, message: advice.message };
 
   const lastBest = bestStrengthSet(sessions[0].exercise);
   const last = lastBest ? formatStrengthReference(lastBest) : 'Sem carga registrada';
   const pr = findValidPr(sessions);
-  const target = buildTodayTarget(lastBest, exercise);
-  return { last, pr: pr ? formatStrengthReference(pr) : 'Ainda sem PR', target };
+  const target = buildSmartTodayTarget(advice.suggestedWeightKg, advice.suggestedReps, advice.status, lastBest, exercise);
+  return { last, pr: pr ? formatStrengthReference(pr) : 'Ainda sem PR', target, status: advice.status, statusLabel: statusLabel(advice.status), title: advice.title, message: advice.message };
 }
 
 function getStrengthSessions(history: WorkoutHistoryRecord[], exerciseId: string) {
@@ -250,13 +258,17 @@ function toStrengthReference(set: ExecutedSet): StrengthReference | null {
   return { weightKg: set.weightKg ?? 0, repetitions: set.repetitions ?? 0 };
 }
 
-function buildTodayTarget(last: StrengthReference | null, exercise: TitanExercise) {
-  if (!last) return 'Criar referência inicial';
+function buildSmartTodayTarget(suggestedWeightKg: number | null, suggestedReps: number | null, status: 'insufficient' | 'maintain' | 'progress' | 'review', last: StrengthReference | null, exercise: TitanExercise) {
+  if (!last || status === 'insufficient') return 'Criar referência inicial';
   const minReps = exercise.minReps ?? 6;
   const maxReps = exercise.maxReps ?? Math.max(minReps, last.repetitions + 1);
-  if (last.repetitions < maxReps) return `${last.weightKg} kg × ${Math.min(maxReps, last.repetitions + 1)}`;
-  return `${formatWeight(last.weightKg + 2.5)} kg × ${minReps}`;
+  const weight = suggestedWeightKg ?? last.weightKg;
+  if (status === 'progress') return `${formatWeight(weight)} kg × ${minReps}–${Math.min(maxReps, minReps + 1)}`;
+  if (suggestedReps) return `${formatWeight(weight)} kg × ${Math.max(minReps, Math.min(maxReps, suggestedReps))}`;
+  if (status === 'review') return `${formatWeight(weight)} kg · ${minReps}–${maxReps} reps`;
+  return `${formatWeight(weight)} kg × ${Math.max(minReps, Math.min(maxReps, last.repetitions))}–${maxReps}`;
 }
+function statusLabel(status: 'insufficient' | 'maintain' | 'progress' | 'review') { return ({ insufficient: 'CRIANDO BASE', maintain: 'CONSOLIDAR', progress: 'PROGREDIR', review: 'REVISAR' })[status]; }
 
 function formatStrengthReference(value: StrengthReference) { return `${formatWeight(value.weightKg)} kg × ${value.repetitions}`; }
 function formatWeight(value: number) { return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(1))); }
