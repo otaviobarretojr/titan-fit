@@ -3,6 +3,7 @@ import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanPlan } from '../plan/types';
 
 type WeeklyCoachStatus = 'building' | 'good' | 'attention';
+export type FourWeekTrend = 'building' | 'rising' | 'stable' | 'attention';
 
 type WeekMetrics = {
   strengthSessions: number;
@@ -24,6 +25,8 @@ export type WeeklyCoachSummary = {
   previousPrEvents: number;
   comparisonLabel: string;
   priority: string;
+  fourWeekTrend: FourWeekTrend;
+  fourWeekLabel: string;
 };
 
 export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistoryRecord[]): WeeklyCoachSummary {
@@ -37,6 +40,7 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
   const previousRecords = records.filter((record) => inRange(record.completedAt, previousStart, previousEnd));
   const current = getWeekMetrics(currentRecords);
   const previous = getWeekMetrics(previousRecords);
+  const fourWeek = buildFourWeekTrend(records, now);
 
   const strengthExercises = plan.workouts.flatMap((workout) => workout.exercises).filter((exercise) => (exercise.exerciseType ?? 'strength') === 'strength');
   const unique = [...new Map(strengthExercises.map((exercise) => [exercise.id, exercise])).values()];
@@ -57,77 +61,67 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
     const baseMessage = previousRecords.length
       ? 'Ainda não há registros nesta semana para comparar com a anterior.'
       : 'O Coach precisa dos seus treinos e cardios desta semana para gerar uma leitura útil.';
-    return {
-      status: 'building',
-      headline: 'Semana ainda sem registros',
-      message: composeMessage(baseMessage, comparisonLabel, priority),
-      strengthSessions: 0,
-      cardioSessions: 0,
-      prEvents: 0,
-      progressSignals,
-      stagnantExercises,
-      previousStrengthSessions: previous.strengthSessions,
-      previousCardioSessions: previous.cardioSessions,
-      previousPrEvents: previous.prEvents,
-      comparisonLabel,
-      priority,
-    };
+    return buildSummary({
+      status: 'building', headline: 'Semana ainda sem registros', baseMessage, current, previous,
+      progressSignals, stagnantExercises, comparisonLabel, priority, fourWeek,
+    });
   }
 
   if (stagnantExercises > 0) {
-    const baseMessage = `${stagnantExercises} exercício${stagnantExercises === 1 ? '' : 's'} aparece${stagnantExercises === 1 ? '' : 'm'} estável${stagnantExercises === 1 ? '' : 'is'} nas últimas sessões.`;
-    return {
+    return buildSummary({
       status: 'attention',
       headline: 'Há pontos para destravar',
-      message: composeMessage(baseMessage, comparisonLabel, priority),
-      strengthSessions: current.strengthSessions,
-      cardioSessions: current.cardioSessions,
-      prEvents: current.prEvents,
-      progressSignals,
-      stagnantExercises,
-      previousStrengthSessions: previous.strengthSessions,
-      previousCardioSessions: previous.cardioSessions,
-      previousPrEvents: previous.prEvents,
-      comparisonLabel,
-      priority,
-    };
+      baseMessage: `${stagnantExercises} exercício${stagnantExercises === 1 ? '' : 's'} aparece${stagnantExercises === 1 ? '' : 'm'} estável${stagnantExercises === 1 ? '' : 'is'} nas últimas sessões.`,
+      current, previous, progressSignals, stagnantExercises, comparisonLabel, priority, fourWeek,
+    });
   }
 
   if (progressSignals > 0 || current.prEvents > 0) {
     const baseMessage = progressSignals > 0
       ? `${progressSignals} exercício${progressSignals === 1 ? '' : 's'} já mostra${progressSignals === 1 ? '' : 'm'} sinal positivo de progressão.`
       : `${current.prEvents} PR${current.prEvents === 1 ? '' : 's'} conquistado${current.prEvents === 1 ? '' : 's'} nesta semana.`;
-    return {
-      status: 'good',
-      headline: 'Semana com evolução',
-      message: composeMessage(baseMessage, comparisonLabel, priority),
-      strengthSessions: current.strengthSessions,
-      cardioSessions: current.cardioSessions,
-      prEvents: current.prEvents,
-      progressSignals,
-      stagnantExercises,
-      previousStrengthSessions: previous.strengthSessions,
-      previousCardioSessions: previous.cardioSessions,
-      previousPrEvents: previous.prEvents,
-      comparisonLabel,
-      priority,
-    };
+    return buildSummary({
+      status: 'good', headline: 'Semana com evolução', baseMessage, current, previous,
+      progressSignals, stagnantExercises, comparisonLabel, priority, fourWeek,
+    });
   }
 
-  return {
+  return buildSummary({
     status: 'building',
     headline: 'Semana consistente',
-    message: composeMessage('Continue acumulando sessões comparáveis. O Coach ainda não encontrou sinal forte de progressão ou estagnação.', comparisonLabel, priority),
-    strengthSessions: current.strengthSessions,
-    cardioSessions: current.cardioSessions,
-    prEvents: current.prEvents,
-    progressSignals,
-    stagnantExercises,
-    previousStrengthSessions: previous.strengthSessions,
-    previousCardioSessions: previous.cardioSessions,
-    previousPrEvents: previous.prEvents,
-    comparisonLabel,
-    priority,
+    baseMessage: 'Continue acumulando sessões comparáveis. O Coach ainda não encontrou sinal forte de progressão ou estagnação.',
+    current, previous, progressSignals, stagnantExercises, comparisonLabel, priority, fourWeek,
+  });
+}
+
+function buildSummary(input: {
+  status: WeeklyCoachStatus;
+  headline: string;
+  baseMessage: string;
+  current: WeekMetrics;
+  previous: WeekMetrics;
+  progressSignals: number;
+  stagnantExercises: number;
+  comparisonLabel: string;
+  priority: string;
+  fourWeek: { trend: FourWeekTrend; label: string };
+}): WeeklyCoachSummary {
+  return {
+    status: input.status,
+    headline: input.headline,
+    message: composeMessage(input.baseMessage, input.comparisonLabel, input.fourWeek.label, input.priority),
+    strengthSessions: input.current.strengthSessions,
+    cardioSessions: input.current.cardioSessions,
+    prEvents: input.current.prEvents,
+    progressSignals: input.progressSignals,
+    stagnantExercises: input.stagnantExercises,
+    previousStrengthSessions: input.previous.strengthSessions,
+    previousCardioSessions: input.previous.cardioSessions,
+    previousPrEvents: input.previous.prEvents,
+    comparisonLabel: input.comparisonLabel,
+    priority: input.priority,
+    fourWeekTrend: input.fourWeek.trend,
+    fourWeekLabel: input.fourWeek.label,
   };
 }
 
@@ -135,6 +129,43 @@ function getWeekMetrics(records: WorkoutHistoryRecord[]): WeekMetrics {
   const strengthSessions = records.filter((record) => record.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength')).length;
   const cardioSessions = records.flatMap((record) => record.exercises).filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance').length;
   return { strengthSessions, cardioSessions, prEvents: countPrEvents(records) };
+}
+
+function buildFourWeekTrend(records: WorkoutHistoryRecord[], now: Date) {
+  const weeks = Array.from({ length: 4 }, (_, index) => {
+    const offset = 3 - index;
+    const weekStart = startOfWeek(now);
+    weekStart.setDate(weekStart.getDate() - offset * 7);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weekEnd.setMilliseconds(-1);
+    const effectiveEnd = offset === 0 && now < weekEnd ? now : weekEnd;
+    return getWeekMetrics(records.filter((record) => inRange(record.completedAt, weekStart, effectiveEnd)));
+  });
+
+  const activeWeeks = weeks.filter((week) => week.strengthSessions + week.cardioSessions > 0);
+  if (activeWeeks.length < 2) return { trend: 'building' as FourWeekTrend, label: '4 semanas: construindo base' };
+
+  const firstHalf = averageMetrics(weeks.slice(0, 2));
+  const secondHalf = averageMetrics(weeks.slice(2));
+  const strengthDelta = secondHalf.strengthSessions - firstHalf.strengthSessions;
+  const cardioDelta = secondHalf.cardioSessions - firstHalf.cardioSessions;
+  const totalPrs = weeks.reduce((sum, week) => sum + week.prEvents, 0);
+  const latestTwoActive = weeks.slice(2).filter((week) => week.strengthSessions + week.cardioSessions > 0).length;
+
+  if (latestTwoActive < 2) return { trend: 'attention' as FourWeekTrend, label: '4 semanas: atenção à consistência recente' };
+  if (strengthDelta <= -1 || cardioDelta <= -1.5) return { trend: 'attention' as FourWeekTrend, label: '4 semanas: tendência de queda na frequência' };
+  if (strengthDelta >= 0.5 || cardioDelta >= 1 || totalPrs >= 2) return { trend: 'rising' as FourWeekTrend, label: '4 semanas: tendência positiva' };
+  return { trend: 'stable' as FourWeekTrend, label: '4 semanas: tendência estável' };
+}
+
+function averageMetrics(weeks: WeekMetrics[]): WeekMetrics {
+  const divisor = Math.max(1, weeks.length);
+  return {
+    strengthSessions: weeks.reduce((sum, week) => sum + week.strengthSessions, 0) / divisor,
+    cardioSessions: weeks.reduce((sum, week) => sum + week.cardioSessions, 0) / divisor,
+    prEvents: weeks.reduce((sum, week) => sum + week.prEvents, 0) / divisor,
+  };
 }
 
 function buildComparisonLabel(current: WeekMetrics, previous: WeekMetrics, hasPreviousWeek: boolean) {
@@ -155,7 +186,7 @@ function buildPriority(input: { current: WeekMetrics; previous: WeekMetrics; pro
   return 'Prioridade: manter consistência e continuar criando sessões comparáveis.';
 }
 
-function composeMessage(base: string, comparison: string, priority: string) { return `${base} ${comparison}. ${priority}`; }
+function composeMessage(base: string, comparison: string, fourWeek: string, priority: string) { return `${base} ${comparison}. ${fourWeek}. ${priority}`; }
 function signed(value: number) { return value > 0 ? `+${value}` : String(value); }
 function inRange(value: string, start: Date, end: Date) { const date = new Date(value); return date >= start && date <= end; }
 function startOfWeek(date: Date) { const result = new Date(date); const day = result.getDay(); const diff = day === 0 ? -6 : 1 - day; result.setDate(result.getDate() + diff); result.setHours(0, 0, 0, 0); return result; }
