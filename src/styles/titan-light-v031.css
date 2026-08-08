@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light;
+  --color-bg: #f4f6f9;
+  --color-bg-soft: #eef2f7;
+  --color-surface: #ffffff;
+  --color-surface-strong: #f7f9fc;
+  --color-surface-elevated: #ffffff;
+  --color-border: rgba(15, 23, 42, .08);
+  --color-border-strong: rgba(15, 23, 42, .14);
+  --color-text: #172033;
+  --color-muted: #667085;
+  --color-subtle: #98a2b3;
+  --color-primary: #2563eb;
+  --color-primary-strong: #174fc4;
+  --color-primary-soft: rgba(37, 99, 235, .09);
+  --color-success: #16a36a;
+  --color-warning: #d88a16;
+  --color-danger: #dc4c55;
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-strong);
+  --line: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-muted);
+  --accent: var(--color-primary);
+  --shadow-card: 0 6px 24px rgba(15, 23, 42, .055);
+  --shadow-elevated: 0 16px 44px rgba(15, 23, 42, .10);
+}
+
+body { background: var(--color-bg); color: var(--color-text); }
+.app-shell { background: linear-gradient(180deg, #fafbfc 0, var(--color-bg) 240px); }
+.app-header { background: rgba(250, 251, 252, .90); border-bottom-color: rgba(15,23,42,.06); }
+.eyebrow { color: #4772b8; }
+.status-pill.online { color: #128257; background: rgba(22,163,106,.07); }
+.status-pill.offline { color: #c2414b; background: rgba(220,76,85,.07); }
+
+.hero-card, .info-card, .import-card, .workout-card, .settings-card, .exercise-card,
+.exercise-detail-header, .metric-card, .video-card, .detail-card, .rest-timer,
+.execution-card, .workout-progress-card, .active-exercise-card, .workout-summary,
+.dashboard-card, .coach-card, .cardio-card, .evolution-card, .history-card {
+  background: #fff;
+  border-color: rgba(15,23,42,.075);
+  box-shadow: var(--shadow-card);
+}
+
+.info-card > div, .exercise-prescription span, .progression-panel > div,
+.summary-grid > div, .set-entry, .next-exercise-preview, .pr-summary {
+  background: #f7f9fc;
+}
+
+.primary-action { background: #2563eb; color: #fff; box-shadow: 0 6px 16px rgba(37,99,235,.16); }
+.secondary-action { background: #fff; color: var(--color-text); border-color: rgba(15,23,42,.12); }
+.text-action, .exercise-arrow { color: #2563eb; }
+.workout-count, .exercise-order { background: #eef4ff; color: #2563eb; }
+
+.bottom-navigation {
+  background: rgba(255,255,255,.94);
+  border-top-color: rgba(15,23,42,.08);
+  box-shadow: 0 -8px 30px rgba(15,23,42,.05);
+}
+.bottom-navigation button { color: #7a8496; }
+.bottom-navigation button.active { color: #1d5bd1; background: #edf3ff; }
+
+.set-entry-fields label { color: #5271a8; }
+.set-entry-fields input { background: #f7f9fc; color: var(--color-text); border-color: rgba(15,23,42,.10); }
+.complete-set-action { background: #f4f7fc; color: var(--color-text); border-color: #8eb0ee; }
+.complete-set-action[aria-pressed="true"] { background: rgba(22,163,106,.08); color: #128257; border-color: rgba(22,163,106,.36); }
+.exercise-cue { background: #f2f6fd; color: #345b91; border-left-color: #5f8edc; }
+.pr-banner { background: #fff8e7; color: #8a6414; border-color: rgba(216,138,22,.28); }
+.validation-message.error, .danger-action { background: #fff4f4; color: #bd3d46; }
+.warning-text { color: #9a6814 !important; }
+.plan-preview { background: #f1f6ff; }
+
+/* Remove the neon/glass feeling left by older theme layers. */
+.dashboard-card::before, .coach-card::before, .cardio-card::before { opacity: .28; }
+
+/* Home: airy, editorial and easier to scan. */
+.app-main { padding-inline: 18px; }
+.home-dashboard { gap: 12px; }
+.home-score-card, .home-workout-card, .home-cardio-card, .home-rest-card, .coach-card {
+  border-radius: 24px;
+}
+.home-score-card { background: #fff; }
+.titan-score-ring { filter: none; }
+.home-cardio-card, .home-rest-card { box-shadow: 0 4px 18px rgba(15,23,42,.045); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
