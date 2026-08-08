@@ -3,7 +3,7 @@ import { getExerciseVideo } from '../exercise-library/videos';
 import { getProgressionAdvice } from '../history/intelligence';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
-import type { ExerciseType, TitanExercise, TitanWorkoutDay } from '../plan/types';
+import type { ExerciseType, TitanExercise, TitanExerciseAlternative, TitanWorkoutDay } from '../plan/types';
 import { loadWorkoutExecution, removeWorkoutExecution, saveWorkoutExecution } from './storage';
 import type { ExecutedSet, ExerciseExecution, WorkoutExecution } from './types';
 
@@ -51,27 +51,26 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const baseExercise = workout.exercises[activeExerciseIndex];
   const activeExecution = execution.exercises[baseExercise.id];
   const activeExercise = effectiveExercise(baseExercise, activeExecution);
+  const availableOptions = exerciseOptions(baseExercise);
   const alternativeSelected = activeExercise.id !== baseExercise.id;
   const exerciseType = resolveExerciseType(activeExercise);
   const activeSets = activeExecution.sets;
   const exerciseCompleted = activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
   const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
-  const exerciseVideo = alternativeSelected ? null : getExerciseVideo(activeExercise);
+  const exerciseVideo = getExerciseVideo(activeExercise);
   const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
   function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
     setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
   }
   function updateNumeric(setNumber: number, field: NumericField, value: string) { updateSet(setNumber, { [field]: value === '' ? null : Number(value) }); }
-  function selectExerciseOption(name: string | null) {
+  function selectExerciseOption(option: TitanExercise) {
     const current = execution.exercises[baseExercise.id];
-    const nextId = name ? alternativeExerciseId(baseExercise.id, name) : baseExercise.id;
-    const nextName = name ?? baseExercise.name;
-    if (current.selectedExerciseId === nextId && current.selectedExerciseName === nextName) return;
+    if (current.selectedExerciseId === option.id && current.selectedExerciseName === option.name) return;
     const hasRecordedData = current.sets.some(hasRecordedStrengthData);
     if (hasRecordedData && !window.confirm('Já existem séries registradas neste exercício. Trocar a opção irá limpar as séries desta sessão. Deseja continuar?')) return;
-    const freshSets = Array.from({ length: Math.max(1, baseExercise.sets ?? 1) }, (_, index) => blankSet(index + 1, baseExercise));
+    const freshSets = Array.from({ length: Math.max(1, option.sets ?? baseExercise.sets ?? 1) }, (_, index) => blankSet(index + 1, option));
     setExecution((state) => ({
       ...state,
       updatedAt: new Date().toISOString(),
@@ -79,9 +78,10 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
         ...state.exercises,
         [baseExercise.id]: {
           ...state.exercises[baseExercise.id],
-          selectedExerciseId: nextId,
-          selectedExerciseName: nextName,
-          sets: hasRecordedData ? freshSets : state.exercises[baseExercise.id].sets,
+          selectedExerciseId: option.id,
+          selectedExerciseName: option.name,
+          exerciseType: resolveExerciseType(option),
+          sets: freshSets,
         },
       },
     }));
@@ -124,18 +124,17 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
 
     <article className={`active-exercise-card ${exerciseType === 'cardio' ? 'cardio-exercise' : ''}`}>
-      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3>{alternativeSelected && <small className="alternative-active-label">Alternativa selecionada</small>}</div></header>
+      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3>{alternativeSelected && <small className="alternative-active-label">Alternativa selecionada · histórico próprio</small>}</div></header>
 
-      {baseExercise.alternatives?.length ? <details className="exercise-alternative-picker">
+      {availableOptions.length > 1 ? <details className="exercise-alternative-picker">
         <summary><span><small>EXERCÍCIO DA SESSÃO</small><strong>{activeExercise.name}</strong></span><b>Trocar</b></summary>
         <div className="exercise-alternative-options">
-          <button type="button" className={!alternativeSelected ? 'selected' : ''} onClick={() => selectExerciseOption(null)}><span>Principal</span><strong>{baseExercise.name}</strong>{!alternativeSelected && <b>✓</b>}</button>
-          {baseExercise.alternatives.map((alternative) => {
-            const selected = activeExercise.name === alternative;
-            return <button type="button" className={selected ? 'selected' : ''} key={alternative} onClick={() => selectExerciseOption(alternative)}><span>Alternativa</span><strong>{alternative}</strong>{selected && <b>✓</b>}</button>;
+          {availableOptions.map((option, index) => {
+            const selected = activeExercise.id === option.id;
+            return <button type="button" className={selected ? 'selected' : ''} key={option.id} onClick={() => selectExerciseOption(option)}><span>{index === 0 ? 'Principal' : 'Alternativa'}</span><strong>{option.name}</strong>{selected && <b>✓</b>}</button>;
           })}
         </div>
-        <p>A opção escolhida vale para esta sessão e terá histórico, PR e progressão separados.</p>
+        <p>A opção escolhida vale para esta sessão. Carga, repetições, RIR, histórico, PR e progressão ficam vinculados ao exercício realmente executado.</p>
       </details> : null}
 
       {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
@@ -148,7 +147,6 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       </section>}
 
       <Prescription exercise={activeExercise} />
-      {alternativeSelected && <p className="alternative-prescription-note">Séries, repetições, RIR e descanso seguem a prescrição do exercício principal nesta versão.</p>}
       {exerciseType === 'strength' && <>
         <div className="progression-panel workout-pr-panel">
           <div><span>Última sessão</span><strong>{strengthSnapshot.last}</strong></div>
@@ -160,8 +158,8 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
           <p>{strengthSnapshot.message}</p>
         </div>
       </>}
-      {!alternativeSelected && activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
-      {!alternativeSelected && activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
+      {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
+      {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
 
       {!videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
@@ -207,12 +205,29 @@ function normalizeExecution(saved: WorkoutExecution | null, planId: string, work
   const fresh = createExecution(planId, workout);
   for (const exercise of workout.exercises) {
     const previous = saved.exercises?.[exercise.id]; if (!previous) continue;
-    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), selectedExerciseId: previous.selectedExerciseId ?? exercise.id, selectedExerciseName: previous.selectedExerciseName ?? exercise.name, sets: fresh.exercises[exercise.id].sets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
+    const selected = effectiveExercise(exercise, previous);
+    const fallbackSets = Array.from({ length: Math.max(1, selected.sets ?? exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, selected));
+    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(selected), selectedExerciseId: selected.id, selectedExerciseName: selected.name, sets: fallbackSets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
   }
   return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, updatedAt: saved.updatedAt ?? fresh.updatedAt };
 }
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
-function effectiveExercise(base: TitanExercise, execution?: ExerciseExecution): TitanExercise { const selectedId = execution?.selectedExerciseId ?? base.id; const selectedName = execution?.selectedExerciseName ?? base.name; return selectedId === base.id && selectedName === base.name ? base : { ...base, id: selectedId, name: selectedName }; }
+function resolveStructuredAlternative(base: TitanExercise, alternative: TitanExerciseAlternative): TitanExercise {
+  return { ...base, ...alternative, muscleGroup: alternative.muscleGroup ?? base.muscleGroup, alternatives: undefined, alternativeExercises: undefined };
+}
+function legacyAlternative(base: TitanExercise, name: string): TitanExercise {
+  return { ...base, id: alternativeExerciseId(base.id, name), name, technique: undefined, commonMistakes: undefined, video: undefined, alternatives: undefined, alternativeExercises: undefined };
+}
+function exerciseOptions(base: TitanExercise): TitanExercise[] {
+  const structured = (base.alternativeExercises ?? []).map((alternative) => resolveStructuredAlternative(base, alternative));
+  const structuredNames = new Set(structured.map((item) => item.name.toLowerCase()));
+  const legacy = (base.alternatives ?? []).filter((name) => !structuredNames.has(name.toLowerCase())).map((name) => legacyAlternative(base, name));
+  return [base, ...structured, ...legacy];
+}
+function effectiveExercise(base: TitanExercise, execution?: ExerciseExecution): TitanExercise {
+  const selectedId = execution?.selectedExerciseId ?? base.id; const selectedName = execution?.selectedExerciseName ?? base.name;
+  return exerciseOptions(base).find((option) => option.id === selectedId) ?? exerciseOptions(base).find((option) => option.name === selectedName) ?? (selectedId === base.id ? base : legacyAlternative(base, selectedName));
+}
 function alternativeExerciseId(baseId: string, name: string) { const slug = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); return `${baseId}::alt::${slug || 'alternativa'}`; }
 function hasRecordedStrengthData(set: ExecutedSet) { return set.completed || (set.weightKg ?? 0) > 0 || (set.repetitions ?? 0) > 0 || Boolean(set.notes); }
 
