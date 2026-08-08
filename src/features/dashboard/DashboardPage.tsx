@@ -8,7 +8,7 @@ type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onSt
 type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
 type CoachPriority = { status: CoachStatus; badge: string; title: string; message: string; detail: string; context?: string };
 type WorkoutVisual = 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'full';
-type TodayCardio = { title: string; day: string; durationMinutes: number | null; startTime?: string; detail?: string };
+type TodayCardio = { title: string; day: string; durationMinutes: number | null; startTime?: string; zone?: string; detail?: string };
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
@@ -30,36 +30,42 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const exerciseCount = strengthExercises.length;
   const setCount = strengthExercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0);
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
-  const history = loadWorkoutHistory();
+  const _history = loadWorkoutHistory();
   const todayCardio = getTodayCardio(plan, dayPlan);
+  const cardioDisplay: TodayCardio = todayCardio ?? { title: 'Cardio diário', day: 'Hoje', durationMinutes: null, zone: undefined, detail: 'O cardio faz parte da rotina diária. Tempo e zona ainda não estão definidos no projeto.' };
   const coach = getTodayCoachPriority(hasStrengthToday ? dayPlan : null, Boolean(todayCardio));
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
-  const latestCardio = getLatestCardio(history);
+
+  const cardioCard = <section className={`dashboard-cardio-card today-cardio-highlight${!todayCardio ? ' cardio-unconfigured' : ''}`} aria-label="Cardio de hoje">
+    <div><span className="eyebrow">CARDIO DE HOJE</span><strong>{cardioDisplay.title}</strong><p>{buildTodayCardioLine(cardioDisplay)}</p>{cardioDisplay.detail && <p>{cardioDisplay.detail}</p>}</div>
+    <div className="dashboard-cardio-stats"><span><small>Tempo</small><strong>{cardioDisplay.durationMinutes ? `${cardioDisplay.durationMinutes} min` : 'A definir'}</strong></span><span><small>Zona</small><strong>{cardioDisplay.zone ?? 'A definir'}</strong></span></div>
+  </section>;
 
   return <div className="dashboard-page dashboard-page-clean">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
 
-    {hasStrengthToday && dayPlan ? <section className="today-workout" aria-labelledby="today-workout-title">
-      <WorkoutMuscleArt visual={visual} />
-      <div className="today-workout-topline"><span className="eyebrow">TREINO COMPLETO · {strengthStart}</span><span className="today-workout-day">{dayPlan.day}</span></div>
-      <h3 id="today-workout-title">{dayPlan.title}</h3>
-      <p>{dayPlan.focus ?? 'Siga o projeto e registre cada exercício.'}</p>
-      <div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> registros</span></div>
-      <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>
-    </section> : <section className="today-rest-card" aria-label="Descanso da musculação">
-      <span className="eyebrow">MUSCULAÇÃO</span>
-      <h3>Descanso de treino</h3>
-      <p>{todayCardio ? 'Hoje não há musculação programada. O foco do dia está no cardio.' : 'Hoje não há musculação programada. Use o dia para recuperar e seguir o próximo treino do projeto.'}</p>
-      <span className="today-rest-badge">SEM MUSCULAÇÃO HOJE</span>
-    </section>}
-
-    {todayCardio && <section className="dashboard-cardio-card today-cardio-highlight" aria-label="Cardio de hoje">
-      <div><span className="eyebrow">CARDIO DE HOJE</span><strong>{todayCardio.title}</strong><p>{buildTodayCardioLine(todayCardio)}</p>{todayCardio.detail && <p>{todayCardio.detail}</p>}</div>
-      <div className="dashboard-cardio-stats"><span><small>Último</small><strong>{latestCardio ? formatCardioDuration(latestCardio.durationSeconds) : '—'}</strong></span><span><small>Distância</small><strong>{latestCardio?.distanceMeters ? `${(latestCardio.distanceMeters / 1000).toFixed(2)} km` : '—'}</strong></span></div>
-    </section>}
+    {hasStrengthToday && dayPlan ? <>
+      <section className="today-workout" aria-labelledby="today-workout-title">
+        <WorkoutMuscleArt visual={visual} />
+        <div className="today-workout-topline"><span className="eyebrow">TREINO COMPLETO · {strengthStart}</span><span className="today-workout-day">{dayPlan.day}</span></div>
+        <h3 id="today-workout-title">{dayPlan.title}</h3>
+        <p>{dayPlan.focus ?? 'Siga o projeto e registre cada exercício.'}</p>
+        <div className="today-workout-metrics"><span><strong>{exerciseCount}</strong> exercícios</span><span><strong>{setCount}</strong> registros</span></div>
+        <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>
+      </section>
+      {cardioCard}
+    </> : <>
+      {cardioCard}
+      <section className="today-rest-card" aria-label="Descanso da musculação">
+        <span className="eyebrow">MUSCULAÇÃO</span>
+        <h3>Descanso da musculação</h3>
+        <p>{todayCardio ? 'Hoje o foco principal está no cardio programado.' : 'Hoje não há musculação programada. O cardio diário continua previsto, mas falta definir tempo e zona no projeto.'}</p>
+        <span className="today-rest-badge">SEM MUSCULAÇÃO HOJE</span>
+      </section>
+    </>}
 
     <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN">
-      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.29.3</span><span>{coach.badge}</span></div>
+      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.29.4</span><span>{coach.badge}</span></div>
       <strong>{coach.title}</strong><p>{coach.message}</p>{coach.context && <small className="coach-context">{coach.context}</small>}{coach.detail && <details><summary>Ver orientação</summary><p>{coach.detail}</p></details>}
     </section>
   </div>;
@@ -70,17 +76,16 @@ function getTodayCardio(plan: TitanPlan, workout: TitanWorkoutDay | null): Today
   if (scheduled) return cardioFromSchedule(scheduled);
   const embedded = workout?.exercises.find(isCardio);
   if (!embedded) return null;
-  return { title: embedded.name, day: workout?.day ?? 'Hoje', durationMinutes: embedded.durationSeconds ? Math.round(embedded.durationSeconds / 60) : null, detail: embedded.notes ?? embedded.cardioZone };
+  return { title: embedded.name, day: workout?.day ?? 'Hoje', durationMinutes: embedded.durationSeconds ? Math.round(embedded.durationSeconds / 60) : null, zone: embedded.cardioZone, detail: embedded.notes };
 }
-function cardioFromSchedule(session: TitanCardioSession): TodayCardio { return { title: session.title, day: session.day, durationMinutes: session.durationMinutes, startTime: session.startTime, detail: session.goal ?? session.phase }; }
-function buildTodayCardioLine(cardio: TodayCardio) { const parts = [cardio.day]; if (cardio.startTime) parts.push(cardio.startTime); if (cardio.durationMinutes) parts.push(`${cardio.durationMinutes} min`); return parts.join(' · '); }
-function getLatestCardio(records: WorkoutHistoryRecord[]) { for (const record of records) { for (const exercise of record.exercises) { if (exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance') return { durationSeconds: exercise.totalDurationSeconds, distanceMeters: exercise.totalDistanceMeters }; } } return null; }
-function formatCardioDuration(seconds: number) { if (!seconds) return '—'; return `${Math.max(1, Math.round(seconds / 60))} min`; }
+function cardioFromSchedule(session: TitanCardioSession): TodayCardio { return { title: session.title, day: session.day, durationMinutes: session.durationMinutes, startTime: session.startTime, zone: cardioZoneFromSchedule(session), detail: session.goal ?? session.phase }; }
+function cardioZoneFromSchedule(session: TitanCardioSession) { if (session.type === 'zone2') return 'Zona 2'; if (session.type === 'hiit') return 'HIIT'; return undefined; }
+function buildTodayCardioLine(cardio: TodayCardio) { const parts = [cardio.day]; if (cardio.startTime) parts.push(cardio.startTime); return parts.join(' · '); }
 
-function getTodayCoachPriority(workout: TitanWorkoutDay | null, hasCardioToday = false): CoachPriority {
-  if (!workout) return hasCardioToday
+function getTodayCoachPriority(workout: TitanWorkoutDay | null, hasConfiguredCardioToday = false): CoachPriority {
+  if (!workout) return hasConfiguredCardioToday
     ? { status: 'maintain', badge: 'CARDIO HOJE', title: 'Musculação em descanso', message: 'Hoje o foco é cumprir o cardio programado e preservar a recuperação muscular.', detail: 'Registre a sessão na aba Cardio para que o histórico acompanhe tempo, distância, ritmo e frequência cardíaca.' }
-    : { status: 'maintain', badge: 'DESCANSO', title: 'Recuperação programada', message: 'Não há musculação programada para hoje.', detail: 'Mantenha o descanso e retome a progressão no próximo treino previsto pelo projeto.' };
+    : { status: 'maintain', badge: 'CARDIO DIÁRIO', title: 'Descanso da musculação', message: 'Hoje não há musculação. O cardio diário continua previsto, mas o projeto ainda não definiu tempo e zona.', detail: 'Defina a sessão de cardio do dia no projeto para que a Home mostre duração e zona-alvo sem precisar estimar valores.' };
   const records = loadWorkoutHistory();
   if (!records.length) return { status: 'insufficient', badge: 'CRIANDO BASE', title: 'Primeiro treino de referência', message: 'Hoje o objetivo é registrar cargas, repetições e RIR com consistência.', detail: 'A primeira execução cria sua linha de base e não conta como PR.' };
   const strengthExercises = workout.exercises.filter(isStrength);
