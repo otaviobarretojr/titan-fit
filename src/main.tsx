@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { App } from './app/App';
 import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
+import { enablePostWorkoutCoach } from './ui/post-workout-coach';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/dashboard.css';
@@ -26,9 +27,11 @@ import './styles/workout-close-v0266.css';
 import './styles/coach-v027.css';
 import './styles/home-premium-v0272.css';
 import './styles/home-muscle-art-v0273.css';
+import './styles/post-workout-coach-v0274.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
+enablePostWorkoutCoach();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
