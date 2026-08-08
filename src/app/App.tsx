@@ -16,7 +16,7 @@ import { ProgrammingPage } from '../features/programming/ProgrammingPage';
 type TabId = 'today' | 'programming' | 'cardio' | 'progress' | 'settings' | 'workout';
 type NavigationTab = Exclude<TabId, 'workout'>;
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
-const APP_VERSION = '0.36.0';
+const APP_VERSION = '0.37.0';
 const tabs: Array<{ id: NavigationTab; label: string }> = [
   { id: 'today', label: 'Hoje' },
   { id: 'programming', label: 'Programação' },
