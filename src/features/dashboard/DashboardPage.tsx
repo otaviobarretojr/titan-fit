@@ -3,6 +3,7 @@ import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanCardioSession, TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
+import { buildWeeklyCoachSummary } from './weeklyCoach';
 
 type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; onOpenProgress: () => void; };
 type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
@@ -30,10 +31,11 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const exerciseCount = strengthExercises.length;
   const setCount = strengthExercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0);
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
-  const _history = loadWorkoutHistory();
+  const history = loadWorkoutHistory();
   const todayCardio = getTodayCardio(plan, dayPlan);
   const cardioDisplay: TodayCardio = todayCardio ?? { title: 'Cardio diário', day: 'Hoje', durationMinutes: null, zone: undefined, detail: 'O cardio faz parte da rotina diária. Tempo e zona ainda não estão definidos no projeto.' };
   const coach = getTodayCoachPriority(hasStrengthToday ? dayPlan : null, Boolean(todayCardio));
+  const weeklyCoach = buildWeeklyCoachSummary(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
 
   const cardioCard = <section className={`dashboard-cardio-card today-cardio-highlight${!todayCardio ? ' cardio-unconfigured' : ''}`} aria-label="Cardio de hoje">
@@ -65,8 +67,19 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
     </>}
 
     <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN">
-      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.29.4</span><span>{coach.badge}</span></div>
-      <strong>{coach.title}</strong><p>{coach.message}</p>{coach.context && <small className="coach-context">{coach.context}</small>}{coach.detail && <details><summary>Ver orientação</summary><p>{coach.detail}</p></details>}
+      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.30</span><span>{coach.badge}</span></div>
+      <strong>{coach.title}</strong><p>{coach.message}</p>{coach.context && <small className="coach-context">{coach.context}</small>}
+      <div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}>
+        <div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div>
+        <div className="coach-weekly-metrics">
+          <span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span>
+          <span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span>
+          <span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span>
+          <span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span>
+        </div>
+        <p>{weeklyCoach.message}</p>
+      </div>
+      {coach.detail && <details><summary>Ver orientação do dia</summary><p>{coach.detail}</p></details>}
     </section>
   </div>;
 }
