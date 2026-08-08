@@ -1,0 +1,86 @@
+/* TITAN FIT v0.32.2 — Score TITAN alignment hotfix */
+.titan-score-card{
+  display:grid!important;
+  justify-items:center!important;
+  text-align:center!important;
+}
+
+.titan-score-main{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  justify-items:center!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+
+.titan-score-value{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:122px!important;
+  height:122px!important;
+  min-width:122px!important;
+  min-height:122px!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+  text-align:center!important;
+  line-height:1!important;
+  letter-spacing:0!important;
+}
+
+.titan-score-value::before{
+  content:'SCORE TITAN'!important;
+  position:static!important;
+  transform:none!important;
+  width:auto!important;
+  display:block!important;
+  margin:0 0 5px!important;
+  font-size:.52rem!important;
+  line-height:1!important;
+  letter-spacing:.10em!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+
+.titan-score-value{
+  font-size:2.35rem!important;
+  font-weight:900!important;
+}
+
+.titan-score-value small{
+  display:block!important;
+  margin:5px 0 0!important;
+  font-size:.55rem!important;
+  line-height:1!important;
+  letter-spacing:.06em!important;
+  text-align:center!important;
+}
+
+.titan-score-main>div:first-child{
+  width:100%!important;
+  max-width:320px!important;
+  display:grid!important;
+  justify-items:center!important;
+  text-align:center!important;
+}
+
+.titan-score-main>div:first-child>strong,
+.titan-score-main>div:first-child>p{
+  text-align:center!important;
+}
+
+@media(max-width:390px){
+  .titan-score-value{
+    width:112px!important;
+    height:112px!important;
+    min-width:112px!important;
+    min-height:112px!important;
+    font-size:2.15rem!important;
+  }
+  .titan-score-value::before{font-size:.49rem!important;margin-bottom:4px!important}
+  .titan-score-value small{font-size:.52rem!important;margin-top:4px!important}
+}
