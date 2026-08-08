@@ -31,10 +31,10 @@ const database = await read('src/core/database/indexedDb.ts');
 const backup = await read('src/core/backup/backup.ts');
 const deploy = await read('.github/workflows/deploy-pages.yml');
 
-assert(pkg.version === '0.21.0', 'package.json deve manter a versão técnica atual');
-assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'"), 'PWA e base do GitHub Pages devem permanecer configurados');
+assert(pkg.version === '0.36.0', 'package.json deve manter a versão técnica atual v0.36.0');
+assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("cacheId: 'titan-fit-v0.36.0'"), 'PWA, base do GitHub Pages e cache da versão atual devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && app.includes('v0.33.0') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação v0.33 deve usar Programação no lugar de Histórico e manter Cardio');
+assert(app.includes("const APP_VERSION = '0.36.0'") && app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Programação no lugar de Histórico, manter Cardio e exibir a versão atual');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
 assert(app.includes('Ativar demonstração completa') && app.includes('Remover dados da demonstração') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve separar demo, remoção da demo e reset protegido');
 assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
@@ -77,4 +77,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT v0.33.0 concluída com sucesso.');
+console.log('Validação do TITAN FIT v0.36.0 concluída com sucesso.');
