@@ -3,11 +3,12 @@ import { BodyEvolutionPage } from '../evolution/BodyEvolutionPage';
 import { getExerciseSessions } from './intelligence';
 import { loadWorkoutHistory } from './storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from './types';
+import { WeeklyCoachSummary } from './WeeklyCoachSummary';
 
 export function ProgressPage({ refreshKey }: { refreshKey: number }) {
   const [view, setView] = useState<'body' | 'training'>('body');
   return <>
-    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.26.2</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
+    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.27.5</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
     <div className="evolution-switch" role="tablist" aria-label="Centro de evolução">
       <button type="button" role="tab" aria-selected={view === 'body'} className={view === 'body' ? 'active' : ''} onClick={() => setView('body')}>Corpo</button>
       <button type="button" role="tab" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>
@@ -51,6 +52,7 @@ function PrHall({ refreshKey }: { refreshKey: number }) {
   if (!records.length) return <section className="hero-card compact"><span className="eyebrow">HALL DOS PRs</span><h2>Nenhum recorde ainda</h2><p>Finalize seus treinos para criar suas primeiras referências de carga.</p></section>;
 
   return <div className="pr-hall-view">
+    <WeeklyCoachSummary records={records} />
     <section className="section-header pr-hall-heading"><span className="eyebrow">🏆 HALL DOS PRs</span><h2>PRs conquistados</h2><p>A primeira execução de cada exercício vira apenas sua linha de base. O PR aparece quando você supera essa referência.</p></section>
 
     {!groups.length ? <section className="hero-card compact"><span className="eyebrow">LINHAS DE BASE REGISTRADAS</span><h2>Seu primeiro PR ainda está por vir</h2><p>Você já tem referências iniciais salvas. Quando melhorar um exercício em uma próxima sessão, a conquista aparecerá aqui.</p></section> : <div className="pr-muscle-grid">
