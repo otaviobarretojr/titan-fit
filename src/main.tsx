@@ -31,6 +31,7 @@ import './styles/home-premium-v0272.css';
 import './styles/home-muscle-art-v0273.css';
 import './styles/post-workout-coach-v0274.css';
 import './styles/weekly-coach-v0275.css';
+import './styles/home-uniform-v0292.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
