@@ -1,5 +1,6 @@
 import type { GeneratedPlanCandidate, PlanCandidateStrategy, TitanProfile, TitanTrainingAssessment } from '../profile/types';
 import { buildSplitTemplate, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
+import { generateCardioSchedule } from '../cardio/generator';
 import type { TitanPlan, TitanWorkoutDay } from './types';
 
 const DAY_NAMES = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
@@ -27,6 +28,7 @@ export function generateTitanPlanCandidates(profile: TitanProfile, assessment: T
   const eligible = getEligibleExercises(input);
   const split = buildSplitTemplate(assessment.trainingDaysPerWeek);
   const strategies: PlanCandidateStrategy[] = ['adherence','balanced','availability'];
+  const cardioSchedule = generateCardioSchedule(assessment);
 
   return strategies.map((strategy) => {
     const config = candidateSettings(strategy);
@@ -63,7 +65,12 @@ export function generateTitanPlanCandidates(profile: TitanProfile, assessment: T
       description: `Plano gerado localmente para ${profile.displayName}, com base no perfil e disponibilidade informados.`,
       createdAt: new Date().toISOString(),
       author: 'TITAN',
-      project: { name: `Projeto ${profile.displayName}`, objective: profile.primaryGoal ?? 'general-fitness', cardioGoal: assessment.cardioGoal },
+      project: {
+        name: `Projeto ${profile.displayName}`,
+        objective: profile.primaryGoal ?? 'general-fitness',
+        cardioGoal: assessment.cardioGoal,
+        cardioSchedule,
+      },
       workouts,
     };
 
@@ -72,6 +79,8 @@ export function generateTitanPlanCandidates(profile: TitanProfile, assessment: T
       : strategy === 'balanced'
         ? ['Equilibra estímulo, recuperação e tempo de sessão.', 'É a recomendação padrão do TITAN para este perfil.']
         : ['Aproveita mais da disponibilidade informada.', 'Usa volume um pouco maior sem ultrapassar os limites definidos para a experiência atual.'];
+
+    if (cardioSchedule.length) rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`);
 
     return { id: crypto.randomUUID(), profileId: profile.id, strategy, title: config.suffix, rationale, source:'titan-generated', plan, createdAt: new Date().toISOString() };
   });
