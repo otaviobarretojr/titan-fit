@@ -21,19 +21,19 @@ export function CoachTitanPanel({ refreshKey }: { refreshKey: number }) {
 
   return <div className="coach-titan-view">
     <section className="section-header coach-titan-heading">
-      <span className="eyebrow">COACH TITAN · v0.27</span>
-      <h2>Prioridades do treino</h2>
-      <p>O Coach usa apenas seus registros salvos e mostra no máximo três ações por vez.</p>
+      <span className="eyebrow">COACH TITAN · v0.27.6</span>
+      <h2>Prioridades atuais</h2>
+      <p>As recomendações usam seu histórico real e a mesma lógica de progressão aplicada durante o treino.</p>
     </section>
 
     {!records.length ? <section className="hero-card compact">
-      <span className="eyebrow">SEM DADOS SUFICIENTES</span>
+      <span className="eyebrow">CRIANDO BASE</span>
       <h2>Complete seus primeiros treinos</h2>
-      <p>Depois de registrar sessões de musculação, o TITAN começa a identificar onde manter, progredir ou revisar.</p>
+      <p>A primeira execução cria a linha de base. Depois das próximas referências, o Coach começa a comparar desempenho.</p>
     </section> : !items.length ? <section className="hero-card compact">
       <span className="eyebrow">BASE EM FORMAÇÃO</span>
       <h2>Ainda faltam comparações</h2>
-      <p>Continue registrando seus exercícios. O Coach precisa de pelo menos duas referências para gerar recomendações úteis.</p>
+      <p>Continue registrando seus exercícios. O Coach precisa de pelo menos duas referências válidas para gerar recomendações úteis.</p>
     </section> : <div className="coach-priority-stack">
       {items.map((item, index) => <article className={`coach-priority-card status-${item.status}`} key={item.exerciseId}>
         <div className="coach-priority-topline">
