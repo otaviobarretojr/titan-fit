@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.40 — Base TITAN de prescrição
+
+- Catálogo estruturado inicial de exercícios por músculo, padrão de movimento, equipamento e experiência mínima.
+- Técnica, erros comuns, substituições, faixas de repetição, RIR e descanso incorporados ao catálogo.
+- Regras iniciais de volume semanal e limite de exercícios por duração da sessão.
+- Seleção de exercícios compatível com experiência e estrutura disponível.
+- Templates de divisão para 2 a 6 dias de musculação.
+- Testes automatizados para volume, elegibilidade de exercícios e divisão semanal.
+
 ## v0.9.0 — Dashboard inteligente
 
 - Home refeita para mostrar a próxima ação com clareza.
