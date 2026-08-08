@@ -1,15 +1,5 @@
 type WorkoutVisual = 'legs' | 'chest' | 'back' | 'shoulders' | 'arms' | 'full';
 
-export function getWorkoutVisual(title = '', focus = ''): WorkoutVisual {
-  const value = `${title} ${focus}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  if (/leg|perna|quadr|posterior|glute|panturr/.test(value)) return 'legs';
-  if (/peit|peitor|chest|push/.test(value)) return 'chest';
-  if (/cost|dors|back|pull/.test(value)) return 'back';
-  if (/ombro|delto|shoulder/.test(value)) return 'shoulders';
-  if (/biceps|triceps|braco|arm/.test(value)) return 'arms';
-  return 'full';
-}
-
 export function WorkoutMuscleArt({ visual }: { visual: WorkoutVisual }) {
   return <svg className={`workout-muscle-art visual-${visual}`} viewBox="0 0 180 330" aria-hidden="true">
     <defs>
