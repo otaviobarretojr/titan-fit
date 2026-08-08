@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { BetaFeedbackPanel } from '../../features/beta/BetaFeedbackPanel';
+import { ProfileSettingsPanel } from '../../features/profile/ProfileSettingsPanel';
 import { createBackup, downloadBackup, restoreBackup, validateBackup, type RestoreSummary } from './backup';
 
 const RESTORE_SUMMARY_KEY = 'titan-fit:restore-summary';
+const APP_VERSION = '0.37.0';
 
 export function BackupPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,14 +54,18 @@ export function BackupPanel() {
     }
   }
 
-  return <section className="settings-card" aria-label="Backup local">
-    <div><span className="info-label">BACKUP LOCAL</span><strong>Proteja seus registros</strong></div>
-    <p>Exporte um arquivo com o banco TITAN FIT ou restaure os dados em outro aparelho.</p>
-    <button type="button" className="secondary-action" disabled={busy} onClick={exportData}>Exportar backup</button>
-    <button type="button" className="secondary-action" disabled={busy} onClick={() => inputRef.current?.click()}>Restaurar backup</button>
-    <input ref={inputRef} className="file-input" type="file" accept=".json,.titan-backup.json,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importData(file); }} />
-    {message && <p role="status">{message}</p>}
-  </section>;
+  return <>
+    <ProfileSettingsPanel />
+    <BetaFeedbackPanel appVersion={APP_VERSION} />
+    <section className="settings-card" aria-label="Backup local">
+      <div><span className="info-label">BACKUP LOCAL</span><strong>Proteja seus registros</strong></div>
+      <p>Exporte um arquivo com o banco TITAN FIT ou restaure os dados em outro aparelho.</p>
+      <button type="button" className="secondary-action" disabled={busy} onClick={exportData}>Exportar backup</button>
+      <button type="button" className="secondary-action" disabled={busy} onClick={() => inputRef.current?.click()}>Restaurar backup</button>
+      <input ref={inputRef} className="file-input" type="file" accept=".json,.titan-backup.json,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importData(file); }} />
+      {message && <p role="status">{message}</p>}
+    </section>
+  </>;
 }
 
 function formatRestoreMessage(summary: RestoreSummary) {
