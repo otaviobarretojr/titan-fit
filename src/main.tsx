@@ -35,6 +35,7 @@ import './styles/home-uniform-v0292.css';
 import './styles/home-day-aware-v0293.css';
 import './styles/home-clean-v0305.css';
 import './styles/titan-light-v031.css';
+import './styles/visual-harmony-v032.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
