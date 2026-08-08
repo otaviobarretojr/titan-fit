@@ -1,0 +1,29 @@
+/* TITAN FIT v0.27.5 — Resumo semanal do Coach TITAN */
+.weekly-coach-summary{margin:18px 0 22px;padding:22px;border:1px solid rgba(225,166,56,.26);border-radius:28px;background:linear-gradient(150deg,rgba(12,18,27,.98),rgba(8,13,21,.98));box-shadow:0 16px 38px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.012)}
+.weekly-coach-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.weekly-coach-header .eyebrow{color:#e7ad41;letter-spacing:.06em}
+.weekly-coach-header h3{margin:6px 0 0;font-size:1.45rem;line-height:1.1;color:#f7f9fc}
+.weekly-coach-trend{flex:0 0 auto;padding:8px 12px;border-radius:999px;font-size:.68rem;font-weight:900;letter-spacing:.05em}
+.weekly-coach-trend.positive{color:#77e79d;border:1px solid rgba(70,190,111,.35);background:rgba(51,160,91,.12)}
+.weekly-coach-trend.stable{color:#85b7ff;border:1px solid rgba(75,137,230,.32);background:rgba(48,101,190,.12)}
+.weekly-coach-trend.attention{color:#ff9c9c;border:1px solid rgba(236,91,91,.34);background:rgba(180,45,45,.12)}
+.weekly-coach-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.weekly-coach-metrics>div{padding:16px;border:1px solid rgba(130,154,192,.15);border-radius:20px;background:rgba(23,33,49,.74)}
+.weekly-coach-metrics span{display:block;color:#929eb2;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.weekly-coach-metrics strong{display:block;margin-top:4px;color:#fff;font-size:1.55rem}
+.weekly-coach-metrics small{display:block;margin-top:4px;color:#9ca8bb;font-size:.75rem}
+.weekly-coach-insights{display:grid;gap:10px}
+.weekly-insight{padding:15px 16px;border-radius:18px;background:rgba(19,29,44,.72);border:1px solid rgba(126,150,187,.14)}
+.weekly-insight span{display:block;font-size:.72rem;font-weight:800;letter-spacing:.03em}
+.weekly-insight strong{display:block;margin:5px 0 2px;color:#f5f8fc;font-size:1rem}
+.weekly-insight small{color:#98a4b6;font-size:.76rem}
+.weekly-insight.positive span{color:#6fe19a}
+.weekly-insight.neutral span{color:#86b5fa}
+.weekly-coach-priority{margin-top:18px;padding:18px;border:1px solid rgba(223,162,48,.18);border-radius:20px;background:linear-gradient(145deg,rgba(111,73,9,.09),rgba(20,25,31,.3))}
+.weekly-coach-priority .eyebrow{color:#dba23d}
+.weekly-coach-priority strong{display:block;margin-top:7px;color:#fff;font-size:1.06rem}
+.weekly-coach-priority p{margin:7px 0 0;color:#a4afbf;line-height:1.5;font-size:.88rem}
+.weekly-coach-empty{padding:18px;border-radius:20px;background:rgba(22,32,47,.68);border:1px solid rgba(123,149,190,.14)}
+.weekly-coach-empty strong{color:#fff}
+.weekly-coach-empty p{margin:7px 0 0;color:#9aa6b8;line-height:1.5;font-size:.86rem}
+@media(max-width:390px){.weekly-coach-summary{padding:18px;border-radius:24px}.weekly-coach-header h3{font-size:1.3rem}.weekly-coach-metrics{gap:9px}.weekly-coach-metrics>div{padding:14px}.weekly-coach-metrics strong{font-size:1.35rem}}
