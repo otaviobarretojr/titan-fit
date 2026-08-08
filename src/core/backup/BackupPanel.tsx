@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BetaFeedbackPanel } from '../../features/beta/BetaFeedbackPanel';
+import { TesterKitPanel } from '../../features/beta/TesterKitPanel';
 import { ProfileSettingsPanel } from '../../features/profile/ProfileSettingsPanel';
 import { createBackup, downloadBackup, restoreBackup, validateBackup, type RestoreSummary } from './backup';
 
@@ -56,6 +57,7 @@ export function BackupPanel() {
 
   return <>
     <ProfileSettingsPanel />
+    <TesterKitPanel appVersion={APP_VERSION} />
     <BetaFeedbackPanel appVersion={APP_VERSION} />
     <section className="settings-card" aria-label="Backup local">
       <div><span className="info-label">BACKUP LOCAL</span><strong>Proteja seus registros</strong></div>
