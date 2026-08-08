@@ -5,7 +5,7 @@ import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage'
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
 import type { ExerciseType, TitanExercise, TitanWorkoutDay } from '../plan/types';
 import { loadWorkoutExecution, removeWorkoutExecution, saveWorkoutExecution } from './storage';
-import type { ExecutedSet, WorkoutExecution } from './types';
+import type { ExecutedSet, ExerciseExecution, WorkoutExecution } from './types';
 
 type Props = { planId: string; planName: string; workout: TitanWorkoutDay; onBack: () => void; onCompleted: () => void };
 type WorkoutSummary = { durationSeconds: number; totalVolumeKg: number; totalSets: number; cardioMinutes: number };
@@ -48,19 +48,47 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     return { completed: completed.length, total: entries.length, volume };
   }, [execution]);
 
-  const activeExercise = workout.exercises[activeExerciseIndex];
+  const baseExercise = workout.exercises[activeExerciseIndex];
+  const activeExecution = execution.exercises[baseExercise.id];
+  const activeExercise = effectiveExercise(baseExercise, activeExecution);
+  const alternativeSelected = activeExercise.id !== baseExercise.id;
   const exerciseType = resolveExerciseType(activeExercise);
-  const activeSets = execution.exercises[activeExercise.id].sets;
+  const activeSets = activeExecution.sets;
   const exerciseCompleted = activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
   const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
-  const exerciseVideo = getExerciseVideo(activeExercise);
+  const exerciseVideo = alternativeSelected ? null : getExerciseVideo(activeExercise);
   const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
   function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
-    setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [activeExercise.id]: { ...current.exercises[activeExercise.id], sets: current.exercises[activeExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
+    setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
   }
   function updateNumeric(setNumber: number, field: NumericField, value: string) { updateSet(setNumber, { [field]: value === '' ? null : Number(value) }); }
+  function selectExerciseOption(name: string | null) {
+    const current = execution.exercises[baseExercise.id];
+    const nextId = name ? alternativeExerciseId(baseExercise.id, name) : baseExercise.id;
+    const nextName = name ?? baseExercise.name;
+    if (current.selectedExerciseId === nextId && current.selectedExerciseName === nextName) return;
+    const hasRecordedData = current.sets.some(hasRecordedStrengthData);
+    if (hasRecordedData && !window.confirm('Já existem séries registradas neste exercício. Trocar a opção irá limpar as séries desta sessão. Deseja continuar?')) return;
+    const freshSets = Array.from({ length: Math.max(1, baseExercise.sets ?? 1) }, (_, index) => blankSet(index + 1, baseExercise));
+    setExecution((state) => ({
+      ...state,
+      updatedAt: new Date().toISOString(),
+      exercises: {
+        ...state.exercises,
+        [baseExercise.id]: {
+          ...state.exercises[baseExercise.id],
+          selectedExerciseId: nextId,
+          selectedExerciseName: nextName,
+          sets: hasRecordedData ? freshSets : state.exercises[baseExercise.id].sets,
+        },
+      },
+    }));
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    setPrCelebration(null);
+  }
   function completeSet(set: ExecutedSet) {
     const completed = !set.completed;
     if (completed && exerciseType === 'strength') {
@@ -96,7 +124,19 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
 
     <article className={`active-exercise-card ${exerciseType === 'cardio' ? 'cardio-exercise' : ''}`}>
-      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3></div></header>
+      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3>{alternativeSelected && <small className="alternative-active-label">Alternativa selecionada</small>}</div></header>
+
+      {baseExercise.alternatives?.length ? <details className="exercise-alternative-picker">
+        <summary><span><small>EXERCÍCIO DA SESSÃO</small><strong>{activeExercise.name}</strong></span><b>Trocar</b></summary>
+        <div className="exercise-alternative-options">
+          <button type="button" className={!alternativeSelected ? 'selected' : ''} onClick={() => selectExerciseOption(null)}><span>Principal</span><strong>{baseExercise.name}</strong>{!alternativeSelected && <b>✓</b>}</button>
+          {baseExercise.alternatives.map((alternative) => {
+            const selected = activeExercise.name === alternative;
+            return <button type="button" className={selected ? 'selected' : ''} key={alternative} onClick={() => selectExerciseOption(alternative)}><span>Alternativa</span><strong>{alternative}</strong>{selected && <b>✓</b>}</button>;
+          })}
+        </div>
+        <p>A opção escolhida vale para esta sessão e terá histórico, PR e progressão separados.</p>
+      </details> : null}
 
       {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
         {videoIsRequired ? <>
@@ -108,6 +148,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       </section>}
 
       <Prescription exercise={activeExercise} />
+      {alternativeSelected && <p className="alternative-prescription-note">Séries, repetições, RIR e descanso seguem a prescrição do exercício principal nesta versão.</p>}
       {exerciseType === 'strength' && <>
         <div className="progression-panel workout-pr-panel">
           <div><span>Última sessão</span><strong>{strengthSnapshot.last}</strong></div>
@@ -119,14 +160,14 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
           <p>{strengthSnapshot.message}</p>
         </div>
       </>}
-      {activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
-      {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
+      {!alternativeSelected && activeExercise.technique && <p className="exercise-cue">{activeExercise.technique}</p>}
+      {!alternativeSelected && activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
 
       {!videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
     </article>
 
-    {workout.exercises[activeExerciseIndex + 1] && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{workout.exercises[activeExerciseIndex + 1].name}</strong></aside>}
+    {workout.exercises[activeExerciseIndex + 1] && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{effectiveExercise(workout.exercises[activeExerciseIndex + 1], execution.exercises[workout.exercises[activeExerciseIndex + 1].id]).name}</strong></aside>}
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
   </div>;
@@ -160,17 +201,20 @@ function resolveExerciseType(exercise: TitanExercise): ExerciseType { return exe
 function typeLabel(type: ExerciseType) { return ({ strength: 'Musculação', distance: 'Distância', cardio: 'Cardio', isometric: 'Isometria', mobility: 'Mobilidade' })[type]; }
 function ariaField(field: NumericField) { return ({ weightKg: 'carga', repetitions: 'repetições', rir: 'RIR', durationSeconds: 'tempo', distanceMeters: 'distância', speedKmh: 'velocidade', inclinePercent: 'inclinação', averageHeartRate: 'frequência cardíaca', calories: 'calorias' })[field]; }
 function blankSet(setNumber: number, exercise: TitanExercise): ExecutedSet { return { setNumber, weightKg: null, repetitions: null, rir: resolveExerciseType(exercise) === 'strength' ? exercise.targetRir ?? null : null, durationSeconds: exercise.durationSeconds ?? null, distanceMeters: exercise.distanceMeters ?? exercise.minDistanceMeters ?? null, speedKmh: exercise.speedKmh ?? exercise.speedMinKmh ?? null, inclinePercent: exercise.inclinePercent ?? null, averagePace: exercise.averagePace ?? null, averageHeartRate: exercise.averageHeartRate ?? null, calories: exercise.calories ?? null, notes: exercise.notes ?? null, completed: false }; }
-function createExecution(planId: string, workout: TitanWorkoutDay): WorkoutExecution { const now = new Date().toISOString(); return { planId, workoutId: workout.id, startedAt: now, updatedAt: now, exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), sets: Array.from({ length: Math.max(1, exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, exercise)) }])) }; }
+function createExecution(planId: string, workout: TitanWorkoutDay): WorkoutExecution { const now = new Date().toISOString(); return { planId, workoutId: workout.id, startedAt: now, updatedAt: now, exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), selectedExerciseId: exercise.id, selectedExerciseName: exercise.name, sets: Array.from({ length: Math.max(1, exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, exercise)) }])) }; }
 function normalizeExecution(saved: WorkoutExecution | null, planId: string, workout: TitanWorkoutDay): WorkoutExecution {
   if (!saved) return createExecution(planId, workout);
   const fresh = createExecution(planId, workout);
   for (const exercise of workout.exercises) {
     const previous = saved.exercises?.[exercise.id]; if (!previous) continue;
-    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), sets: fresh.exercises[exercise.id].sets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
+    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), selectedExerciseId: previous.selectedExerciseId ?? exercise.id, selectedExerciseName: previous.selectedExerciseName ?? exercise.name, sets: fresh.exercises[exercise.id].sets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
   }
   return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, updatedAt: saved.updatedAt ?? fresh.updatedAt };
 }
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
+function effectiveExercise(base: TitanExercise, execution?: ExerciseExecution): TitanExercise { const selectedId = execution?.selectedExerciseId ?? base.id; const selectedName = execution?.selectedExerciseName ?? base.name; return selectedId === base.id && selectedName === base.name ? base : { ...base, id: selectedId, name: selectedName }; }
+function alternativeExerciseId(baseId: string, name: string) { const slug = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); return `${baseId}::alt::${slug || 'alternativa'}`; }
+function hasRecordedStrengthData(set: ExecutedSet) { return set.completed || (set.weightKg ?? 0) > 0 || (set.repetitions ?? 0) > 0 || Boolean(set.notes); }
 
 function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
   const sessions = getStrengthSessions(history, exercise.id);
@@ -275,11 +319,13 @@ function formatWeight(value: number) { return Number.isInteger(value) ? String(v
 
 function createHistoryRecord(planId: string, planName: string, workout: TitanWorkoutDay, execution: WorkoutExecution, completedAt: string): WorkoutHistoryRecord {
   const exercises = workout.exercises.map((exercise) => {
-    const exerciseType = resolveExerciseType(exercise); const sets = execution.exercises[exercise.id].sets.map(({ completed: _completed, ...set }) => set);
+    const exerciseExecution = execution.exercises[exercise.id];
+    const selectedExercise = effectiveExercise(exercise, exerciseExecution);
+    const exerciseType = resolveExerciseType(selectedExercise); const sets = exerciseExecution.sets.map(({ completed: _completed, ...set }) => set);
     const volumeKg = exerciseType === 'strength' ? sets.reduce((total, set) => total + (set.weightKg ?? 0) * (set.repetitions ?? 0), 0) : 0;
     const values = (key: keyof ExecutedSet) => sets.map((set) => set[key]).filter((value): value is number => typeof value === 'number');
     const heartRates = values('averageHeartRate');
-    return { exerciseId: exercise.id, name: exercise.name, muscleGroup: exercise.muscleGroup, exerciseType, sets, volumeKg, bestWeightKg: values('weightKg').length ? Math.max(...values('weightKg')) : null, totalDistanceMeters: values('distanceMeters').reduce((a, b) => a + b, 0), totalDurationSeconds: values('durationSeconds').reduce((a, b) => a + b, 0), bestSpeedKmh: values('speedKmh').length ? Math.max(...values('speedKmh')) : null, bestInclinePercent: values('inclinePercent').length ? Math.max(...values('inclinePercent')) : null, averageHeartRate: heartRates.length ? Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length) : null };
+    return { exerciseId: selectedExercise.id, name: selectedExercise.name, muscleGroup: selectedExercise.muscleGroup, exerciseType, sets, volumeKg, bestWeightKg: values('weightKg').length ? Math.max(...values('weightKg')) : null, totalDistanceMeters: values('distanceMeters').reduce((a, b) => a + b, 0), totalDurationSeconds: values('durationSeconds').reduce((a, b) => a + b, 0), bestSpeedKmh: values('speedKmh').length ? Math.max(...values('speedKmh')) : null, bestInclinePercent: values('inclinePercent').length ? Math.max(...values('inclinePercent')) : null, averageHeartRate: heartRates.length ? Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length) : null };
   });
   return { id: `${planId}:${workout.id}:${completedAt}`, planId, planName, workoutId: workout.id, workoutTitle: workout.title, workoutDay: workout.day, startedAt: execution.startedAt, completedAt, durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(execution.startedAt).getTime()) / 1000)), totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0), totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0), exercises };
 }
