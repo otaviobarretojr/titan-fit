@@ -1,0 +1,34 @@
+/* TITAN FIT v0.27.3 — arte contextual do grupo muscular no card principal */
+.today-workout::before{content:none!important}
+.workout-muscle-art{
+  position:absolute;
+  z-index:-1;
+  right:4px;
+  top:54px;
+  width:min(36%,180px);
+  height:auto;
+  color:#4a8fff;
+  opacity:.72;
+  pointer-events:none;
+  filter:drop-shadow(0 0 18px rgba(38,112,255,.14));
+}
+.workout-muscle-art .muscle{opacity:.045}
+.workout-muscle-art.visual-legs .muscle.legs,
+.workout-muscle-art.visual-chest .muscle.chest,
+.workout-muscle-art.visual-back .muscle.back,
+.workout-muscle-art.visual-shoulders .muscle.shoulders,
+.workout-muscle-art.visual-arms .muscle.arms,
+.workout-muscle-art.visual-full .muscle.full{opacity:1}
+.today-workout h3,.today-workout>p,.today-workout-metrics,.today-workout>.primary-action{max-width:72%}
+.today-workout h3{max-width:15ch}
+.today-workout>p{max-width:31ch}
+@media(max-width:430px){
+  .workout-muscle-art{right:-6px;top:72px;width:38%;opacity:.6}
+  .today-workout h3,.today-workout>p,.today-workout-metrics,.today-workout>.primary-action{max-width:74%}
+}
+@media(max-width:370px){
+  .workout-muscle-art{right:-16px;top:90px;width:39%;opacity:.48}
+  .today-workout h3{max-width:13ch}
+  .today-workout-metrics{max-width:100%}
+  .today-workout>.primary-action{max-width:84%}
+}

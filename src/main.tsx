@@ -25,6 +25,7 @@ import './styles/live-pr-v0265.css';
 import './styles/workout-close-v0266.css';
 import './styles/coach-v027.css';
 import './styles/home-premium-v0272.css';
+import './styles/home-muscle-art-v0273.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
