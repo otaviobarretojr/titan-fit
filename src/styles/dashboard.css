@@ -18,6 +18,7 @@
 .today-workout-metrics { display: flex; gap: 18px; margin: 18px 0; color: #dbeafe; font-size: .8rem; }
 .today-workout-metrics strong { color: #fff; }
 .today-workout .primary-action { position: relative; background: #fff; color: #1e3a8a; }
+.dashboard-cardio-card{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:18px;border:1px solid rgba(34,197,94,.24);border-radius:22px;background:radial-gradient(circle at 100% 0,rgba(34,197,94,.11),transparent 38%),var(--surface)}.dashboard-cardio-card>div:first-child>strong{display:block;margin-top:6px;font-size:1rem}.dashboard-cardio-card p{margin-top:6px;color:var(--text-muted);font-size:.76rem;line-height:1.45}.dashboard-cardio-stats{display:flex;gap:8px}.dashboard-cardio-stats span{min-width:72px;padding:10px;border-radius:15px;background:rgba(255,255,255,.035);text-align:center}.dashboard-cardio-stats small,.dashboard-cardio-stats strong{display:block}.dashboard-cardio-stats small{color:var(--text-muted);font-size:.65rem}.dashboard-cardio-stats strong{margin-top:4px;font-size:.84rem;color:#bbf7d0}
 .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
 .dashboard-grid-empty { margin-top: 2px; }
 .dashboard-tile { min-height: 150px; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); display: flex; flex-direction: column; align-items: flex-start; text-align: left; cursor: pointer; }
@@ -34,4 +35,4 @@
 .future-modules span, .future-modules strong { display: block; }
 .future-modules span { color: var(--text-muted); font-size: .68rem; }
 .future-modules strong { margin-top: 4px; font-size: .78rem; }
-@media (max-width: 380px) { .dashboard-heading { align-items: flex-start; } .dashboard-score { width: 88px; min-height: 88px; } .dashboard-grid { grid-template-columns: 1fr; } .dashboard-tile { min-height: 120px; } }
+@media (max-width: 380px) { .dashboard-heading { align-items: flex-start; } .dashboard-score { width: 88px; min-height: 88px; } .dashboard-grid { grid-template-columns: 1fr; } .dashboard-tile { min-height: 120px; } .dashboard-cardio-card{grid-template-columns:1fr}.dashboard-cardio-stats{justify-content:flex-start} }
