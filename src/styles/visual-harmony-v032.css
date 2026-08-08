@@ -1,0 +1,204 @@
+/* TITAN FIT v0.32 — Visual Harmony */
+:root{
+  color-scheme:light;
+  --color-bg:#f5f7fa;
+  --color-bg-soft:#eef2f6;
+  --color-surface:#ffffff;
+  --color-surface-strong:#f8fafc;
+  --color-surface-elevated:#ffffff;
+  --color-border:rgba(15,23,42,.075);
+  --color-border-strong:rgba(15,23,42,.13);
+  --color-text:#172033;
+  --color-muted:#6b7485;
+  --color-subtle:#99a2b2;
+  --color-primary:#2f6fed;
+  --color-primary-strong:#1d56c8;
+  --color-primary-soft:#edf3ff;
+  --color-success:#189867;
+  --color-warning:#c98818;
+  --color-danger:#d84c57;
+  --surface:#fff;
+  --surface-2:#f5f7fa;
+  --line:rgba(15,23,42,.075);
+  --text:#172033;
+  --muted:#6b7485;
+  --accent:#2f6fed;
+  --text-secondary:#6b7485;
+  --shadow-card:0 6px 22px rgba(15,23,42,.055);
+  --shadow-elevated:0 14px 40px rgba(15,23,42,.09);
+}
+
+html,body,#root{background:#f5f7fa!important;color:#172033}
+.app-shell{background:linear-gradient(180deg,#fbfcfe 0,#f5f7fa 250px)!important}
+.app-header{background:rgba(251,252,254,.94)!important;border-bottom:1px solid rgba(15,23,42,.06)!important;box-shadow:none!important}
+.app-header h1{color:#172033!important;letter-spacing:-.02em}
+.eyebrow{color:#5d82c4!important}
+.demo-pill{background:#fff8dc!important;border-color:#f1df98!important;color:#9d7410!important}
+.status-pill.online{background:#eef9f4!important;border-color:#cdeadd!important;color:#157a56!important}
+.status-pill.offline{background:#fff1f1!important;border-color:#f1d0d3!important;color:#b84049!important}
+
+/* One surface language everywhere */
+.hero-card,.info-card,.import-card,.workout-card,.settings-card,.exercise-card,.exercise-detail-header,.metric-card,.video-card,.detail-card,.rest-timer,.execution-card,.workout-progress-card,.active-exercise-card,.workout-summary,
+.history-session-card,.history-exercise-card,.history-empty,.cardio-hero,.cardio-session-card,.cardio-highlight-card,.cardio-plan-card,.cardio-last-card,.cardio-empty,.cardio-history-list article,.cardio-evolution-card,
+.evolution-hero,.trend-card,.evolution-entry,.empty-evolution,.body-status-card,.body-dashboard-empty,.latest-assessment-card,.body-comparison-section,.body-chart-section,.body-photo-section,.training-evolution-view .progress-summary>div,.training-evolution-view .progression-card,.training-evolution-view .history-card,.evaluation-history-row,.evaluation-detail-grid>div,.evaluation-notes-card,
+.dashboard-coach-card,.coach-priority-card{
+  background:#fff!important;
+  border:1px solid rgba(15,23,42,.075)!important;
+  box-shadow:0 6px 22px rgba(15,23,42,.055)!important;
+  color:#172033!important;
+}
+
+/* HOME */
+.dashboard-page-clean{gap:12px!important}
+.dashboard-heading{padding:12px 4px 2px!important;background:transparent!important}
+.dashboard-heading h2{color:#172033!important;font-size:clamp(2rem,8vw,2.6rem)!important;letter-spacing:-.045em!important}
+.dashboard-heading p{color:#818b9d!important}
+
+.titan-score-card{margin:0!important;padding:10px 4px 8px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.titan-score-main>div:first-child>strong{color:#334155!important;font-size:.9rem!important}
+.titan-score-main p{color:#7a8495!important;font-size:.74rem!important;line-height:1.45!important}
+.titan-score-value{
+  width:118px!important;height:118px!important;min-width:118px!important;
+  color:#1d4f9f!important;
+  border:7px solid #dce9ff!important;
+  background:linear-gradient(180deg,#ffffff,#f2f6fd)!important;
+  box-shadow:inset 0 0 0 1px #c9dbfb,0 8px 22px rgba(50,83,139,.10)!important;
+}
+.titan-score-value::before{color:#6c8fc8!important}
+.titan-score-value small{color:#94a0b2!important}
+.titan-score-card.status-excellent .titan-score-value{border-color:#ccebdc!important;box-shadow:inset 0 0 0 1px #b6dfcd,0 8px 22px rgba(24,152,103,.09)!important;color:#167a56!important}
+.titan-score-card.status-attention .titan-score-value{border-color:#f2dfb8!important;box-shadow:inset 0 0 0 1px #e8cc93,0 8px 22px rgba(201,136,24,.08)!important;color:#9b6813!important}
+
+.today-workout{
+  border:1px solid #d8e4f7!important;
+  background:linear-gradient(145deg,#f7faff,#eef4fd)!important;
+  box-shadow:0 7px 24px rgba(38,82,147,.07)!important;
+  color:#172033!important;
+}
+.today-workout::after{background:rgba(47,111,237,.055)!important;box-shadow:none!important}
+.today-workout-topline .eyebrow{color:#4478c9!important}
+.today-workout-topline .eyebrow::before{border-color:#bad0f2!important;background:#eaf2ff!important;color:#2f6fed!important}
+.today-workout-day{background:#fff!important;border-color:#dbe5f4!important;color:#5473a4!important}
+.today-workout h3{color:#172033!important}
+.today-workout p{color:#657188!important;border-top-color:#dde6f3!important}
+.today-workout-metrics{color:#67748a!important}
+.today-workout-metrics strong{color:#172033!important}
+.today-workout .primary-action{background:#2f6fed!important;color:#fff!important;box-shadow:0 7px 18px rgba(47,111,237,.18)!important}
+.workout-muscle-art{opacity:.18!important;filter:saturate(.8)!important}
+
+.dashboard-cardio-card.today-cardio-highlight{
+  background:#fff!important;
+  border:1px solid #d8eee4!important;
+  box-shadow:0 5px 18px rgba(22,126,83,.055)!important;
+  color:#172033!important;
+}
+.dashboard-cardio-card.today-cardio-highlight .eyebrow{color:#268962!important}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child>strong{color:#172033!important}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child>p{color:#758092!important}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats span{background:#f3f8f5!important;border:1px solid #e2eee8!important}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats small{color:#819087!important}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats strong{color:#177a56!important}
+
+.today-rest-card{
+  background:#fff!important;
+  border:1px solid #e2e7ee!important;
+  box-shadow:0 5px 18px rgba(15,23,42,.045)!important;
+  color:#172033!important;
+}
+.today-rest-card .eyebrow{color:#78879b!important}
+.today-rest-card h3{color:#172033!important}
+.today-rest-card p{color:#7a8493!important}
+.today-rest-badge{background:#f4f6f9!important;border-color:#e0e5ec!important;color:#667085!important}
+
+.dashboard-coach-card{
+  background:#fff!important;
+  border-color:#eee4cb!important;
+  box-shadow:0 6px 22px rgba(118,87,20,.055)!important;
+}
+.dashboard-coach-topline .eyebrow{color:#b27b16!important}
+.dashboard-coach-topline .eyebrow::before{background:#fff7e8!important;border-color:#ecd6aa!important;color:#b27b16!important}
+.dashboard-coach-topline>span:last-child{background:#f2f7ff!important;border-color:#d7e4f8!important;color:#4c6f9f!important}
+.dashboard-coach-card>strong{color:#172033!important}
+.dashboard-coach-card>p,.coach-context{color:#6f7a8b!important}
+.coach-weekly-snapshot{background:#fafbfc!important;border-color:#e8ecf1!important}
+.coach-weekly-head span,.coach-weekly-snapshot>p,.coach-weekly-metrics small{color:#788395!important}
+.coach-weekly-head strong,.coach-weekly-metrics strong{color:#172033!important}
+.coach-weekly-metrics span{background:#fff!important;border:1px solid #edf0f4!important}
+.dashboard-coach-card summary{background:#fffaf0!important;border-color:#ecdcb9!important;color:#9b6d16!important}
+
+/* CARDIO */
+.cardio-page{gap:14px!important}
+.cardio-hero{padding:20px!important}
+.cardio-hero p,.cardio-highlight-card p,.cardio-plan-card p,.cardio-empty p{color:#6f7a8b!important}
+.cardio-session-card{background:#fff!important;border-color:#dbe6f6!important}
+.cardio-mode-grid button{background:#f6f8fb!important;border-color:#e2e7ee!important;color:#687386!important}
+.cardio-mode-grid button.active{background:#edf3ff!important;border-color:#b8cff4!important;color:#235cb9!important}
+.cardio-input-grid input,.cardio-input-grid select{background:#f7f9fc!important;border-color:#dfe5ec!important;color:#172033!important}
+.cardio-highlight-card{background:#f7fbf9!important;border-color:#d9eee4!important}
+.cardio-pulse{background:#edf9f3!important;border-color:#cfe8dc!important;color:#18845d!important}
+.cardio-day{color:#5278b9!important}
+.cardio-meta-row span,.cardio-stats-grid>div,.cardio-delta{background:#f6f8fb!important;border:1px solid #e9edf2!important}
+.cardio-history-list article>span,.cardio-section-title>strong,.delta-neutral strong{color:#4f6f9f!important}
+.trend-improved{color:#157a56!important;background:#edf9f3!important;border-color:#cfe8dc!important}
+.trend-stable,.trend-baseline{color:#315f9e!important;background:#eef4ff!important;border-color:#d4e2f8!important}
+.trend-declined{color:#b8424b!important;background:#fff1f2!important;border-color:#f1d4d7!important}
+.delta-positive strong{color:#157a56!important}.delta-negative strong{color:#b8424b!important}
+
+/* HISTÓRICO */
+.history-session-card{background:#fff!important}
+.history-date{background:#eef4ff!important;color:#315f9e!important}
+.history-session-main>span,.history-chevron{color:#5d82bd!important}
+.history-session-main small,.history-exercise-heading span,.history-set-row>span{color:#758092!important}
+.history-exercise-card{background:#fff!important}
+.history-type{background:#eef4ff!important;color:#315f9e!important}
+.history-set-row{background:#f7f9fc!important}
+.history-close{background:#fff!important;border-color:#e0e5ec!important;color:#445065!important}
+
+/* EVOLUÇÃO / PROGRESSO */
+.evolution-switch{background:#edf1f6!important;border-color:#e0e6ee!important}
+.evolution-switch button{color:#758093!important}
+.evolution-switch button.active{background:#fff!important;color:#2258ad!important;box-shadow:0 2px 8px rgba(15,23,42,.07)!important}
+.status-add-button{background:#eef4ff!important;border-color:#c8d9f3!important;color:#2f6fed!important}
+.evolution-field-grid input,.evolution-notes textarea{background:#fff!important;border-color:#dfe5ec!important;color:#172033!important}
+.entry-metrics span,.training-evolution-view .history-metrics span,.training-evolution-view .coach-advice,.latest-metric-grid>div,.comparison-item,.comparison-empty,.body-trend-card{background:#f6f8fb!important}
+.assessment-badge{background:#eef4ff!important;color:#315f9e!important}
+.trend-card polyline{stroke:#2f6fed!important}
+
+/* TREINO / EXECUÇÃO */
+.workout-progress-card,.active-exercise-card,.workout-summary,.execution-card,.exercise-detail-header{background:#fff!important}
+.workout-progress-card>strong,.rest-timer strong{color:#315f9e!important}
+.workout-progress-track{background:#e9eef5!important}.workout-progress-track span{background:#2f6fed!important}
+.exercise-cue{background:#f0f5fd!important;color:#3f608f!important;border-left-color:#6c95d5!important}
+.set-entry{background:#f8fafc!important;border-color:#e1e6ed!important}
+.set-entry.completed{background:#f0faf5!important;border-color:#bfe3d1!important}
+.video-stage{border-color:#d8e4f7!important;background:#f2f5f9!important}
+.video-replay-action{background:#edf3ff!important;color:#315f9e!important}
+
+/* CONFIGURAÇÕES */
+.settings-card{background:#fff!important}
+.settings-danger-zone{border-top-color:#f0d9dc!important}
+.danger-action{background:#fff2f2!important;border-color:#efc6ca!important;color:#b94049!important}
+
+/* BOTTOM NAV: same family as rest of app */
+.bottom-navigation{
+  background:rgba(255,255,255,.96)!important;
+  border:1px solid rgba(15,23,42,.075)!important;
+  border-bottom:0!important;
+  box-shadow:0 -7px 28px rgba(15,23,42,.07)!important;
+  backdrop-filter:blur(18px)!important;
+}
+.bottom-navigation button{color:#8a94a5!important;background:transparent!important}
+.bottom-navigation button.active{color:#255fbe!important;background:transparent!important}
+.bottom-navigation button.active .nav-icon-wrap{background:#eaf2ff!important;border:1px solid #d0e0fa!important;box-shadow:none!important}
+.nav-icon{stroke:currentColor!important}
+
+/* Remove leftover dark decorations */
+.today-workout::before{color:rgba(47,111,237,.055)!important;filter:none!important}
+.dashboard-coach-card,.today-workout,.dashboard-cardio-card,.today-rest-card{backdrop-filter:none!important}
+
+@media(max-width:390px){
+  .app-main{padding-inline:16px!important}
+  .titan-score-value{width:108px!important;height:108px!important;min-width:108px!important}
+  .dashboard-heading h2{font-size:2rem!important}
+  .today-workout{padding:18px!important}
+}
