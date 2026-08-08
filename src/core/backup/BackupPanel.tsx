@@ -1,10 +1,23 @@
-import { useRef, useState } from 'react';
-import { createBackup, downloadBackup, restoreBackup, validateBackup } from './backup';
+import { useEffect, useRef, useState } from 'react';
+import { createBackup, downloadBackup, restoreBackup, validateBackup, type RestoreSummary } from './backup';
+
+const RESTORE_SUMMARY_KEY = 'titan-fit:restore-summary';
 
 export function BackupPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(RESTORE_SUMMARY_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(RESTORE_SUMMARY_KEY);
+    try {
+      setMessage(formatRestoreMessage(JSON.parse(raw) as RestoreSummary));
+    } catch {
+      setMessage('Backup restaurado com sucesso.');
+    }
+  }, []);
 
   async function exportData() {
     setBusy(true);
@@ -27,11 +40,11 @@ export function BackupPanel() {
       const parsed = JSON.parse(await file.text()) as unknown;
       if (!validateBackup(parsed)) throw new Error('invalid');
       if (!window.confirm('Restaurar este backup? Os dados atuais do banco serão substituídos.')) return;
-      await restoreBackup(parsed);
-      setMessage('Backup restaurado. Recarregando o TITAN FIT...');
-      window.setTimeout(() => window.location.reload(), 800);
+      const summary = await restoreBackup(parsed);
+      setMessage(`${formatRestoreMessage(summary)} Recarregando o TITAN FIT...`);
+      window.setTimeout(() => window.location.reload(), 1200);
     } catch {
-      setMessage('Arquivo de backup inválido ou incompatível.');
+      setMessage('Não foi possível restaurar o backup. O arquivo pode ser incompatível ou a gravação local falhou.');
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -46,4 +59,15 @@ export function BackupPanel() {
     <input ref={inputRef} className="file-input" type="file" accept=".json,.titan-backup.json,application/json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importData(file); }} />
     {message && <p role="status">{message}</p>}
   </section>;
+}
+
+function formatRestoreMessage(summary: RestoreSummary) {
+  const parts = [
+    `${summary.plans} projeto${summary.plans === 1 ? '' : 's'}`,
+    `${summary.workoutHistory} treino${summary.workoutHistory === 1 ? '' : 's'} no histórico`,
+    `${summary.activeSessions} sessão${summary.activeSessions === 1 ? '' : 'ões'} ativa${summary.activeSessions === 1 ? '' : 's'}`,
+  ];
+  if (summary.preferences > 0) parts.push(`${summary.preferences} registro${summary.preferences === 1 ? '' : 's'} de evolução/preferências`);
+  if (summary.cardioRecords > 0) parts.push(`${summary.cardioRecords} registro${summary.cardioRecords === 1 ? '' : 's'} de cardio`);
+  return `Backup restaurado com sucesso: ${parts.join(' · ')}.`;
 }
