@@ -131,18 +131,22 @@ function buildPr(sessions: ReturnType<typeof getExerciseSessions>) {
   if (!baseline) return null;
   let bestWeight = baseline.weight;
   let bestScore = baseline.weight * baseline.reps;
-  let currentPr: { weight: number; reps: number } | null = null;
-  chronological.slice(1).forEach(({ exercise }) => {
+  let prWeight = 0;
+  let prReps = 0;
+  let hasPr = false;
+  for (const { exercise } of chronological.slice(1)) {
     const set = bestSet(exercise);
-    if (!set) return;
+    if (!set) continue;
     const score = set.weight * set.reps;
     if (set.weight > bestWeight || score > bestScore) {
-      currentPr = set;
+      prWeight = set.weight;
+      prReps = set.reps;
+      hasPr = true;
       bestWeight = Math.max(bestWeight, set.weight);
       bestScore = Math.max(bestScore, score);
     }
-  });
-  return currentPr ? `${currentPr.weight} kg × ${currentPr.reps}` : null;
+  }
+  return hasPr ? `${prWeight} kg × ${prReps}` : null;
 }
 
 function bestSet(exercise: ReturnType<typeof getExerciseSessions>[number]['exercise']) {
