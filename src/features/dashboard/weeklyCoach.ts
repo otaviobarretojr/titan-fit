@@ -54,12 +54,13 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
   const priority = buildPriority({ current, previous, progressSignals, stagnantExercises, hasPreviousWeek: previousRecords.length > 0 });
 
   if (!currentRecords.length) {
+    const baseMessage = previousRecords.length
+      ? 'Ainda não há registros nesta semana para comparar com a anterior.'
+      : 'O Coach precisa dos seus treinos e cardios desta semana para gerar uma leitura útil.';
     return {
       status: 'building',
       headline: 'Semana ainda sem registros',
-      message: previousRecords.length
-        ? 'Ainda não há registros nesta semana para comparar com a anterior.'
-        : 'O Coach precisa dos seus treinos e cardios desta semana para gerar uma leitura útil.',
+      message: composeMessage(baseMessage, comparisonLabel, priority),
       strengthSessions: 0,
       cardioSessions: 0,
       prEvents: 0,
@@ -74,10 +75,11 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
   }
 
   if (stagnantExercises > 0) {
+    const baseMessage = `${stagnantExercises} exercício${stagnantExercises === 1 ? '' : 's'} aparece${stagnantExercises === 1 ? '' : 'm'} estável${stagnantExercises === 1 ? '' : 'is'} nas últimas sessões.`;
     return {
       status: 'attention',
       headline: 'Há pontos para destravar',
-      message: `${stagnantExercises} exercício${stagnantExercises === 1 ? '' : 's'} aparece${stagnantExercises === 1 ? '' : 'm'} estável${stagnantExercises === 1 ? '' : 'is'} nas últimas sessões.`,
+      message: composeMessage(baseMessage, comparisonLabel, priority),
       strengthSessions: current.strengthSessions,
       cardioSessions: current.cardioSessions,
       prEvents: current.prEvents,
@@ -92,12 +94,13 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
   }
 
   if (progressSignals > 0 || current.prEvents > 0) {
+    const baseMessage = progressSignals > 0
+      ? `${progressSignals} exercício${progressSignals === 1 ? '' : 's'} já mostra${progressSignals === 1 ? '' : 'm'} sinal positivo de progressão.`
+      : `${current.prEvents} PR${current.prEvents === 1 ? '' : 's'} conquistado${current.prEvents === 1 ? '' : 's'} nesta semana.`;
     return {
       status: 'good',
       headline: 'Semana com evolução',
-      message: progressSignals > 0
-        ? `${progressSignals} exercício${progressSignals === 1 ? '' : 's'} já mostra${progressSignals === 1 ? '' : 'm'} sinal positivo de progressão.`
-        : `${current.prEvents} PR${current.prEvents === 1 ? '' : 's'} conquistado${current.prEvents === 1 ? '' : 's'} nesta semana.`,
+      message: composeMessage(baseMessage, comparisonLabel, priority),
       strengthSessions: current.strengthSessions,
       cardioSessions: current.cardioSessions,
       prEvents: current.prEvents,
@@ -114,7 +117,7 @@ export function buildWeeklyCoachSummary(plan: TitanPlan, records: WorkoutHistory
   return {
     status: 'building',
     headline: 'Semana consistente',
-    message: 'Continue acumulando sessões comparáveis. O Coach ainda não encontrou sinal forte de progressão ou estagnação.',
+    message: composeMessage('Continue acumulando sessões comparáveis. O Coach ainda não encontrou sinal forte de progressão ou estagnação.', comparisonLabel, priority),
     strengthSessions: current.strengthSessions,
     cardioSessions: current.cardioSessions,
     prEvents: current.prEvents,
@@ -139,7 +142,7 @@ function buildComparisonLabel(current: WeekMetrics, previous: WeekMetrics, hasPr
   const strengthDelta = current.strengthSessions - previous.strengthSessions;
   const cardioDelta = current.cardioSessions - previous.cardioSessions;
   const prDelta = current.prEvents - previous.prEvents;
-  return `vs. semana anterior: musculação ${signed(strengthDelta)} · cardio ${signed(cardioDelta)} · PRs ${signed(prDelta)}`;
+  return `Vs. semana anterior: musculação ${signed(strengthDelta)} · cardio ${signed(cardioDelta)} · PRs ${signed(prDelta)}`;
 }
 
 function buildPriority(input: { current: WeekMetrics; previous: WeekMetrics; progressSignals: number; stagnantExercises: number; hasPreviousWeek: boolean }) {
@@ -152,6 +155,7 @@ function buildPriority(input: { current: WeekMetrics; previous: WeekMetrics; pro
   return 'Prioridade: manter consistência e continuar criando sessões comparáveis.';
 }
 
+function composeMessage(base: string, comparison: string, priority: string) { return `${base} ${comparison}. ${priority}`; }
 function signed(value: number) { return value > 0 ? `+${value}` : String(value); }
 function inRange(value: string, start: Date, end: Date) { const date = new Date(value); return date >= start && date <= end; }
 function startOfWeek(date: Date) { const result = new Date(date); const day = result.getDay(); const diff = day === 0 ? -6 : 1 - day; result.setDate(result.getDate() + diff); result.setHours(0, 0, 0, 0); return result; }
