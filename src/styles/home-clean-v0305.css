@@ -1,0 +1,68 @@
+/* TITAN FIT v0.30.5 — Home clean com Score TITAN prioritário */
+.dashboard-page-clean{gap:12px}
+.dashboard-heading{order:0;padding-bottom:0}
+
+/* Score TITAN vira o ponto focal da Home, sem ocupar um card pesado. */
+.titan-score-card{order:1;margin:0;padding:8px 4px 4px;border:0!important;background:transparent!important;box-shadow:none!important;display:grid;justify-items:center;text-align:center}
+.titan-score-main{display:grid;grid-template-columns:1fr;justify-items:center;gap:8px;width:100%}
+.titan-score-main>div:first-child{order:2;max-width:320px}
+.titan-score-main>div:first-child .eyebrow{display:none}
+.titan-score-main>div:first-child>strong{margin:0;font-size:.92rem;line-height:1.2;color:#eef4ff}
+.titan-score-main p{margin:5px auto 0;max-width:31ch;font-size:.72rem;line-height:1.4;color:#8e9aad}
+.titan-score-value{order:1;position:relative;width:122px;height:122px;min-width:122px;border-radius:50%;display:grid;place-content:center;text-align:center;font-size:2.35rem;line-height:.92;font-weight:900;letter-spacing:-.055em;color:#f8fbff;border:7px solid rgba(62,138,255,.22);background:radial-gradient(circle at 50% 42%,rgba(39,114,235,.2),rgba(8,17,30,.98) 68%);box-shadow:inset 0 0 0 1px rgba(92,156,255,.32),0 10px 28px rgba(0,0,0,.24),0 0 28px rgba(49,117,229,.09)}
+.titan-score-value::before{content:'SCORE TITAN';position:absolute;left:50%;top:28px;transform:translateX(-50%);width:max-content;font-size:.52rem;line-height:1;letter-spacing:.11em;font-weight:900;color:#77adff}
+.titan-score-value small{margin-top:5px;font-size:.55rem;line-height:1;letter-spacing:.08em;color:#8191aa}
+.titan-score-card.status-excellent .titan-score-value{border-color:rgba(48,197,117,.3);box-shadow:inset 0 0 0 1px rgba(73,210,139,.3),0 10px 28px rgba(0,0,0,.24),0 0 26px rgba(36,190,110,.09)}
+.titan-score-card.status-attention .titan-score-value{border-color:rgba(229,164,55,.3)}
+.titan-score-pillars{display:none}
+
+/* Cards principais seguem abaixo do score. */
+.today-workout,.dashboard-cardio-card.today-cardio-highlight,.today-rest-card{order:2}
+.dashboard-coach-card{order:3}
+
+/* Treino continua sendo a principal ação do dia, mas com hierarquia mais enxuta. */
+.today-workout{padding:20px 21px 21px;border-radius:24px;box-shadow:0 12px 28px rgba(0,0,0,.2)}
+.today-workout h3{margin:17px 0 8px;font-size:clamp(1.55rem,6.6vw,1.95rem);line-height:1.08;max-width:19ch}
+.today-workout p{padding-top:10px;font-size:.8rem;line-height:1.4;max-width:34ch;-webkit-line-clamp:2}
+.today-workout-metrics{margin:14px 0 10px;gap:12px;font-size:.7rem}
+.today-workout-metrics strong{font-size:.95rem}
+.today-workout .primary-action{min-height:46px;margin-top:12px;border-radius:15px;font-size:.88rem}
+
+/* Cardio compacto: entrega o essencial sem competir com a musculação. */
+.dashboard-cardio-card.today-cardio-highlight{min-height:0!important;padding:14px 15px!important;border-radius:19px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:12px;align-items:center;background:linear-gradient(145deg,rgba(9,24,27,.98),rgba(7,16,23,.98))!important;box-shadow:0 8px 22px rgba(0,0,0,.16)!important}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child{display:grid;gap:3px;min-width:0}
+.dashboard-cardio-card.today-cardio-highlight .eyebrow{font-size:.56rem;letter-spacing:.09em}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child>strong{margin:0;font-size:.92rem;line-height:1.22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child>p{margin:0;font-size:.65rem;line-height:1.32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dashboard-cardio-card.today-cardio-highlight>div:first-child>p+ p{display:none}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats{margin:0!important;padding:0!important;gap:6px}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats span{min-width:58px;padding:7px 8px;border-radius:11px;background:rgba(255,255,255,.035)}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats small{font-size:.55rem}
+.dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats strong{margin-top:2px;font-size:.72rem;white-space:nowrap}
+
+/* Descanso também deve ser rápido de entender, não parecer um treino inteiro. */
+.today-rest-card{min-height:0!important;padding:15px 17px!important;border-radius:19px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;justify-content:stretch!important}
+.today-rest-card .eyebrow{grid-column:1;font-size:.56rem}
+.today-rest-card h3{grid-column:1;margin:1px 0 0;font-size:1rem;line-height:1.25}
+.today-rest-card p{grid-column:1;margin:2px 0 0;font-size:.68rem;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.today-rest-badge{grid-column:2;grid-row:1/4;align-self:center!important;margin:0!important;padding:7px 9px!important;max-width:92px;text-align:center;font-size:.55rem!important;line-height:1.25;letter-spacing:.04em!important}
+
+/* Coach com melhor legibilidade e menos ruído visual. */
+.dashboard-coach-card{padding:18px;border-radius:22px}
+.dashboard-coach-topline{margin-bottom:11px}
+.dashboard-coach-card>strong{font-size:1.06rem;line-height:1.3}
+.dashboard-coach-card>p{margin-top:6px;font-size:.8rem;line-height:1.45}
+.coach-weekly-snapshot{margin-top:12px;padding:12px;border-radius:16px}
+.coach-weekly-metrics{gap:5px;margin-top:9px}
+.coach-weekly-metrics span{padding:7px 5px}
+.coach-weekly-metrics strong{font-size:.95rem}
+.coach-weekly-snapshot>p{font-size:.7rem}
+
+@media(max-width:390px){
+  .titan-score-value{width:112px;height:112px;min-width:112px;font-size:2.15rem}
+  .titan-score-value::before{top:26px}
+  .today-workout{padding:18px 18px 19px}
+  .dashboard-cardio-card.today-cardio-highlight{grid-template-columns:minmax(0,1fr) auto!important;padding:12px 13px!important}
+  .dashboard-cardio-card.today-cardio-highlight .dashboard-cardio-stats span{min-width:52px;padding:6px}
+  .today-rest-card{padding:13px 14px!important}
+}
