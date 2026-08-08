@@ -1,0 +1,45 @@
+/* TITAN FIT v0.33 — Programação semanal */
+.programming-page,.programming-detail{display:grid;gap:16px}
+.programming-header{padding:6px 2px 2px;margin-bottom:0}
+.programming-header h2{margin:7px 0 6px}
+.programming-section{display:grid;gap:12px}
+.programming-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 2px}
+.programming-section-head>div{display:flex;align-items:center;gap:10px}
+.programming-section-head h3{margin-top:3px;font-size:1.08rem;color:#172033}
+.programming-section-head small{color:#7a8495;font-size:.72rem}
+.programming-section-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;font-weight:900}
+.programming-section-icon.strength{background:#eef4ff;color:#2f6fed}.programming-section-icon.cardio{background:#eef9f3;color:#16855c}
+.programming-list{display:grid;gap:9px}
+.programming-day-card{width:100%;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;padding:13px 14px;border:1px solid #e1e6ed;border-radius:20px;background:#fff;color:#172033;box-shadow:0 5px 18px rgba(15,23,42,.045)}
+button.programming-day-card{cursor:pointer}
+button.programming-day-card:active{transform:scale(.985)}
+.programming-day-card.rest,.programming-day-card.unconfigured{background:#fafbfc;box-shadow:none}
+.programming-day-label{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:#eef4ff;color:#315f9e;font-size:.72rem;letter-spacing:.04em}
+.programming-day-card.rest .programming-day-label{background:#f0f2f5;color:#7a8495}.programming-day-card.unconfigured .programming-day-label{background:#f2f7f5;color:#5f7e71}
+.programming-day-copy{min-width:0;display:grid;gap:4px}
+.programming-day-copy strong{font-size:.9rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.programming-day-copy small{color:#7a8495;font-size:.7rem;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.programming-chevron{color:#8a96a7;font-size:1.5rem}
+.programming-tag{padding:7px 9px;border-radius:999px;background:#f2f5f8;color:#667085;font-size:.55rem;font-weight:850;letter-spacing:.04em;white-space:nowrap}
+.programming-tag.rest{background:#f0f2f5;color:#667085}
+.programming-empty,.programming-detail-hero,.programming-instructions,.programming-exercise-card{background:#fff;border:1px solid #e1e6ed;border-radius:24px;box-shadow:0 6px 22px rgba(15,23,42,.05)}
+.programming-empty{padding:22px}.programming-empty h2{margin:8px 0}.programming-empty p{color:#748093;line-height:1.5}
+.programming-back{width:100%;margin:0}
+.programming-detail-hero{padding:22px}
+.programming-detail-hero.cardio{border-color:#d8ebe3;background:#fbfefd}
+.programming-detail-hero h2{margin:8px 0 8px;font-size:1.65rem;line-height:1.12}
+.programming-detail-hero p{color:#748093;line-height:1.5}
+.programming-detail-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.programming-detail-summary span{padding:12px;border-radius:16px;background:#f7f9fc;text-align:center}
+.programming-detail-summary small{display:block;color:#7a8495;font-size:.65rem}.programming-detail-summary strong{display:block;margin-top:3px;font-size:1rem;color:#172033}
+.programming-exercise-list{display:grid;gap:10px}
+.programming-exercise-card{overflow:hidden;border-radius:20px}
+.programming-exercise-card summary{list-style:none;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:11px;align-items:center;padding:14px;cursor:pointer}
+.programming-exercise-card summary::-webkit-details-marker{display:none}
+.programming-exercise-order{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#eef4ff;color:#2f6fed;font-weight:850}
+.programming-exercise-card summary>span:nth-child(2){display:grid;gap:4px;min-width:0}.programming-exercise-card summary strong{font-size:.9rem}.programming-exercise-card summary small{color:#7a8495;font-size:.68rem}
+.programming-exercise-guide{display:grid;gap:10px;padding:0 14px 14px;border-top:1px solid #eef1f4}
+.programming-info-row{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #eef1f4}.programming-info-row span{color:#7a8495;font-size:.72rem}.programming-info-row strong{font-size:.78rem;text-align:right}
+.programming-guide-block{padding:13px;border-radius:16px;background:#f8fafc}.programming-guide-block p,.programming-guide-block li{color:#667085;font-size:.76rem;line-height:1.5}.programming-guide-block ul{margin:8px 0 0;padding-left:18px}.programming-guide-block li+li{margin-top:5px}
+.programming-instructions{padding:20px}.programming-instructions h3{margin:7px 0 10px}.programming-instructions ol{margin:0;padding-left:20px}.programming-instructions li{color:#667085;line-height:1.55}.programming-instructions li+li{margin-top:7px}
+@media(max-width:390px){.programming-day-card{grid-template-columns:46px minmax(0,1fr) auto;padding:12px;gap:10px}.programming-day-label{width:44px;height:44px}.programming-day-copy strong{font-size:.84rem}.programming-tag{font-size:.5rem;padding:6px 7px}.programming-detail-hero{padding:18px}}
