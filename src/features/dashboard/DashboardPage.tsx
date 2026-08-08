@@ -38,7 +38,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       <button type="button" className="primary-action" disabled={!workout} onClick={() => workout && onStartWorkout(workout.id)}>Iniciar treino</button>
     </section>
     <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN">
-      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.27.1</span><span>{coach.badge}</span></div>
+      <div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN · v0.27.6</span><span>{coach.badge}</span></div>
       <strong>{coach.title}</strong>
       <p>{coach.message}</p>
       {coach.context && <small className="coach-context">{coach.context}</small>}

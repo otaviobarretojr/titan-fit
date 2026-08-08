@@ -8,7 +8,7 @@ import { WeeklyCoachSummary } from './WeeklyCoachSummary';
 export function ProgressPage({ refreshKey }: { refreshKey: number }) {
   const [view, setView] = useState<'body' | 'training'>('body');
   return <>
-    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.27.5</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
+    <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO · v0.27.6</span><h2>Evolução</h2><p>Acompanhe o físico e seus recordes de treino no mesmo lugar.</p></section>
     <div className="evolution-switch" role="tablist" aria-label="Centro de evolução">
       <button type="button" role="tab" aria-selected={view === 'body'} className={view === 'body' ? 'active' : ''} onClick={() => setView('body')}>Corpo</button>
       <button type="button" role="tab" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>

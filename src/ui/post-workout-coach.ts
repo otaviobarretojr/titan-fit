@@ -60,7 +60,7 @@ function buildRecommendation(results: ExerciseResult[]) {
   const stable = results.find((item) => item.status === 'stable');
   if (stable) return `Próximo ${stable.name}: mantenha a carga e busque +1 repetição com a mesma qualidade de execução.`;
   const progressed = results.find((item) => item.status === 'pr' || item.status === 'improved');
-  if (progressed) return `Boa sessão. Em ${progressed.name}, consolide o novo nível antes do próximo aumento de carga.`;
+  if (progressed) return `Em ${progressed.name}, consolide o novo nível antes do próximo aumento de carga.`;
   return 'Sessão registrada. Repita os exercícios para o Coach criar comparações e orientar a próxima progressão.';
 }
 
@@ -87,7 +87,7 @@ function renderPostWorkoutCoach(summary: Element) {
   card.dataset.postWorkoutCoach = 'true';
   card.innerHTML = `
     <div class="post-coach-heading">
-      <div><span class="post-coach-kicker">♛ COACH TITAN · PÓS-TREINO</span><strong>Leitura da sessão</strong></div>
+      <div><span class="post-coach-kicker">♛ COACH TITAN · v0.27.6</span><strong>Leitura da sessão</strong></div>
       <span class="post-coach-status">ANALISADO</span>
     </div>
     <div class="post-coach-metrics">

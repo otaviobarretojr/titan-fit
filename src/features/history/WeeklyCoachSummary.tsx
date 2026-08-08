@@ -16,7 +16,7 @@ export function WeeklyCoachSummary({ records }: Props) {
 
   return <section className="weekly-coach-summary" aria-label="Resumo semanal do Coach TITAN">
     <div className="weekly-coach-header">
-      <div><span className="eyebrow">COACH TITAN · v0.27.5</span><h3>Resumo da semana</h3></div>
+      <div><span className="eyebrow">COACH TITAN · v0.27.6</span><h3>Resumo da semana</h3></div>
       <span className={`weekly-coach-trend ${summary.trend}`}>{summary.trendLabel}</span>
     </div>
 
@@ -31,7 +31,7 @@ export function WeeklyCoachSummary({ records }: Props) {
         {summary.stagnantExercise && <div className="weekly-insight neutral"><span>→ Estável</span><strong>{summary.stagnantExercise.name}</strong><small>desempenho praticamente igual</small></div>}
       </div>
       <div className="weekly-coach-priority"><span className="eyebrow">PRIORIDADE DA PRÓXIMA SEMANA</span><strong>{summary.priorityTitle}</strong><p>{summary.priorityMessage}</p></div>
-    </> : <div className="weekly-coach-empty"><strong>Construindo comparação semanal</strong><p>Complete treinos em semanas diferentes para o Coach comparar evolução, PRs e estabilidade.</p></div>}
+    </> : <div className="weekly-coach-empty"><strong>Construindo comparação semanal</strong><p>Complete treinos em semanas diferentes para o Coach comparar evolução, PRs e estabilidade sem antecipar conclusões.</p></div>}
   </section>;
 }
 
@@ -65,19 +65,19 @@ function buildWeeklySummary(records: WorkoutHistoryRecord[]) {
   const stagnantExercise = comparisons.filter((item) => Math.abs(item.deltaPercent) <= 1).sort((a, b) => Math.abs(a.deltaPercent) - Math.abs(b.deltaPercent))[0] ?? null;
   const decliningExercise = comparisons.filter((item) => item.deltaPercent < -1).sort((a, b) => a.deltaPercent - b.deltaPercent)[0] ?? null;
   const prs = countPrsInRange(records, currentStart, nextStart);
-  const hasComparison = previous.length > 0 && comparisons.length > 0;
+  const hasComparison = current.length > 0 && previous.length > 0 && comparisons.length > 0;
 
   let priorityTitle = 'Consolidar consistência';
   let priorityMessage = 'Repita os principais exercícios com técnica estável e busque pequenas melhorias antes de aumentar a carga.';
   if (decliningExercise) {
     priorityTitle = `Recuperar ${decliningExercise.name}`;
-    priorityMessage = 'Mantenha a carga controlada e tente recuperar repetições e execução antes de buscar um novo aumento.';
+    priorityMessage = 'Mantenha a carga de referência e recupere repetições e execução antes de tentar progredir.';
   } else if (stagnantExercise) {
     priorityTitle = `Destravar ${stagnantExercise.name}`;
     priorityMessage = 'Na próxima sessão, mantenha a carga e tente ganhar pelo menos 1 repetição total antes de subir o peso.';
   } else if (bestExercise) {
     priorityTitle = `Consolidar ${bestExercise.name}`;
-    priorityMessage = 'A evolução foi clara. Repita o desempenho e, se a técnica e o RIR permitirem, avance para a próxima progressão.';
+    priorityMessage = 'A evolução foi clara. Repita o desempenho e, se técnica e RIR permitirem, avance para a próxima progressão.';
   }
 
   const trend = decliningExercise ? 'attention' : bestExercise ? 'positive' : 'stable';
