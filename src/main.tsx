@@ -42,6 +42,7 @@ import './styles/programming-v033.css';
 import './styles/exercise-alternatives-v036.css';
 import './styles/workout-mode-v038.css';
 import './styles/profile-onboarding.css';
+import './styles/beta-v045.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
