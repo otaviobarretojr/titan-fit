@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "otavio-primeiros-5k-v1",
+  "name": "TITAN — Primeiros 5 km v1",
+  "goal": "first-5k",
+  "description": "Bloco de 8 semanas com cardio preferencialmente às 17:00–17:30, separado da musculação das 20:00. Sábado livre. A sessão-meta de 5 km pode ultrapassar 30 minutos.",
+  "weeks": [
+    {
+      "week": 1,
+      "title": "Adaptação e controle",
+      "sessions": [
+        {"id":"w1-dom-zone2","title":"Domingo — corrida fácil/Zona 2","type":"zone2","durationMinutes":30,"description":"5 min caminhada rápida + 20 min trote confortável ou alternância trote/caminhada + 5 min caminhada.","target":"RPE 3–5/10; terminar com sensação de que conseguiria continuar."},
+        {"id":"w1-ter-intervalos","title":"Terça — intervalos curtos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 6 x 1 min corrida controlada com 2 min de caminhada/trote leve entre blocos. Completar com volta à calma.","target":"Corridas em RPE 7/10, sem sprint máximo."},
+        {"id":"w1-qua-zone2","title":"Quarta — Zona 2 regenerativa","type":"zone2","durationMinutes":30,"description":"Caminhada inclinada ou trote muito leve contínuo.","target":"RPE 3–4/10; foco em recuperação."},
+        {"id":"w1-sex-progressivo","title":"Sexta — corrida progressiva","type":"run","durationMinutes":30,"description":"10 min caminhada/trote leve + 15 min trote contínuo confortável + 5 min caminhada.","target":"Manter técnica e respiração controlada."}
+      ]
+    },
+    {
+      "week": 2,
+      "title": "Mais tempo correndo",
+      "sessions": [
+        {"id":"w2-dom-zone2","title":"Domingo — corrida fácil","type":"zone2","durationMinutes":30,"description":"5 min leve + 20 min corrida/trote contínuo confortável + 5 min leve.","target":"RPE 4/10."},
+        {"id":"w2-ter-intervalos","title":"Terça — 6 x 90 segundos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 6 x 90 s de corrida com 90 s leves. Completar o restante em trote/caminhada.","target":"RPE 7/10 nos blocos."},
+        {"id":"w2-qua-zone2","title":"Quarta — Zona 2 regenerativa","type":"zone2","durationMinutes":30,"description":"Sessão contínua leve, preferencialmente caminhada inclinada ou trote fácil.","target":"RPE 3–4/10."},
+        {"id":"w2-sex-continuo","title":"Sexta — bloco contínuo","type":"run","durationMinutes":30,"description":"5 min leve + 20 min trote contínuo + 5 min leve.","target":"RPE 4–5/10; sem perseguir velocidade."}
+      ]
+    },
+    {
+      "week": 3,
+      "title": "Consolidar blocos maiores",
+      "sessions": [
+        {"id":"w3-dom-zone2","title":"Domingo — 30 min fáceis","type":"zone2","durationMinutes":30,"description":"Corrida/trote fácil contínuo; caminhar apenas se necessário para manter esforço baixo.","target":"RPE 4/10."},
+        {"id":"w3-ter-intervalos","title":"Terça — 5 x 2 minutos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 5 x 2 min corrida com 2 min leves. Volta à calma no tempo restante.","target":"RPE 7/10 nos blocos."},
+        {"id":"w3-qua-zone2","title":"Quarta — recuperação aeróbia","type":"zone2","durationMinutes":30,"description":"Caminhada rápida/trote leve contínuo.","target":"RPE 3–4/10."},
+        {"id":"w3-sex-continuo","title":"Sexta — 25 min contínuos","type":"run","durationMinutes":30,"description":"5 min aquecimento e até 25 min de corrida fácil contínua.","target":"RPE 4–5/10."}
+      ]
+    },
+    {
+      "week": 4,
+      "title": "Base de 30 minutos",
+      "sessions": [
+        {"id":"w4-dom-zone2","title":"Domingo — base fácil","type":"zone2","durationMinutes":30,"description":"30 min em esforço confortável e uniforme.","target":"RPE 4/10."},
+        {"id":"w4-ter-intervalos","title":"Terça — 6 x 2 minutos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 6 x 2 min corrida com 90 s leves. Volta à calma no restante.","target":"RPE 7/10; manter todos os blocos parecidos."},
+        {"id":"w4-qua-zone2","title":"Quarta — Zona 2","type":"zone2","durationMinutes":30,"description":"Sessão leve contínua sem buscar recordes.","target":"RPE 3–4/10."},
+        {"id":"w4-sex-continuo","title":"Sexta — 30 min contínuos","type":"run","durationMinutes":30,"description":"Corrida contínua confortável durante toda a janela, reduzindo o ritmo se necessário.","target":"Completar os 30 min sem quebrar o esforço."}
+      ]
+    },
+    {
+      "week": 5,
+      "title": "Ritmo sustentado",
+      "sessions": [
+        {"id":"w5-dom-zone2","title":"Domingo — fácil","type":"zone2","durationMinutes":30,"description":"30 min leves para consolidar volume aeróbio.","target":"RPE 4/10."},
+        {"id":"w5-ter-intervalos","title":"Terça — 5 x 3 minutos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 5 x 3 min de corrida controlada com 90 s leves; usar o restante para volta à calma.","target":"RPE 7/10 nos blocos, sem sprint."},
+        {"id":"w5-qua-zone2","title":"Quarta — regenerativo","type":"zone2","durationMinutes":30,"description":"Caminhada inclinada ou trote leve contínuo.","target":"RPE 3–4/10."},
+        {"id":"w5-sex-progressivo","title":"Sexta — progressivo controlado","type":"run","durationMinutes":30,"description":"10 min fácil + 15 min moderado + 5 min fácil.","target":"Parte moderada em RPE 5–6/10."}
+      ]
+    },
+    {
+      "week": 6,
+      "title": "Intervalos longos",
+      "sessions": [
+        {"id":"w6-dom-zone2","title":"Domingo — fácil","type":"zone2","durationMinutes":30,"description":"Corrida contínua leve ou trote/caminhada mantendo esforço baixo.","target":"RPE 4/10."},
+        {"id":"w6-ter-intervalos","title":"Terça — 4 x 4 minutos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 4 x 4 min corrida com 90 s leves. Volta à calma no restante.","target":"RPE 7/10; ritmo sustentável em todos os blocos."},
+        {"id":"w6-qua-zone2","title":"Quarta — Zona 2","type":"zone2","durationMinutes":30,"description":"Sessão leve e uniforme.","target":"RPE 3–4/10."},
+        {"id":"w6-sex-progressivo","title":"Sexta — 20 min moderados","type":"run","durationMinutes":30,"description":"5 min fácil + 20 min em ritmo moderado contínuo + 5 min fácil.","target":"RPE 5–6/10 no bloco central."}
+      ]
+    },
+    {
+      "week": 7,
+      "title": "Especificidade de 5 km",
+      "sessions": [
+        {"id":"w7-dom-zone2","title":"Domingo — corrida fácil","type":"zone2","durationMinutes":30,"description":"30 min fáceis para preservar recuperação.","target":"RPE 4/10."},
+        {"id":"w7-ter-intervalos","title":"Terça — 3 x 5 minutos","type":"run","durationMinutes":30,"description":"5 min aquecimento. Fazer 3 x 5 min em ritmo forte controlado com 2 min leves. Volta à calma no restante.","target":"RPE 7–8/10, sem falhar no último bloco."},
+        {"id":"w7-qua-zone2","title":"Quarta — regenerativo","type":"zone2","durationMinutes":30,"description":"Caminhada/trote leve.","target":"RPE 3/10."},
+        {"id":"w7-sex-ritmo","title":"Sexta — ritmo sustentado","type":"run","durationMinutes":30,"description":"10 min fácil + 15 min em ritmo próximo ao que parece sustentável para 5 km + 5 min fácil.","target":"RPE 6–7/10 no bloco central."}
+      ]
+    },
+    {
+      "week": 8,
+      "title": "Redução de fadiga e teste",
+      "sessions": [
+        {"id":"w8-dom-5k","title":"Domingo — teste 5 km","type":"run","durationMinutes":40,"description":"Aquecimento leve e tentativa de completar 5 km de forma contínua. A duração pode ultrapassar a janela habitual de 30 min.","target":"Prioridade é concluir 5 km com ritmo controlado; não é necessário correr em intensidade máxima."},
+        {"id":"w8-ter-soltar","title":"Terça — intervalos leves","type":"run","durationMinutes":25,"description":"5 min fácil + 4 x 2 min moderados com 2 min leves + volta à calma.","target":"RPE 6/10; sessão curta para manter ritmo sem acumular fadiga."},
+        {"id":"w8-qua-zone2","title":"Quarta — Zona 2 leve","type":"zone2","durationMinutes":25,"description":"Sessão confortável e curta.","target":"RPE 3/10."},
+        {"id":"w8-sex-recuperacao","title":"Sexta — recuperação","type":"walk","durationMinutes":20,"description":"Caminhada leve ou trote muito confortável, apenas se estiver recuperado do teste.","target":"RPE 2–3/10."}
+      ]
+    }
+  ]
+}

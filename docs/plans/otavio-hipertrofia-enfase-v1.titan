@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "id": "otavio-hipertrofia-enfase-v1",
+  "name": "TITAN — Hipertrofia Ênfase Superior/Posterior v1",
+  "description": "Bloco de 6 dias com prioridade para peitoral superior, ombros, dorsais, posteriores, panturrilhas e antebraços. Sábado livre. Sessões planejadas para até 90 minutos.",
+  "createdAt": "2026-08-09T14:14:00.000Z",
+  "author": "Coach TITAN",
+  "workouts": [
+    {
+      "id": "domingo-push-a",
+      "day": "Domingo",
+      "title": "Push A — Peitoral superior e ombros",
+      "focus": "Peitoral superior + deltoide lateral",
+      "exercises": [
+        {"id":"push-a-supino-inclinado-barra","name":"Supino inclinado com barra","muscleGroup":"Peitoral superior","sets":4,"minReps":6,"maxReps":8,"targetRir":2,"restSeconds":180,"technique":"Escápulas estáveis, peito alto e descida controlada. Use inclinação moderada para manter o peitoral superior como alvo principal.","commonMistakes":["Inclinação excessiva do banco","Perder retração escapular","Quicar a barra"],"alternatives":["Supino inclinado com halteres","Supino inclinado Smith"]},
+        {"id":"push-a-supino-inclinado-halter","name":"Supino inclinado com halteres","muscleGroup":"Peitoral superior","sets":2,"minReps":8,"maxReps":10,"targetRir":2,"restSeconds":120,"technique":"Controle a amplitude e mantenha antebraços alinhados sob os halteres.","commonMistakes":["Descer rápido demais","Perder estabilidade dos ombros"],"alternatives":["Chest press inclinado","Supino inclinado Smith"]},
+        {"id":"push-a-crucifixo-baixo-alto","name":"Crucifixo no cabo de baixo para cima","muscleGroup":"Peitoral superior","sets":2,"minReps":12,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Conduza as mãos para cima e para dentro mantendo leve flexão de cotovelos.","commonMistakes":["Transformar em supino","Usar impulso do tronco"],"alternatives":["Peck deck","Crucifixo inclinado com halteres"]},
+        {"id":"push-a-desenvolvimento-halter","name":"Desenvolvimento com halteres","muscleGroup":"Ombros","sets":3,"minReps":8,"maxReps":10,"targetRir":2,"restSeconds":120,"technique":"Mantenha tronco firme e pressione sem hiperextender a lombar.","commonMistakes":["Arquear excessivamente a lombar","Descer sem controle"],"alternatives":["Desenvolvimento com barra","Arnold press"]},
+        {"id":"push-a-elevacao-lateral-halter","name":"Elevação lateral com halteres","muscleGroup":"Deltoide lateral","sets":3,"minReps":12,"maxReps":20,"targetRir":1,"restSeconds":75,"technique":"Eleve em arco com controle, mantendo o ombro longe da orelha.","commonMistakes":["Encolher os ombros","Embalar o tronco"],"alternatives":["Elevação lateral no cabo","Elevação lateral máquina"]},
+        {"id":"push-a-elevacao-lateral-cabo","name":"Elevação lateral no cabo","muscleGroup":"Deltoide lateral","sets":2,"minReps":12,"maxReps":18,"targetRir":1,"restSeconds":60,"technique":"Use tensão contínua e pare antes de perder o controle escapular.","commonMistakes":["Usar carga excessiva","Girar o tronco"],"alternatives":["Elevação lateral com halteres","Elevação lateral máquina"]},
+        {"id":"push-a-triceps-polia","name":"Tríceps na polia","muscleGroup":"Tríceps","sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha cotovelos estáveis ao lado do corpo e estenda completamente sem balançar.","commonMistakes":["Abrir os cotovelos","Inclinar demais o tronco"],"alternatives":["Tríceps testa","Mergulho máquina"]}
+      ]
+    },
+    {
+      "id": "segunda-lower-a",
+      "day": "Segunda",
+      "title": "Lower A — Posteriores e panturrilhas",
+      "focus": "Posteriores de coxa + panturrilhas",
+      "exercises": [
+        {"id":"lower-a-romeno","name":"Levantamento romeno","muscleGroup":"Posteriores de coxa","sets":4,"minReps":6,"maxReps":8,"targetRir":2,"restSeconds":180,"technique":"Empurre o quadril para trás mantendo coluna neutra e a barra próxima das pernas.","commonMistakes":["Arredondar a lombar","Transformar em agachamento"],"alternatives":["Stiff com barra","Levantamento romeno com halteres"]},
+        {"id":"lower-a-flexora-sentada","name":"Cadeira flexora","muscleGroup":"Posteriores de coxa","sets":3,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":90,"technique":"Mantenha quadril apoiado e controle a volta até alongar os posteriores.","commonMistakes":["Tirar o quadril do banco","Soltar a fase excêntrica"],"alternatives":["Mesa flexora","Flexora em pé"]},
+        {"id":"lower-a-mesa-flexora","name":"Mesa flexora","muscleGroup":"Posteriores de coxa","sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":90,"technique":"Flexione os joelhos sem elevar o quadril e controle a extensão.","commonMistakes":["Levantar o quadril","Encurtar amplitude"],"alternatives":["Cadeira flexora","Flexora unilateral"]},
+        {"id":"lower-a-hip-thrust","name":"Hip thrust com barra","muscleGroup":"Glúteos","sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":120,"technique":"Finalize com extensão de quadril sem hiperextender a lombar.","commonMistakes":["Hiperextender a coluna","Pés muito longe"],"alternatives":["Hip thrust máquina","Ponte de glúteos"]},
+        {"id":"lower-a-panturrilha-em-pe","name":"Panturrilha em pé","muscleGroup":"Panturrilhas","sets":4,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":75,"technique":"Use amplitude completa, faça pausa no alongamento e suba sem quicar.","commonMistakes":["Repetições curtas","Usar impulso"],"alternatives":["Panturrilha Smith","Panturrilha unilateral"]},
+        {"id":"lower-a-panturrilha-sentada","name":"Panturrilha sentada","muscleGroup":"Panturrilhas","sets":2,"minReps":12,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Controle o alongamento e mantenha a planta do pé estável.","commonMistakes":["Quicar no fundo","Perder amplitude"],"alternatives":["Panturrilha no leg press","Panturrilha em pé"]}
+      ]
+    },
+    {
+      "id": "terca-pull-a",
+      "day": "Terça",
+      "title": "Pull A — Dorsais e antebraços",
+      "focus": "Largura de dorsais + antebraço",
+      "exercises": [
+        {"id":"pull-a-puxada-neutra","name":"Puxada neutra","muscleGroup":"Dorsais","sets":3,"minReps":6,"maxReps":10,"targetRir":2,"restSeconds":150,"technique":"Inicie deprimindo as escápulas e puxe os cotovelos em direção ao quadril.","commonMistakes":["Puxar só com os braços","Inclinar demais o tronco"],"alternatives":["Barra fixa assistida","Puxada alta"]},
+        {"id":"pull-a-puxada-supinada","name":"Puxada supinada","muscleGroup":"Dorsais","sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":120,"technique":"Mantenha peito alto e conduza os cotovelos para baixo sem balançar.","commonMistakes":["Usar impulso","Fechar demais a amplitude"],"alternatives":["Puxada neutra","Barra fixa"]},
+        {"id":"pull-a-remada-unilateral-cabo","name":"Remada unilateral no cabo","muscleGroup":"Dorsais","sets":3,"minReps":10,"maxReps":12,"targetRir":1,"restSeconds":90,"technique":"Puxe o cotovelo em direção ao quadril e mantenha o tronco estável.","commonMistakes":["Girar o tronco","Elevar o ombro"],"alternatives":["Remada unilateral com halter","Remada sentada"]},
+        {"id":"pull-a-pullover-cabo","name":"Pullover no cabo","muscleGroup":"Dorsais","sets":2,"minReps":12,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha cotovelos quase fixos e leve as mãos em arco até as coxas.","commonMistakes":["Flexionar muito os cotovelos","Usar balanço"],"alternatives":["Pullover máquina","Puxada alta"]},
+        {"id":"pull-a-rosca-direta","name":"Rosca direta","muscleGroup":"Bíceps","sets":3,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":90,"technique":"Cotovelos estáveis e subida sem jogar o tronco para trás.","commonMistakes":["Embalar o corpo","Mover os cotovelos"],"alternatives":["Rosca W","Rosca no cabo"]},
+        {"id":"pull-a-rosca-martelo","name":"Rosca martelo","muscleGroup":"Bíceps e antebraço","sets":2,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha pegada neutra e controle o cotovelo.","commonMistakes":["Balançar os halteres","Perder posição do punho"],"alternatives":["Rosca inversa","Rosca no cabo"]},
+        {"id":"pull-a-flexao-punho","name":"Flexão de punho","muscleGroup":"Antebraço","sets":2,"minReps":15,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Movimente o punho em amplitude confortável mantendo antebraços apoiados.","commonMistakes":["Usar movimento do cotovelo","Carga alta demais"],"alternatives":["Extensão de punho","Farmer's walk"]},
+        {"id":"pull-a-rosca-inversa","name":"Rosca inversa","muscleGroup":"Antebraço","sets":2,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Use pegada pronada e mantenha os punhos neutros.","commonMistakes":["Dobrar os punhos","Roubar com o tronco"],"alternatives":["Rosca martelo","Extensão de punho"]}
+      ]
+    },
+    {
+      "id": "quarta-push-b",
+      "day": "Quarta",
+      "title": "Push B — Peitoral superior e deltoides",
+      "focus": "Peitoral superior + deltoide lateral/posterior",
+      "exercises": [
+        {"id":"push-b-supino-inclinado-smith","name":"Supino inclinado Smith","muscleGroup":"Peitoral superior","sets":4,"minReps":8,"maxReps":10,"targetRir":2,"restSeconds":150,"technique":"Ajuste o banco para que a barra desça sobre a porção alta do peito, mantendo escápulas fixas.","commonMistakes":["Banco muito inclinado","Perder contato das escápulas"],"alternatives":["Supino inclinado com barra","Chest press inclinado"]},
+        {"id":"push-b-chest-press-inclinado","name":"Chest press inclinado","muscleGroup":"Peitoral superior","sets":2,"minReps":10,"maxReps":12,"targetRir":1,"restSeconds":105,"technique":"Ajuste o assento para empurrar em trajetória compatível com o peitoral superior.","commonMistakes":["Ombros projetados à frente","Amplitude curta"],"alternatives":["Supino inclinado com halteres","Supino inclinado Smith"]},
+        {"id":"push-b-crucifixo-baixo-alto","name":"Crucifixo no cabo de baixo para cima","muscleGroup":"Peitoral superior","sets":2,"minReps":12,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha tensão contínua e termine o movimento acima da linha do peito.","commonMistakes":["Usar impulso","Flexionar demais os cotovelos"],"alternatives":["Peck deck","Crucifixo inclinado"]},
+        {"id":"push-b-arnold","name":"Desenvolvimento Arnold","muscleGroup":"Ombros","sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":120,"technique":"Gire os braços de forma controlada sem perder estabilidade do tronco.","commonMistakes":["Acelerar a rotação","Arquear a lombar"],"alternatives":["Desenvolvimento com halteres","Desenvolvimento com barra"]},
+        {"id":"push-b-elevacao-lateral-cabo","name":"Elevação lateral no cabo","muscleGroup":"Deltoide lateral","sets":3,"minReps":12,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Use amplitude controlada e tensão contínua.","commonMistakes":["Encolher o trapézio","Balançar o corpo"],"alternatives":["Elevação lateral com halteres","Elevação lateral máquina"]},
+        {"id":"push-b-crucifixo-inverso","name":"Crucifixo inverso no cabo","muscleGroup":"Deltoide posterior","sets":3,"minReps":12,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Abra os braços mantendo o peito estável e sem transformar o movimento em remada.","commonMistakes":["Dobrar demais os cotovelos","Elevar os ombros"],"alternatives":["Reverse peck deck","Face pull"]},
+        {"id":"push-b-triceps-frances","name":"Tríceps francês com halter","muscleGroup":"Tríceps","sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha braços apontados para cima e controle a flexão dos cotovelos.","commonMistakes":["Abrir muito os cotovelos","Compensar com lombar"],"alternatives":["Tríceps testa","Tríceps na polia"]}
+      ]
+    },
+    {
+      "id": "quinta-lower-b",
+      "day": "Quinta",
+      "title": "Lower B — Posteriores, quadríceps e panturrilhas",
+      "focus": "Posteriores + pernas completas",
+      "exercises": [
+        {"id":"lower-b-hack","name":"Hack squat","muscleGroup":"Quadríceps","sets":4,"minReps":6,"maxReps":10,"targetRir":2,"restSeconds":180,"technique":"Desça com controle mantendo joelhos acompanhando a linha dos pés.","commonMistakes":["Perder estabilidade dos pés","Reduzir amplitude sem necessidade"],"alternatives":["Agachamento Smith","Leg press"]},
+        {"id":"lower-b-bulgaro","name":"Agachamento búlgaro","muscleGroup":"Quadríceps e glúteos","sets":3,"minReps":8,"maxReps":12,"targetRir":2,"restSeconds":120,"technique":"Mantenha base estável e desça verticalmente com controle.","commonMistakes":["Base curta demais","Perder equilíbrio"],"alternatives":["Afundo reverso","Passada com halteres"]},
+        {"id":"lower-b-leg-press","name":"Leg press","muscleGroup":"Quadríceps","sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":120,"technique":"Controle a descida e mantenha lombar apoiada.","commonMistakes":["Tirar o quadril do encosto","Travamento agressivo dos joelhos"],"alternatives":["Hack squat","Leg press unilateral"]},
+        {"id":"lower-b-stiff","name":"Stiff com barra","muscleGroup":"Posteriores de coxa","sets":3,"minReps":8,"maxReps":10,"targetRir":2,"restSeconds":150,"technique":"Mantenha joelhos destravados e leve o quadril para trás até sentir alongamento dos posteriores.","commonMistakes":["Arredondar a coluna","Afastar a barra do corpo"],"alternatives":["Levantamento romeno","Good morning"]},
+        {"id":"lower-b-flexora-em-pe","name":"Flexora em pé","muscleGroup":"Posteriores de coxa","sets":3,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Flexione o joelho sem mover o quadril e controle a volta.","commonMistakes":["Girar o quadril","Usar impulso"],"alternatives":["Flexora unilateral","Mesa flexora"]},
+        {"id":"lower-b-panturrilha-legpress","name":"Panturrilha no leg press","muscleGroup":"Panturrilhas","sets":4,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Faça pausa no alongamento e use amplitude máxima segura.","commonMistakes":["Quicar","Repetições parciais"],"alternatives":["Panturrilha em pé","Panturrilha Smith"]},
+        {"id":"lower-b-panturrilha-unilateral","name":"Panturrilha unilateral","muscleGroup":"Panturrilhas","sets":2,"minReps":12,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Mantenha equilíbrio e controle toda a amplitude em cada lado.","commonMistakes":["Usar impulso","Perder amplitude"],"alternatives":["Panturrilha sentada","Panturrilha em pé"]}
+      ]
+    },
+    {
+      "id": "sexta-pull-b",
+      "day": "Sexta",
+      "title": "Pull B — Dorsais, costas e antebraços",
+      "focus": "Dorsais + espessura de costas + antebraço",
+      "exercises": [
+        {"id":"pull-b-remada-t","name":"Remada T","muscleGroup":"Costas","sets":3,"minReps":6,"maxReps":10,"targetRir":2,"restSeconds":150,"technique":"Mantenha tronco firme e conduza os cotovelos para trás sem arrancar a carga.","commonMistakes":["Usar balanço","Perder posição da coluna"],"alternatives":["Remada curvada com barra","Remada máquina"]},
+        {"id":"pull-b-remada-peito-apoiado","name":"Remada com peito apoiado","muscleGroup":"Costas","sets":3,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":105,"technique":"Mantenha peito no apoio e finalize puxando as escápulas sem elevar os ombros.","commonMistakes":["Tirar o peito do apoio","Encolher os ombros"],"alternatives":["Remada máquina","Remada sentada"]},
+        {"id":"pull-b-puxada-articulada","name":"Puxada articulada","muscleGroup":"Dorsais","sets":3,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":105,"technique":"Puxe os cotovelos para baixo e mantenha o tórax estável no apoio.","commonMistakes":["Usar impulso","Puxar apenas com bíceps"],"alternatives":["Puxada neutra","Puxada alta"]},
+        {"id":"pull-b-pullover-cabo","name":"Pullover no cabo","muscleGroup":"Dorsais","sets":2,"minReps":12,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Use arco controlado e mantenha cotovelos quase fixos.","commonMistakes":["Flexionar demais os cotovelos","Perder tensão na volta"],"alternatives":["Pullover máquina","Puxada alta"]},
+        {"id":"pull-b-face-pull","name":"Face pull","muscleGroup":"Deltoide posterior e costas","sets":3,"minReps":12,"maxReps":18,"targetRir":1,"restSeconds":60,"technique":"Puxe a corda em direção ao rosto com rotação externa e escápulas controladas.","commonMistakes":["Puxar baixo demais","Projetar a cabeça"],"alternatives":["Crucifixo inverso","Reverse peck deck"]},
+        {"id":"pull-b-rosca-scott","name":"Rosca Scott","muscleGroup":"Bíceps","sets":2,"minReps":8,"maxReps":12,"targetRir":1,"restSeconds":90,"technique":"Mantenha braços apoiados e evite perder tensão no fundo.","commonMistakes":["Descolar os braços do apoio","Descer sem controle"],"alternatives":["Rosca máquina","Rosca direta"]},
+        {"id":"pull-b-bayesian","name":"Rosca Bayesian","muscleGroup":"Bíceps","sets":2,"minReps":10,"maxReps":15,"targetRir":1,"restSeconds":75,"technique":"Mantenha o braço ligeiramente atrás do tronco e flexione o cotovelo sem deslocar o ombro.","commonMistakes":["Trazer o braço para frente","Girar o tronco"],"alternatives":["Rosca no cabo","Rosca concentrada"]},
+        {"id":"pull-b-extensao-punho","name":"Extensão de punho","muscleGroup":"Antebraço","sets":2,"minReps":15,"maxReps":20,"targetRir":1,"restSeconds":60,"technique":"Apoie antebraços e movimente apenas os punhos em amplitude confortável.","commonMistakes":["Usar carga excessiva","Mover o cotovelo"],"alternatives":["Flexão de punho","Rosca inversa"]},
+        {"id":"pull-b-farmers","name":"Farmer's walk","muscleGroup":"Antebraço e trapézio","sets":2,"minReps":30,"maxReps":45,"targetRir":2,"restSeconds":90,"technique":"Caminhe com postura alta, abdômen firme e pegada forte. A faixa representa segundos por série.","commonMistakes":["Inclinar o tronco","Perder postura por excesso de carga"],"alternatives":["Encolhimento com halteres","Rosca martelo"]}
+      ]
+    }
+  ]
+}
