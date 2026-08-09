@@ -47,7 +47,7 @@ export function PlanCandidatesPage({ profile, assessment, onActivate }: { profil
     <section className="profile-choice-grid candidate-grid" aria-label="Comparação das opções de treino">
       {candidates.map((candidate) => {
         const cardioCount = candidate.plan.project?.cardioSchedule?.length ?? 0;
-        const metrics = candidate.metrics;
+        const metrics = candidate.engineMetrics;
         return <article key={candidate.id} className={`profile-choice-card candidate-card ${candidate.recommended ? 'primary recommended' : ''}`}>
           <div className="candidate-card-heading">
             <div>
