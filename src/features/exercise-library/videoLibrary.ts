@@ -1,5 +1,6 @@
 import type { TitanCatalogExercise } from './catalog';
 import { COMMON_EXERCISE_VIDEO_BATCH } from './videoRegistryCommonBatch';
+import { CORE_GLUTES_EXERCISE_VIDEO_BATCH } from './videoRegistryCoreGlutesBatch';
 import { CORE_POSTERIOR_EXERCISE_VIDEO_BATCH } from './videoRegistryCorePosteriorBatch';
 import { EXERCISE_VIDEO_BATCH_4 } from './videoRegistryBatch4';
 import { EXERCISE_VIDEO_REGISTRY, type ExerciseVideoMetadata } from './videoRegistry';
@@ -9,6 +10,7 @@ export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata
   ...COMMON_EXERCISE_VIDEO_BATCH,
   ...EXERCISE_VIDEO_BATCH_4,
   ...CORE_POSTERIOR_EXERCISE_VIDEO_BATCH,
+  ...CORE_GLUTES_EXERCISE_VIDEO_BATCH,
 };
 
 export function getCatalogExerciseVideo(exercise: Pick<TitanCatalogExercise, 'id'>): ExerciseVideoMetadata | null {
