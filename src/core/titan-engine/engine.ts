@@ -80,6 +80,14 @@ function weeklySetsByMuscle(workouts: TitanEngineCandidateBlueprint['workouts'])
   }, {});
 }
 
+function weeklyFrequencyByMuscle(workouts: TitanEngineCandidateBlueprint['workouts']) {
+  return workouts.reduce<Record<string, number>>((accumulator, workout) => {
+    const muscles = new Set(workout.exercises.map((exercise) => exercise.primaryMuscle));
+    for (const muscle of muscles) accumulator[muscle] = (accumulator[muscle] ?? 0) + 1;
+    return accumulator;
+  }, {});
+}
+
 function volumeCoverage(setsByMuscle: Record<string, number>, target: [number, number]) {
   const totals = Object.values(setsByMuscle);
   if (!totals.length) return 0;
@@ -88,6 +96,19 @@ function volumeCoverage(setsByMuscle: Record<string, number>, target: [number, n
     if (sets >= minimum && sets <= maximum) return 100;
     if (sets < minimum) return (sets / Math.max(1, minimum)) * 100;
     return Math.max(0, 100 - ((sets - maximum) / Math.max(1, maximum)) * 100);
+  });
+  return clampScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+}
+
+function frequencyCoverage(frequencyByMuscle: Record<string, number>, assessment: TitanEngineAssessment) {
+  const entries = Object.entries(frequencyByMuscle);
+  if (!entries.length) return 0;
+  const baseTarget = assessment.trainingDaysPerWeek >= 4 ? 2 : 1;
+  const scores = entries.map(([muscle, frequency]) => {
+    const priority = priorityScore(muscle, assessment.musclePriorities) > 0;
+    const target = priority && assessment.trainingDaysPerWeek >= 3 ? 2 : baseTarget;
+    if (frequency >= target) return 100;
+    return (frequency / Math.max(1, target)) * 100;
   });
   return clampScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
 }
@@ -103,10 +124,13 @@ function sessionBalance(workouts: TitanEngineCandidateBlueprint['workouts']) {
 
 function fatigueScore(workouts: TitanEngineCandidateBlueprint['workouts'], preferredSessionMinutes: number) {
   if (!workouts.length) return 0;
-  const expectedSetCapacity = Math.max(8, preferredSessionMinutes / 3);
+  const expectedLoadCapacity = Math.max(8, preferredSessionMinutes / 3);
   const sessionScores = workouts.map((workout) => {
-    const totalSets = workout.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
-    return clampScore(100 - Math.max(0, totalSets - expectedSetCapacity) * 6);
+    const weightedLoad = workout.exercises.reduce((sum, exercise) => {
+      const restWeight = Math.max(0.75, Math.min(1.5, exercise.restSeconds / 120));
+      return sum + exercise.sets * restWeight;
+    }, 0);
+    return clampScore(100 - Math.max(0, weightedLoad - expectedLoadCapacity) * 6);
   });
   return clampScore(sessionScores.reduce((sum, score) => sum + score, 0) / sessionScores.length);
 }
@@ -119,12 +143,14 @@ function strategyFit(strategy: TitanEngineStrategy, assessment: TitanEngineAsses
 
 function metricsFor(candidate: TitanEngineCandidateBlueprint, assessment: TitanEngineAssessment, rule: TitanEnginePrescriptionRule): TitanEngineCandidateMetrics {
   const weekly = weeklySetsByMuscle(candidate.workouts);
+  const frequency = weeklyFrequencyByMuscle(candidate.workouts);
   const volume = volumeCoverage(weekly, rule.weeklySetsPerMuscle);
+  const frequencyScore = frequencyCoverage(frequency, assessment);
   const balance = sessionBalance(candidate.workouts);
   const fatigue = fatigueScore(candidate.workouts, assessment.preferredSessionMinutes);
   const fit = strategyFit(candidate.strategy, assessment);
-  const score = clampScore(volume * 0.4 + balance * 0.2 + fatigue * 0.2 + fit * 0.2);
-  return { weeklySetsByMuscle: weekly, volumeTargetCoverage: volume, sessionBalance: balance, fatigueScore: fatigue, strategyFit: fit, score };
+  const score = clampScore(volume * 0.35 + frequencyScore * 0.15 + balance * 0.15 + fatigue * 0.2 + fit * 0.15);
+  return { weeklySetsByMuscle: weekly, weeklyFrequencyByMuscle: frequency, volumeTargetCoverage: volume, frequencyScore, sessionBalance: balance, fatigueScore: fatigue, strategyFit: fit, score };
 }
 
 function buildCandidate(
@@ -172,8 +198,9 @@ function buildCandidate(
 function recommendationReasons(candidate: TitanEngineCandidateBlueprint) {
   const reasons = [`Score TITAN ${candidate.metrics.score}/100.`];
   if (candidate.metrics.volumeTargetCoverage >= 80) reasons.push('Mantém boa cobertura do volume semanal alvo.');
+  if (candidate.metrics.frequencyScore >= 85) reasons.push('Distribui os músculos em frequência compatível com a rotina semanal.');
   if (candidate.metrics.sessionBalance >= 85) reasons.push('Distribui o trabalho de forma equilibrada entre as sessões.');
-  if (candidate.metrics.fatigueScore >= 85) reasons.push('Mantém a carga por sessão compatível com o tempo informado.');
+  if (candidate.metrics.fatigueScore >= 85) reasons.push('Mantém a carga por sessão compatível com o tempo e descansos prescritos.');
   if (candidate.strategy === 'balanced') reasons.push('Equilibra aderência, estímulo e recuperação como padrão da Engine.');
   return reasons;
 }
