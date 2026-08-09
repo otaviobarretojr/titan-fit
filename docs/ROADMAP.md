@@ -59,11 +59,16 @@ Objetivo: transformar perfil e projeto em entidades operacionais do produto.
 
 Objetivo: separar regras de prescrição da interface.
 
-- Criar `core/titan-engine`.
-- Avaliar perfil, experiência, dias, duração, equipamentos, prioridades e limitações.
-- Gerar candidatos de programação com justificativas.
-- Aplicar regras de volume, frequência, distribuição muscular e fadiga.
-- Produzir recomendações determinísticas e testáveis.
+- Criar `core/titan-engine`. ✅
+- Separar decisão de prescrição da montagem do `TitanPlan`. ✅
+- Avaliar experiência, dias, duração, equipamentos, prioridades e limitações. ✅
+- Gerar três candidatos de programação com justificativas. ✅
+- Produzir blueprints determinísticos e testáveis, sem dependência de React ou persistência. ✅
+- Suportar de 1 a 7 dias sem reduzir silenciosamente a frequência informada. ✅
+- Aplicar regras de volume semanal por grupo muscular.
+- Refinar distribuição de frequência e fadiga entre sessões.
+- Criar score interno dos candidatos para recomendar uma opção padrão de forma explicável.
+- Integrar contexto futuro de histórico/progressão sem acoplar a Engine ao banco local.
 
 ## v0.60 — Knowledge Base
 
