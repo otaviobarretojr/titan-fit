@@ -69,6 +69,7 @@ export function generateTitanPlanCandidates(
     }));
 
     const rationale = [...candidate.rationale];
+    if (candidate.recommended) rationale.unshift(...engine.recommendationReasons);
     if (cardioSchedule.length) rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`);
     rationale.push(`Prescrição processada pela TITAN Engine v${engine.engineVersion}.`);
     rationale.push(...engine.warnings);
@@ -98,6 +99,14 @@ export function generateTitanPlanCandidates(
       source: 'titan-generated',
       plan,
       createdAt,
+      recommended: candidate.recommended,
+      titanScore: candidate.metrics.score,
+      engineMetrics: {
+        volumeTargetCoverage: candidate.metrics.volumeTargetCoverage,
+        sessionBalance: candidate.metrics.sessionBalance,
+        fatigueScore: candidate.metrics.fatigueScore,
+        strategyFit: candidate.metrics.strategyFit,
+      },
     };
   });
 }
