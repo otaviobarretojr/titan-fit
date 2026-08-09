@@ -8,6 +8,7 @@ import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
 import { loadActivePlan, loadActivePlanFromDatabase, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
+import { linkPlanToProject } from '../features/project/repository';
 import { App } from './App';
 
 type EntryState = 'loading' | 'onboarding' | 'import' | 'candidates' | 'app';
@@ -27,11 +28,11 @@ export function TitanEntry() {
   useEffect(() => {
     if (entryState !== 'loading') return;
     void Promise.all([loadPlanningContext(), loadActivePlanFromDatabase()])
-      .then(([{ profile: loadedProfile, assessment: loadedAssessment }, activePlan]) => {
-        if (activePlan) return setEntryState('app');
-        if (!loadedProfile?.onboardingCompleted) return setEntryState('onboarding');
-        if (loadedAssessment) return setEntryState('candidates');
-        setEntryState('onboarding');
+      .then(([context, storedPlan]) => {
+        if (storedPlan) return setEntryState('app');
+        if (!context.profile?.onboardingCompleted) return setEntryState('onboarding');
+        if (context.assessment) return setEntryState('candidates');
+        setEntryState('app');
       })
       .catch(() => setEntryState('onboarding'));
   }, [entryState]);
@@ -45,8 +46,9 @@ export function TitanEntry() {
     setEntryState('app');
   }
 
-  function activateImportedPlan(plan: TitanPlan) {
-    saveActivePlan(plan);
+  async function activateImportedPlan(plan: TitanPlan) {
+    const linkedPlan = await linkPlanToProject(plan, profile?.id ?? null);
+    saveActivePlan(linkedPlan);
     window.history.replaceState({ ...window.history.state, titanTab: 'today' }, '');
     setEntryState('app');
   }
@@ -73,7 +75,7 @@ export function TitanEntry() {
         <h1>Importe seu projeto</h1>
         <p>Selecione o arquivo do projeto. O TITAN valida a estrutura antes de ativá-lo.</p>
       </section>
-      <PlanImporter onImport={activateImportedPlan} />
+      <PlanImporter onImport={(plan) => void activateImportedPlan(plan)} />
     </main>;
   }
 
