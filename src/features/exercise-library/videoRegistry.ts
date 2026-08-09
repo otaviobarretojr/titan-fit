@@ -1,7 +1,7 @@
 import type { TitanCatalogExercise } from './catalog';
 
 export type ExerciseVideoLicenseStatus = 'embedded-reference' | 'licensed-external' | 'titan-owned';
-export type ExerciseVideoProvider = 'youtube' | 'hosted';
+export type ExerciseVideoProvider = 'youtube' | 'vimeo' | 'hosted';
 
 export type ExerciseVideoMetadata = {
   exerciseId: string;
