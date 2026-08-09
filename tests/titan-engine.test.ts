@@ -68,6 +68,15 @@ describe('TITAN Engine', () => {
     }
   });
 
+  it('limita volume semanal ao teto e permite margem controlada para prioridade', () => {
+    const result = generateTitanEngineBlueprints({ ...assessment, trainingDaysPerWeek: 7 }, exercises, rule);
+    for (const candidate of result.candidates) {
+      expect(candidate.metrics.weeklySetsByMuscle.Costas ?? 0).toBeLessThanOrEqual(14);
+      expect(candidate.metrics.weeklySetsByMuscle.Quadríceps ?? 0).toBeLessThanOrEqual(14);
+      expect(candidate.metrics.weeklySetsByMuscle.Peitoral ?? 0).toBeLessThanOrEqual(Math.round(14 * 1.15));
+    }
+  });
+
   it('marca exatamente uma estratégia como recomendada e explica a escolha', () => {
     const result = generateTitanEngineBlueprints(assessment, exercises, rule);
     expect(result.candidates.filter((candidate) => candidate.recommended)).toHaveLength(1);
