@@ -36,7 +36,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cacheId: 'titan-fit-v0.40.0',
+        cacheId: 'titan-fit-v0.37.0',
         cleanupOutdatedCaches: true,
         navigateFallback: '/titan-fit/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png}'],
