@@ -3,7 +3,7 @@ import { SPECIFIC_EXERCISE_VISUALS } from './specificVisuals';
 import { SPECIFIC_EXERCISE_VISUALS_EXTRA } from './specificVisualsExtra';
 import { SPECIFIC_EXERCISE_VISUALS_BATCH3 } from './specificVisualsBatch3';
 
-export const ALL_SPECIFIC_EXERCISE_VISUALS = { ...SPECIFIC_EXERCISE_VISUALS, ...SPECIFIC_EXERCISE_VISUALS_EXTRA, ...SPECIFIC_EXERCISE_VISUALS_BATCH3 };
+const ALL_SPECIFIC_EXERCISE_VISUALS = { ...SPECIFIC_EXERCISE_VISUALS, ...SPECIFIC_EXERCISE_VISUALS_EXTRA, ...SPECIFIC_EXERCISE_VISUALS_BATCH3 };
 
 export function ExerciseMotionVisual({ exercise, compact = false }: { exercise: TitanCatalogExercise; compact?: boolean }) {
   const specific = ALL_SPECIFIC_EXERCISE_VISUALS[exercise.id];
