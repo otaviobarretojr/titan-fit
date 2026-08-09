@@ -3,6 +3,10 @@ export type TitanEngineExperience = 'beginner' | 'intermediate' | 'advanced';
 export type TitanEngineEquipmentAccess = 'full-gym' | 'home-gym' | 'minimal' | 'bodyweight';
 export type TitanEngineMusclePriority = 'chest' | 'back' | 'shoulders' | 'arms' | 'quadriceps' | 'hamstrings-glutes' | 'calves' | 'core';
 export type TitanEngineMovementPattern = 'horizontal-push' | 'vertical-push' | 'horizontal-pull' | 'vertical-pull' | 'squat' | 'hinge' | 'knee-flexion' | 'elbow-flexion' | 'elbow-extension' | 'calf' | 'core';
+export type TitanEngineExerciseRole = 'compound' | 'isolation';
+export type TitanEngineStabilityDemand = 'low' | 'medium' | 'high';
+export type TitanEngineFatigueCost = 'low' | 'medium' | 'high';
+export type TitanEngineTensionBias = 'lengthened' | 'mid-range' | 'shortened' | 'mixed' | 'unknown';
 
 export type TitanEngineLimitation = { area: string; note?: string };
 
@@ -22,6 +26,10 @@ export type TitanEngineExercise = {
   name: string;
   primaryMuscle: string;
   movementPattern?: TitanEngineMovementPattern;
+  exerciseRole?: TitanEngineExerciseRole;
+  stabilityDemand?: TitanEngineStabilityDemand;
+  fatigueCost?: TitanEngineFatigueCost;
+  tensionBias?: TitanEngineTensionBias;
   repRange: [number, number];
   defaultRir: number;
   restSeconds: number;
