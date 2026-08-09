@@ -21,12 +21,13 @@ Objetivo: preparar a arquitetura definitiva antes de ampliar a geração intelig
 
 ### Fundação
 
-- Atualizar documentação de arquitetura para refletir o código real.
-- Formalizar modelo de dados por perfil, projeto, plano e histórico.
-- Unificar versão técnica exibida pelo app, package e cache PWA.
-- Definir migração segura do plano ativo do localStorage para IndexedDB.
-- Preparar o conceito de `activeProfileId` e `activeProjectId`.
-- Reduzir responsabilidades concentradas em `App.tsx`.
+- [x] Atualizar documentação de arquitetura para refletir o código real.
+- [x] Formalizar modelo de dados por perfil, projeto, plano e histórico.
+- [x] Preparar carregamento preferencial do plano ativo pelo IndexedDB com fallback legado.
+- [ ] Unificar versão técnica exibida pelo app, package, lockfile e cache PWA com validação automática.
+- [ ] Introduzir `activeProfileId` e `activeProjectId` sem quebrar dados existentes.
+- [ ] Criar testes específicos de migração e compatibilidade de persistência.
+- [ ] Reduzir responsabilidades concentradas em `App.tsx`.
 
 ### Base de prescrição
 
@@ -38,68 +39,116 @@ Objetivo: preparar a arquitetura definitiva antes de ampliar a geração intelig
 
 ## v0.45 — Profile & Project Core
 
-- Onboarding definitivo de perfil.
-- Avaliação de experiência, rotina, disponibilidade, equipamentos, limitações e prioridades.
-- Entidade `Project` persistente.
-- Fluxo “Criar com TITAN”, “Inserir projeto” e “Configurar manualmente”.
-- Migração de usuários atuais para um perfil/projeto padrão sem perda de dados.
+Objetivo: transformar o perfil atual em um núcleo capaz de suportar projetos independentes e múltiplos usuários no futuro.
 
-## v0.50 — TITAN Engine
+- Introduzir entidade `Project` separada do plano.
+- Associar projetos ao `profileId`.
+- Definir projeto ativo por perfil.
+- Preservar projetos anteriores como arquivados.
+- Fazer importação e geração convergirem para o mesmo contrato de projeto.
+- Preparar troca de perfil sem mistura de dados.
 
-- Separar regras de prescrição da interface React.
-- Gerar candidatos de programa por estratégias de aderência, equilíbrio e disponibilidade.
-- Explicar racional de cada proposta.
-- Validar volume, frequência, duração, equipamentos e limitações antes de oferecer um plano.
-- Registrar decisões relevantes do Coach.
+## v0.50 — TITAN Knowledge Base
 
-## v0.55 — Knowledge Base v1
+Objetivo: transformar a biblioteca de exercícios em uma base de prescrição versionada.
 
-- Biblioteca ampliada e versionada de exercícios.
-- Metadados para hipertrofia, força, fadiga, estabilidade e dificuldade técnica.
-- Substituições por equipamento, desconforto e padrão de movimento.
-- Cobertura visual própria/licenciada conforme política do produto.
-- Testes de consistência da base.
+- Identidade estável por exercício.
+- Músculos primários e secundários.
+- Padrões de movimento.
+- Equipamentos necessários.
+- Nível e complexidade técnica.
+- Técnica e erros comuns.
+- Substituições, progressões e regressões.
+- Faixas de repetição, RIR e descanso.
+- Metadados de fadiga, estabilidade e adequação ao objetivo.
+- Testes de integridade da Knowledge Base.
 
-## v0.60 — Nutrição
+## v0.60 — TITAN Engine
 
+Objetivo: separar as regras de avaliação e prescrição da interface.
+
+Entradas principais:
+
+- perfil;
+- avaliação;
+- objetivo;
+- experiência;
+- dias e duração disponíveis;
+- equipamentos;
+- limitações;
+- prioridades musculares;
+- preferências;
+- objetivo cardiovascular.
+
+Saídas principais:
+
+- candidatos de programa;
+- justificativas;
+- volume e frequência por músculo;
+- seleção de exercícios;
+- séries, repetições, RIR e descanso;
+- cardio compatível com objetivo e rotina;
+- alertas quando os dados forem insuficientes.
+
+## v0.70 — Projetos e geração guiada
+
+Objetivo: entregar a criação completa do Projeto TITAN.
+
+Fluxo alvo:
+
+1. criar ou selecionar perfil;
+2. preencher avaliação;
+3. escolher objetivo;
+4. TITAN Engine gera três propostas;
+5. usuário compara propostas e justificativas;
+6. usuário escolhe uma proposta;
+7. sistema cria e ativa o projeto.
+
+Também continuará disponível:
+
+- inserir projeto existente;
+- atualizar musculação separadamente;
+- atualizar cardio separadamente;
+- arquivar ou substituir projeto sem apagar histórico.
+
+## v0.80 — Nutrição e rotina
+
+- Plano alimentar.
 - Refeições planejadas e pendentes.
-- Registro total/parcial/não realizado.
-- Macros e alternativas equivalentes.
+- Registro parcial.
+- Substituições equivalentes.
 - Redistribuição de macros.
-- Resumo diário de calorias e proteína.
+- Calorias e macronutrientes.
+- Água.
+- Sono e recuperação registrados pelo usuário.
+- Integração desses dados ao Score e Coach quando houver informação suficiente.
 
-## v0.70 — Coach adaptativo e relatórios
+## v0.90 — Coach, relatórios e automações
 
-- Tendências semanais e mensais.
-- Recomendações com confiança declarada.
-- Progressão baseada em histórico, técnica, repetições e esforço.
-- Alertas de aderência e inconsistência de dados.
-- Relatórios de treino, cardio, evolução e nutrição.
-
-## v0.80 — Notificações e offline avançado
-
-- Estrutura para refeições, treino, cardio, água, suplementos e sono.
-- Melhorias de atualização offline e cache.
-- Proteções adicionais de migração e backup.
-
-## v0.90 — Testes e polimento
-
-- Auditoria mobile completa.
-- Acessibilidade.
-- Performance.
-- Migrações de schema testadas.
-- Recuperação de falhas e cenários offline.
-- Testes de regressão de importação e backup.
+- Recomendações prioritárias.
+- Tendências.
+- Relatório semanal.
+- Relatório mensal.
+- Alertas de estagnação.
+- Recomendações de progressão.
+- Auditoria das decisões do Coach.
+- Notificações compatíveis com PWA.
+- Melhorias de backup e restauração.
 
 ## v1.0 — Primeira versão estável
 
 Critérios principais:
 
-- perfil e projeto estáveis;
-- treino e cardio plenamente utilizáveis offline;
-- histórico e evolução preservados entre versões;
-- importação e geração de projeto funcionando sobre o mesmo domínio;
-- backup/restauração confiáveis;
-- TITAN Engine testada e explicável;
-- documentação sincronizada com o código;
-- experiência mobile validada em Android.
+- uso diário estável em Android;
+- PWA instalável;
+- funcionalidade essencial offline;
+- migrações testadas;
+- backups restauráveis;
+- projeto gerado ou importado;
+- musculação e cardio completos;
+- histórico persistente;
+- evolução corporal;
+- nutrição funcional;
+- Coach com regras explicáveis;
+- testes críticos automatizados;
+- documentação alinhada ao código.
