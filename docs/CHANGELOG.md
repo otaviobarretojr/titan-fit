@@ -17,6 +17,8 @@
 - Tela comparativa mobile das três estratégias passa a exibir Score TITAN, divisão semanal, volume, equilíbrio, fadiga, adequação e justificativas.
 - Destaque “Recomendado pelo TITAN” passa a obedecer a decisão real da Engine, sem estratégia fixa na interface.
 - Usuário continua livre para ativar qualquer uma das três opções; a escolha é vinculada ao fluxo Perfil → Projeto → Plano.
+- Configurações ganha “Gerar novas opções”, reutilizando Perfil e Avaliação já salvos sem refazer onboarding.
+- A ativação de uma nova proposta cria um novo ciclo/projeto e pausa automaticamente o projeto anteriormente ativo, preservando histórico e ciclos anteriores.
 - A Engine emite warnings quando recebe frequência fora do intervalo suportado ou catálogo vazio.
 - Testes específicos adicionados para determinismo, prioridades, limitações, exclusões, frequência de sete dias, teto de volume, recomendação e comparação visual.
 
