@@ -23,4 +23,12 @@ describe('exercise video registry',()=>{
     const exercise=TITAN_FULL_EXERCISE_CATALOG.find((item)=>item.id==='face-pull');
     expect(exercise && getCatalogExerciseVideo(exercise)?.provider).toBe('youtube');
   });
+
+  it('mantém o primeiro lote ampliado de peitoral e costas',()=>{
+    expect(Object.keys(EXERCISE_VIDEO_REGISTRY).length).toBeGreaterThanOrEqual(30);
+    for(const id of ['chest-press-machine','incline-machine-press','lat-pulldown','seated-row','chest-supported-row','machine-row']){
+      expect(EXERCISE_VIDEO_REGISTRY[id]?.provider).toBe('youtube');
+      expect(EXERCISE_VIDEO_REGISTRY[id]?.licenseStatus).toBe('embedded-reference');
+    }
+  });
 });
