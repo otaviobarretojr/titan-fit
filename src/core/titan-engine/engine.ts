@@ -1,6 +1,7 @@
 import type {
   TitanEngineAssessment,
   TitanEngineCandidateBlueprint,
+  TitanEngineCandidateMetrics,
   TitanEngineExercise,
   TitanEngineMusclePriority,
   TitanEnginePrescriptionRule,
@@ -13,6 +14,8 @@ const PRIORITY_TERMS: Record<TitanEngineMusclePriority, string[]> = {
   chest: ['peitoral'], back: ['costas', 'dorsais'], shoulders: ['deltoides'], arms: ['bíceps', 'tríceps'],
   quadriceps: ['quadríceps'], 'hamstrings-glutes': ['posteriores', 'glúteos'], calves: ['panturrilhas'], core: ['abdômen', 'core'],
 };
+
+function clampScore(value: number) { return Math.max(0, Math.min(100, Math.round(value))); }
 
 function buildSplit(days: number): string[] {
   const normalized = Math.max(1, Math.min(7, Math.round(days)));
@@ -70,6 +73,60 @@ function rationaleFor(strategy: TitanEngineStrategy, assessment: TitanEngineAsse
   return rationale;
 }
 
+function weeklySetsByMuscle(workouts: TitanEngineCandidateBlueprint['workouts']) {
+  return workouts.flatMap((workout) => workout.exercises).reduce<Record<string, number>>((accumulator, exercise) => {
+    accumulator[exercise.primaryMuscle] = (accumulator[exercise.primaryMuscle] ?? 0) + exercise.sets;
+    return accumulator;
+  }, {});
+}
+
+function volumeCoverage(setsByMuscle: Record<string, number>, target: [number, number]) {
+  const totals = Object.values(setsByMuscle);
+  if (!totals.length) return 0;
+  const [minimum, maximum] = target;
+  const scores = totals.map((sets) => {
+    if (sets >= minimum && sets <= maximum) return 100;
+    if (sets < minimum) return (sets / Math.max(1, minimum)) * 100;
+    return Math.max(0, 100 - ((sets - maximum) / Math.max(1, maximum)) * 100);
+  });
+  return clampScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+}
+
+function sessionBalance(workouts: TitanEngineCandidateBlueprint['workouts']) {
+  const totals = workouts.map((workout) => workout.exercises.reduce((sum, exercise) => sum + exercise.sets, 0));
+  if (!totals.length) return 0;
+  const average = totals.reduce((sum, total) => sum + total, 0) / totals.length;
+  if (average === 0) return 0;
+  const meanDeviation = totals.reduce((sum, total) => sum + Math.abs(total - average), 0) / totals.length;
+  return clampScore(100 - (meanDeviation / average) * 100);
+}
+
+function fatigueScore(workouts: TitanEngineCandidateBlueprint['workouts'], preferredSessionMinutes: number) {
+  if (!workouts.length) return 0;
+  const expectedSetCapacity = Math.max(8, preferredSessionMinutes / 3);
+  const sessionScores = workouts.map((workout) => {
+    const totalSets = workout.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+    return clampScore(100 - Math.max(0, totalSets - expectedSetCapacity) * 6);
+  });
+  return clampScore(sessionScores.reduce((sum, score) => sum + score, 0) / sessionScores.length);
+}
+
+function strategyFit(strategy: TitanEngineStrategy, assessment: TitanEngineAssessment) {
+  if (strategy === 'balanced') return 95;
+  if (strategy === 'adherence') return assessment.preferredSessionMinutes <= 60 || assessment.trainingDaysPerWeek <= 4 ? 92 : 82;
+  return assessment.preferredSessionMinutes >= 60 && assessment.trainingDaysPerWeek >= 4 ? 90 : 76;
+}
+
+function metricsFor(candidate: TitanEngineCandidateBlueprint, assessment: TitanEngineAssessment, rule: TitanEnginePrescriptionRule): TitanEngineCandidateMetrics {
+  const weekly = weeklySetsByMuscle(candidate.workouts);
+  const volume = volumeCoverage(weekly, rule.weeklySetsPerMuscle);
+  const balance = sessionBalance(candidate.workouts);
+  const fatigue = fatigueScore(candidate.workouts, assessment.preferredSessionMinutes);
+  const fit = strategyFit(candidate.strategy, assessment);
+  const score = clampScore(volume * 0.4 + balance * 0.2 + fatigue * 0.2 + fit * 0.2);
+  return { weeklySetsByMuscle: weekly, volumeTargetCoverage: volume, sessionBalance: balance, fatigueScore: fatigue, strategyFit: fit, score };
+}
+
 function buildCandidate(
   strategy: TitanEngineStrategy,
   assessment: TitanEngineAssessment,
@@ -98,7 +155,17 @@ function buildCandidate(
       }),
     };
   });
-  return { strategy, title: config.title, rationale: rationaleFor(strategy, assessment), workouts };
+  const base = { strategy, title: config.title, rationale: rationaleFor(strategy, assessment), workouts, metrics: {} as TitanEngineCandidateMetrics, recommended: false };
+  return { ...base, metrics: metricsFor(base, assessment, rule) };
+}
+
+function recommendationReasons(candidate: TitanEngineCandidateBlueprint) {
+  const reasons = [`Score TITAN ${candidate.metrics.score}/100.`];
+  if (candidate.metrics.volumeTargetCoverage >= 80) reasons.push('Mantém boa cobertura do volume semanal alvo.');
+  if (candidate.metrics.sessionBalance >= 85) reasons.push('Distribui o trabalho de forma equilibrada entre as sessões.');
+  if (candidate.metrics.fatigueScore >= 85) reasons.push('Mantém a carga por sessão compatível com o tempo informado.');
+  if (candidate.strategy === 'balanced') reasons.push('Equilibra aderência, estímulo e recuperação como padrão da Engine.');
+  return reasons;
 }
 
 export function generateTitanEngineBlueprints(
@@ -110,5 +177,14 @@ export function generateTitanEngineBlueprints(
   if (assessment.trainingDaysPerWeek < 1 || assessment.trainingDaysPerWeek > 7) warnings.push('Dias de treino ajustados para o intervalo suportado de 1 a 7.');
   if (!exercises.length) warnings.push('Nenhum exercício elegível foi fornecido à TITAN Engine.');
   const strategies: TitanEngineStrategy[] = ['adherence', 'balanced', 'availability'];
-  return { engineVersion: 1, candidates: strategies.map((strategy) => buildCandidate(strategy, assessment, exercises, rule)), warnings };
+  const scored = strategies.map((strategy) => buildCandidate(strategy, assessment, exercises, rule));
+  const recommended = [...scored].sort((a, b) => b.metrics.score - a.metrics.score || strategies.indexOf(a.strategy) - strategies.indexOf(b.strategy))[0];
+  const candidates = scored.map((candidate) => ({ ...candidate, recommended: candidate.strategy === recommended.strategy }));
+  return {
+    engineVersion: 1,
+    candidates,
+    recommendedStrategy: recommended.strategy,
+    recommendationReasons: recommendationReasons(recommended),
+    warnings,
+  };
 }
