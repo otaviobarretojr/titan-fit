@@ -23,7 +23,7 @@ export type TitanEngineExercise = {
   repRange: [number, number];
   defaultRir: number;
   restSeconds: number;
-  technique: string[];
+  technique: string;
   commonMistakes: string[];
   substitutions: string[];
 };
