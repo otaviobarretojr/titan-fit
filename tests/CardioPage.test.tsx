@@ -23,31 +23,37 @@ const plan: TitanPlan = {
       startTime: '17:00',
       title: 'Corrida fácil/Zona 2',
       type: 'zone2',
-      durationMinutes: 30,
+      durationMinutes: 35,
       week: 1,
-      goal: 'Construir base para 5 km',
-      instructions: ['Manter esforço confortável.']
+      goal: 'RPE 3–4/10: leve a confortável.',
+      instructions: ['Aquecimento: 8 min caminhada progressiva. Bloco principal: 22 min em Zona 2. Desaquecimento: 5 min caminhada fácil.','RPE 3–4/10: leve a confortável.']
     }]
   },
   workouts: []
 };
 
 describe('CardioPage — execução planejada', () => {
-  it('abre o cardio programado com cronômetro e campos de registro', () => {
+  it('abre o cardio como sessão orientada e recebe os dados do smartwatch', () => {
     render(<CardioPage plan={plan} initialSessionId="cardio-domingo-w1" />);
 
     expect(screen.getByRole('heading', { name: 'Corrida fácil/Zona 2' })).toBeInTheDocument();
-    expect(screen.getByText(/17:00 · 30 min · Zona 2/i)).toBeInTheDocument();
-    expect(screen.getByText('Construir base para 5 km')).toBeInTheDocument();
-    expect(screen.getByText('Manter esforço confortável.')).toBeInTheDocument();
+    expect(screen.getByText(/17:00 · previsto 35 min · Zona 2/i)).toBeInTheDocument();
+    expect(screen.getByText('Aquecimento')).toBeInTheDocument();
+    expect(screen.getByText('Bloco principal')).toBeInTheDocument();
+    expect(screen.getByText('Desaquecimento')).toBeInTheDocument();
+    expect(screen.getByText('Registre pelo smartwatch')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ex.: 35:42')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Ex.: 3,2')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('bpm')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Como foi a sessão?')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pausar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Pausar' }));
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
-    expect(screen.getByRole('button', { name: 'Pausar' })).toBeEnabled();
+  it('exige o tempo realizado antes de concluir', () => {
+    render(<CardioPage plan={plan} initialSessionId="cardio-domingo-w1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar cardio' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Informe o tempo realizado pelo smartwatch');
   });
 
   it('não oferece mais o seletor manual de modalidade na tela de cardio', () => {
