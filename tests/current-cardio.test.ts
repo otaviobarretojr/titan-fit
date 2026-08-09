@@ -3,16 +3,18 @@ import { effectiveCardioWeek, getCardioWeekSchedule, getTodayCardioSession } fro
 import type { TitanCardioSession, TitanPlan } from '../src/features/plan/types';
 
 function session(week: number, day: string, title: string): TitanCardioSession {
-  return { id: `w${week}-${day}`, week, day, title, type: 'run', durationMinutes: 30, startTime: '17:00' } as TitanCardioSession;
+  return { id: `w${week}-${day}`, week, day, title, type: 'run', durationMinutes: 30, startTime: '17:00' };
 }
 
 function plan(cardioSchedule: TitanCardioSession[]): TitanPlan {
   return {
+    schemaVersion: 1,
     id: 'weekly-cardio-test',
     name: 'Cardio semanal',
+    createdAt: '2026-01-05T00:00:00.000Z',
     workouts: [],
-    project: { name: 'Cardio semanal', startDate: '2026-01-05', cardioSchedule },
-  } as TitanPlan;
+    project: { name: 'Cardio semanal', objective: 'Condicionamento', startDate: '2026-01-05', cardioSchedule },
+  };
 }
 
 describe('programação semanal de cardio', () => {
