@@ -65,9 +65,11 @@ Objetivo: separar regras de prescrição da interface.
 - Gerar três candidatos de programação com justificativas. ✅
 - Produzir blueprints determinísticos e testáveis, sem dependência de React ou persistência. ✅
 - Suportar de 1 a 7 dias sem reduzir silenciosamente a frequência informada. ✅
-- Aplicar regras de volume semanal por grupo muscular.
-- Refinar distribuição de frequência e fadiga entre sessões.
-- Criar score interno dos candidatos para recomendar uma opção padrão de forma explicável.
+- Aplicar teto de volume semanal por grupo muscular, com margem controlada para prioridades. ✅
+- Calcular cobertura do volume-alvo, equilíbrio entre sessões e carga de fadiga. ✅
+- Criar score interno dos candidatos e marcar uma recomendação padrão explicável. ✅
+- Expor `recommended`, `titanScore` e métricas para a futura tela das três opções. ✅
+- Refinar distribuição de frequência e fadiga usando histórico real de execução.
 - Integrar contexto futuro de histórico/progressão sem acoplar a Engine ao banco local.
 
 ## v0.60 — Knowledge Base
