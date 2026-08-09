@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { TitanCatalogExercise } from './catalog';
-import { getCatalogExerciseVideo } from './videoRegistry';
+import { getCatalogExerciseVideo } from './videoLibrary';
 import { ExerciseMotionVisual } from './ExerciseMotionVisual';
 
 export function ExerciseVideoPlayer({ exercise }: { exercise: TitanCatalogExercise }) {
