@@ -1,11 +1,12 @@
 import type { TitanCatalogExercise } from './catalog';
 import { SPECIFIC_EXERCISE_VISUALS } from './specificVisuals';
 import { SPECIFIC_EXERCISE_VISUALS_EXTRA } from './specificVisualsExtra';
+import { SPECIFIC_EXERCISE_VISUALS_BATCH3 } from './specificVisualsBatch3';
 
-const ALL_SPECIFIC_VISUALS = { ...SPECIFIC_EXERCISE_VISUALS, ...SPECIFIC_EXERCISE_VISUALS_EXTRA };
+const ALL_SPECIFIC_EXERCISE_VISUALS = { ...SPECIFIC_EXERCISE_VISUALS, ...SPECIFIC_EXERCISE_VISUALS_EXTRA, ...SPECIFIC_EXERCISE_VISUALS_BATCH3 };
 
 export function ExerciseMotionVisual({ exercise, compact = false }: { exercise: TitanCatalogExercise; compact?: boolean }) {
-  const specific = ALL_SPECIFIC_VISUALS[exercise.id];
+  const specific = ALL_SPECIFIC_EXERCISE_VISUALS[exercise.id];
   const generic = visualConfig(exercise.pattern);
   const label = specific?.label ?? generic.label;
   const cue = specific?.cue ?? generic.cue;
