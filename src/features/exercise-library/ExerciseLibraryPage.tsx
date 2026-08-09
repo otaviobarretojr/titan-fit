@@ -3,7 +3,7 @@ import type { TitanCatalogExercise, TitanEquipment } from './catalog';
 import { ExerciseMotionVisual } from './ExerciseMotionVisual';
 import { ExerciseVideoPlayer } from './ExerciseVideoPlayer';
 import { EXERCISE_LIBRARY_MUSCLES, TITAN_FULL_EXERCISE_CATALOG, filterExerciseLibrary } from './library';
-import { getCatalogExerciseVideo, getVideoCoverage } from './videoRegistry';
+import { getCatalogExerciseVideo, getVideoCoverage } from './videoLibrary';
 
 const EQUIPMENT: Array<[TitanEquipment | 'all', string]> = [['all','Todos'],['machine','Máquina'],['cable','Cabo'],['dumbbell','Halteres'],['barbell','Barra'],['bodyweight','Peso corporal']];
 
