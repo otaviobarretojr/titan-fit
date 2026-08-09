@@ -18,6 +18,7 @@ function toEngineExercise(exercise: ReturnType<typeof getEligibleExercises>[numb
     id: exercise.id,
     name: exercise.name,
     primaryMuscle: exercise.primaryMuscle,
+    movementPattern: exercise.pattern,
     repRange: exercise.repRange,
     defaultRir: exercise.defaultRir,
     restSeconds: exercise.restSeconds,
