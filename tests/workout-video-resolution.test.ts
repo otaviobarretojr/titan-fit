@@ -30,9 +30,9 @@ const assessment: TitanTrainingAssessment = {
 };
 
 describe('workout video resolution', () => {
-  it('resolve no modo treino todo vídeo YouTube registrado na Biblioteca TITAN', () => {
+  it('resolve no modo treino toda mídia reproduzível registrada na Biblioteca TITAN', () => {
     for (const [exerciseId, metadata] of Object.entries(TITAN_EXERCISE_VIDEO_REGISTRY)) {
-      if (metadata.provider !== 'youtube' || !metadata.videoId) continue;
+      if (!metadata.videoId && !metadata.videoUrl) continue;
       const catalogExercise = TITAN_FULL_EXERCISE_CATALOG.find((exercise) => exercise.id === exerciseId);
       expect(catalogExercise, `Exercício ${exerciseId} precisa existir no catálogo`).toBeDefined();
       const workoutExercise: TitanExercise = {
@@ -40,7 +40,28 @@ describe('workout video resolution', () => {
         name: catalogExercise!.name,
         muscleGroup: catalogExercise!.primaryMuscle,
       };
-      expect(getExerciseVideo(workoutExercise)?.videoId, `Vídeo não resolvido para ${exerciseId}`).toBe(metadata.videoId);
+      const resolved = getExerciseVideo(workoutExercise);
+      expect(resolved, `Mídia não resolvida para ${exerciseId}`).not.toBeNull();
+      expect(resolved?.provider).toBe(metadata.provider);
+      expect(resolved?.embedUrl, `URL de incorporação ausente para ${exerciseId}`).toBeTruthy();
+      if (metadata.videoId) expect(resolved?.videoId).toBe(metadata.videoId);
+    }
+  });
+
+  it('gera URL Vimeo correta para os quatro vídeos Vimeo cadastrados', () => {
+    const vimeoEntries = Object.entries(TITAN_EXERCISE_VIDEO_REGISTRY).filter(([, metadata]) => metadata.provider === 'vimeo');
+    expect(vimeoEntries).toHaveLength(4);
+
+    for (const [exerciseId, metadata] of vimeoEntries) {
+      const catalogExercise = TITAN_FULL_EXERCISE_CATALOG.find((exercise) => exercise.id === exerciseId);
+      expect(catalogExercise).toBeDefined();
+      const resolved = getExerciseVideo({
+        id: exerciseId,
+        name: catalogExercise!.name,
+        muscleGroup: catalogExercise!.primaryMuscle,
+      });
+      expect(resolved?.provider).toBe('vimeo');
+      expect(resolved?.embedUrl).toBe(`https://player.vimeo.com/video/${metadata.videoId}`);
     }
   });
 
