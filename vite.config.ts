@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: null,
       includeAssets: [
         'favicon.svg',
@@ -36,7 +36,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cacheId: 'titan-fit-v0.37.0',
+        cacheId: 'titan-fit-v0.50.1',
         cleanupOutdatedCaches: true,
         navigateFallback: '/titan-fit/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png}'],
