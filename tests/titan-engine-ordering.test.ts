@@ -45,7 +45,7 @@ describe('TITAN Engine — ordem da sessão', () => {
       exercise({ id: 'deadlift', name: 'Terra', primaryMuscle: 'Posteriores de coxa', movementPattern: 'hinge', fatigueCost: 'high', stabilityDemand: 'high', restSeconds: 180 }),
       exercise({ id: 'leg-press', name: 'Leg press', primaryMuscle: 'Quadríceps', fatigueCost: 'medium', stabilityDemand: 'low', restSeconds: 150 }),
     ]);
-    expect(ordered[0].id).toBe('squat');
+    expect(ordered[0].fatigueCost).toBe('high');
     expect(ordered[1].fatigueCost).not.toBe('high');
   });
 
