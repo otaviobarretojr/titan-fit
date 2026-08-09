@@ -60,8 +60,9 @@ describe('ProjectManagementPanel', () => {
   it('exibe projeto importado e permite associar ao perfil', async () => {
     render(<ProjectManagementPanel onPlanActivated={() => undefined} />);
     expect(await screen.findByText('Hipertrofia 2026')).toBeInTheDocument();
-    expect(screen.getByText('Otávio')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Associar a Otávio' }));
+    const associateButton = screen.getByRole('button', { name: 'Associar a Otávio' });
+    expect(associateButton).toBeEnabled();
+    fireEvent.click(associateButton);
     await waitFor(() => expect(mocks.assignProjectToProfile).toHaveBeenCalledWith('project-1', 'profile-1'));
   });
 
