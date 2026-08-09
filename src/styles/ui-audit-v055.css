@@ -16,10 +16,13 @@
   --tap-min: 48px;
 }
 
-html { font-family: var(--font-sans); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { font-family: var(--font-sans); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; min-height: 100%; overscroll-behavior: none; }
 body, button, input, textarea, select { font-family: var(--font-sans); }
-body { font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-button, input, textarea, select { font-size: 1rem; }
+body { font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; min-height: 100dvh; margin: 0; overflow-x: hidden; overscroll-behavior-y: none; touch-action: pan-y; }
+#root, .app-shell { min-height: 100dvh; width: 100%; overflow-x: clip; }
+.app-shell { position: relative; }
+button, input, textarea, select { font-size: 1rem; touch-action: manipulation; }
+a, button, [role="button"] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
 /* Escala tipográfica única */
 .app-header h1 {
