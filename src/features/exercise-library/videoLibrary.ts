@@ -9,6 +9,7 @@ import { GAP_EXERCISE_VIDEO_BATCH_2 } from './videoRegistryGapBatch2';
 import { GAP_EXERCISE_VIDEO_BATCH_3 } from './videoRegistryGapBatch3';
 import { GAP_EXERCISE_VIDEO_BATCH_4 } from './videoRegistryGapBatch4';
 import { GAP_EXERCISE_VIDEO_BATCH_5 } from './videoRegistryGapBatch5';
+import { VIMEO_EXERCISE_VIDEO_BATCH } from './videoRegistryVimeoBatch';
 import { EXERCISE_VIDEO_REGISTRY, type ExerciseVideoMetadata } from './videoRegistry';
 
 export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
@@ -23,6 +24,7 @@ export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata
   ...GAP_EXERCISE_VIDEO_BATCH_3,
   ...GAP_EXERCISE_VIDEO_BATCH_4,
   ...GAP_EXERCISE_VIDEO_BATCH_5,
+  ...VIMEO_EXERCISE_VIDEO_BATCH,
 };
 
 export function getCatalogExerciseVideo(exercise: Pick<TitanCatalogExercise, 'id'>): ExerciseVideoMetadata | null {
