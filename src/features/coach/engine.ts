@@ -1,3 +1,4 @@
+import { analyzeMuscleTrends } from '../history/trends';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { CoachInsight, CoachReport } from './types';
 
@@ -36,7 +37,31 @@ export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Da
     }
   }
 
-  const priority = insights.find((item) => item.severity === 'attention')
+  for (const trend of analyzeMuscleTrends(workouts)) {
+    if (trend.status === 'fatigued') {
+      insights.push({
+        id: `muscle-fatigue:${trend.muscleGroup}`,
+        severity: 'attention',
+        title: `Fadiga acumulada · ${trend.muscleGroup}`,
+        message: `${trend.message} ${trend.recommendation === 'consider-deload' ? 'Há dados suficientes para considerar uma semana mais leve antes de retomar a progressão.' : ''}`.trim(),
+      });
+      continue;
+    }
+    if (trend.status === 'stalled') {
+      insights.push({ id: `muscle-stalled:${trend.muscleGroup}`, severity: 'attention', title: `Desempenho em queda · ${trend.muscleGroup}`, message: trend.message });
+      continue;
+    }
+    if (trend.status === 'progressing') {
+      insights.push({ id: `muscle-progress:${trend.muscleGroup}`, severity: 'positive', title: `Progressão · ${trend.muscleGroup}`, message: trend.message });
+      continue;
+    }
+    if (trend.recommendation === 'consider-volume-increase') {
+      insights.push({ id: `muscle-volume-opportunity:${trend.muscleGroup}`, severity: 'neutral', title: `Margem de estímulo · ${trend.muscleGroup}`, message: trend.message });
+    }
+  }
+
+  const priority = insights.find((item) => item.id.startsWith('muscle-fatigue:'))
+    ?? insights.find((item) => item.severity === 'attention')
     ?? insights.find((item) => item.severity === 'positive')
     ?? { id: 'priority-start', severity: 'neutral' as const, title: 'Comece registrando', message: 'Use o aplicativo normalmente. O Coach melhora conforme o histórico cresce.' };
 
@@ -44,6 +69,6 @@ export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Da
     score: { total: trainingScore, training: trainingScore, dataConfidence: workouts.length >= 12 ? 'high' : workouts.length >= 4 ? 'medium' : 'low' },
     priority,
     insights,
-    generatedAt: now.toISOString()
+    generatedAt: now.toISOString(),
   };
 }
