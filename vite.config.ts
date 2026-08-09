@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
+import packageInfo from './package.json';
 
 export default defineConfig({
   base: '/titan-fit/',
@@ -36,7 +37,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cacheId: 'titan-fit-v0.50.1',
+        cacheId: `titan-fit-v${packageInfo.version}`,
         cleanupOutdatedCaches: true,
         navigateFallback: '/titan-fit/index.html',
         globPatterns: ['**/*.{js,css,html,svg,png}'],
