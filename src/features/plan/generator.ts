@@ -1,6 +1,7 @@
-import { generateTitanEngineBlueprints, type TitanEngineExercise } from '../../core/titan-engine';
+import { generateTitanEngineBlueprints, type TitanEngineExercise, type TitanEngineTensionBias } from '../../core/titan-engine';
 import { generateCardioSchedule } from '../cardio/generator';
 import { TITAN_COMPLETE_EXERCISE_CATALOG, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
+import type { TitanCatalogExercise } from '../exercise-library/catalog';
 import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
 import type { TitanExerciseAlternative, TitanPlan, TitanWorkoutDay } from './types';
 
@@ -13,12 +14,51 @@ function workoutTitle(focus: string) {
   return 'Legs';
 }
 
+const ISOLATION_IDS = new Set([
+  'cable-fly','pec-deck','dumbbell-fly','straight-arm-pulldown','dumbbell-lateral-raise','cable-lateral-raise','machine-lateral-raise',
+  'rear-delt-fly','cable-rear-delt-fly','face-pull','leg-extension','cable-kickback','hip-abduction-machine','cable-hip-abduction',
+]);
+const LENGTHENED_BIAS_IDS = new Set([
+  'romanian-deadlift','stiff-deadlift','seated-leg-curl','incline-dumbbell-curl','bayesian-curl','overhead-cable-extension','dumbbell-overhead-extension',
+]);
+const SHORTENED_BIAS_IDS = new Set(['barbell-hip-thrust','machine-hip-thrust','glute-bridge','cable-kickback','cable-pushdown','rope-pushdown']);
+
+function exerciseRole(exercise: TitanCatalogExercise): 'compound' | 'isolation' {
+  if (ISOLATION_IDS.has(exercise.id)) return 'isolation';
+  if (['elbow-flexion','elbow-extension','knee-flexion','calf','core'].includes(exercise.pattern)) return 'isolation';
+  return 'compound';
+}
+
+function stabilityDemand(exercise: TitanCatalogExercise): 'low' | 'medium' | 'high' {
+  if (exercise.equipment.includes('machine')) return 'low';
+  if (exercise.equipment.includes('cable')) return 'medium';
+  if (exercise.equipment.includes('barbell') || exercise.equipment.includes('bodyweight')) return 'high';
+  return 'medium';
+}
+
+function fatigueCost(exercise: TitanCatalogExercise): 'low' | 'medium' | 'high' {
+  const role = exerciseRole(exercise);
+  if (role === 'isolation' && exercise.restSeconds <= 90) return 'low';
+  if (exercise.restSeconds >= 150) return 'high';
+  return 'medium';
+}
+
+function tensionBias(exercise: TitanCatalogExercise): TitanEngineTensionBias {
+  if (LENGTHENED_BIAS_IDS.has(exercise.id)) return 'lengthened';
+  if (SHORTENED_BIAS_IDS.has(exercise.id)) return 'shortened';
+  return 'unknown';
+}
+
 function toEngineExercise(exercise: ReturnType<typeof getEligibleExercises>[number]): TitanEngineExercise {
   return {
     id: exercise.id,
     name: exercise.name,
     primaryMuscle: exercise.primaryMuscle,
     movementPattern: exercise.pattern,
+    exerciseRole: exerciseRole(exercise),
+    stabilityDemand: stabilityDemand(exercise),
+    fatigueCost: fatigueCost(exercise),
+    tensionBias: tensionBias(exercise),
     repRange: exercise.repRange,
     defaultRir: exercise.defaultRir,
     restSeconds: exercise.restSeconds,
