@@ -13,9 +13,12 @@
 - Cada candidato recebe métricas de cobertura do volume-alvo, equilíbrio entre sessões, fadiga estimada e adequação da estratégia.
 - A Engine calcula um `Score TITAN` de 0 a 100 e marca exatamente uma das três estratégias como recomendada.
 - Motivos da recomendação são devolvidos de forma explícita e determinística.
-- `GeneratedPlanCandidate` passa a expor `recommended`, `titanScore` e métricas da Engine para a futura tela comparativa.
+- `GeneratedPlanCandidate` passa a expor `recommended`, `titanScore` e métricas da Engine.
+- Tela comparativa mobile das três estratégias passa a exibir Score TITAN, divisão semanal, volume, equilíbrio, fadiga, adequação e justificativas.
+- Destaque “Recomendado pelo TITAN” passa a obedecer a decisão real da Engine, sem estratégia fixa na interface.
+- Usuário continua livre para ativar qualquer uma das três opções; a escolha é vinculada ao fluxo Perfil → Projeto → Plano.
 - A Engine emite warnings quando recebe frequência fora do intervalo suportado ou catálogo vazio.
-- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões, frequência de sete dias, teto de volume e recomendação.
+- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões, frequência de sete dias, teto de volume, recomendação e comparação visual.
 
 ## v0.45 — Profile & Project Core
 
