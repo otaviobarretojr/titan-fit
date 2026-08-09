@@ -25,7 +25,10 @@ export function loadActivePlan(): TitanPlan | null {
 export async function loadActivePlanFromDatabase(): Promise<TitanPlan | null> {
   try {
     const indexedPlan = await getRecord<TitanPlan>(STORE_NAMES.plans, ACTIVE_PLAN_RECORD_ID);
-    if (indexedPlan) return indexedPlan;
+    if (indexedPlan) {
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(indexedPlan));
+      return indexedPlan;
+    }
 
     const legacyPlan = loadLegacyActivePlan();
     if (legacyPlan) {
