@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { loadPlanById, saveActivePlan } from '../plan/storage';
 import type { TitanPlan } from '../plan/types';
 import { loadActiveProfile } from '../profile/repository';
-import { ProfileSettingsPanel } from '../profile/ProfileSettingsPanel';
 import type { TitanProfile } from '../profile/types';
 import { activateProjectRecord, assignProjectToProfile, getActiveProjectId, loadAllProjects, updateProjectStatus } from './repository';
 import type { TitanProjectRecord, TitanProjectStatus } from './types';
@@ -81,28 +80,25 @@ export function ProjectManagementPanel({ onPlanActivated }: Props) {
     }
   }
 
-  return <>
-    <ProfileSettingsPanel />
-    <section className="settings-card project-manager" aria-label="Meus projetos">
-      <div className="project-manager-heading"><div><span className="info-label">MEUS PROJETOS</span><strong>Projetos e ciclos</strong><small>Troque de objetivo sem apagar seu histórico anterior.</small></div><span className="project-count">{projects.length}</span></div>
-      {loading && <p className="project-manager-empty">Carregando projetos…</p>}
-      {!loading && projects.length === 0 && !message && <p className="project-manager-empty">Seu primeiro projeto aparecerá aqui após importar ou gerar um plano.</p>}
-      <div className="project-manager-list">{projects.map((project) => {
-        const isActive = project.id === activeProjectId;
-        const unassigned = !project.profileId;
-        return <article key={project.id} className={`project-manager-item ${isActive ? 'active' : ''}`}>
-          <div className="project-manager-top"><div><strong>{project.name}</strong><small>{project.objective}</small></div><span className={`project-status status-${project.status}`}>{STATUS_LABEL[project.status]}</span></div>
-          <div className="project-manager-meta"><span>{project.source === 'titan-generated' ? 'Gerado pelo TITAN' : project.source === 'manual' ? 'Manual' : 'Importado'}</span><span>{unassigned ? 'Sem perfil associado' : profile?.id === project.profileId ? profile.displayName : 'Outro perfil'}</span></div>
-          <div className="project-manager-actions">
-            {!isActive && project.status !== 'archived' && project.status !== 'completed' && <button type="button" className="secondary-action" onClick={() => void activate(project)}>Ativar projeto</button>}
-            {isActive && <button type="button" className="secondary-action" onClick={() => void changeStatus(project, 'paused')}>Pausar</button>}
-            {project.status === 'paused' && <button type="button" className="text-action" onClick={() => void changeStatus(project, 'completed')}>Concluir</button>}
-            {project.status !== 'active' && project.status !== 'archived' && <button type="button" className="text-action" onClick={() => void changeStatus(project, 'archived')}>Arquivar</button>}
-            {unassigned && profile && <button type="button" className="text-action" onClick={() => void assign(project)}>Associar a {profile.displayName}</button>}
-          </div>
-        </article>;
-      })}</div>
-      {message && <p className="project-manager-message" role="status">{message}</p>}
-    </section>
-  </>;
+  return <section className="settings-card project-manager" aria-label="Meus projetos">
+    <div className="project-manager-heading"><div><span className="info-label">MEUS PROJETOS</span><strong>Projetos e ciclos</strong><small>Troque de objetivo sem apagar seu histórico anterior.</small></div><span className="project-count">{projects.length}</span></div>
+    {loading && <p className="project-manager-empty">Carregando projetos…</p>}
+    {!loading && projects.length === 0 && !message && <p className="project-manager-empty">Seu primeiro projeto aparecerá aqui após importar ou gerar um plano.</p>}
+    <div className="project-manager-list">{projects.map((project) => {
+      const isActive = project.id === activeProjectId;
+      const unassigned = !project.profileId;
+      return <article key={project.id} className={`project-manager-item ${isActive ? 'active' : ''}`}>
+        <div className="project-manager-top"><div><strong>{project.name}</strong><small>{project.objective}</small></div><span className={`project-status status-${project.status}`}>{STATUS_LABEL[project.status]}</span></div>
+        <div className="project-manager-meta"><span>{project.source === 'titan-generated' ? 'Gerado pelo TITAN' : project.source === 'manual' ? 'Manual' : 'Importado'}</span><span>{unassigned ? 'Sem perfil associado' : profile?.id === project.profileId ? profile.displayName : 'Outro perfil'}</span></div>
+        <div className="project-manager-actions">
+          {!isActive && project.status !== 'archived' && project.status !== 'completed' && <button type="button" className="secondary-action" onClick={() => void activate(project)}>Ativar projeto</button>}
+          {isActive && <button type="button" className="secondary-action" onClick={() => void changeStatus(project, 'paused')}>Pausar</button>}
+          {project.status === 'paused' && <button type="button" className="text-action" onClick={() => void changeStatus(project, 'completed')}>Concluir</button>}
+          {project.status !== 'active' && project.status !== 'archived' && <button type="button" className="text-action" onClick={() => void changeStatus(project, 'archived')}>Arquivar</button>}
+          {unassigned && profile && <button type="button" className="text-action" onClick={() => void assign(project)}>Associar a {profile.displayName}</button>}
+        </div>
+      </article>;
+    })}</div>
+    {message && <p className="project-manager-message" role="status">{message}</p>}
+  </section>;
 }
