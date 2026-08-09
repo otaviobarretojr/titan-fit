@@ -6,7 +6,7 @@ import { loadActiveAssessment, loadActiveProfile } from '../features/profile/rep
 import type { TitanProfile, TitanTrainingAssessment } from '../features/profile/types';
 import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
-import { loadActivePlan, saveActivePlan } from '../features/plan/storage';
+import { loadActivePlan, loadActivePlanFromDatabase, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
 import { App } from './App';
 
@@ -26,11 +26,12 @@ export function TitanEntry() {
 
   useEffect(() => {
     if (entryState !== 'loading') return;
-    void loadPlanningContext()
-      .then(({ profile: loadedProfile, assessment: loadedAssessment }) => {
+    void Promise.all([loadPlanningContext(), loadActivePlanFromDatabase()])
+      .then(([{ profile: loadedProfile, assessment: loadedAssessment }, activePlan]) => {
+        if (activePlan) return setEntryState('app');
         if (!loadedProfile?.onboardingCompleted) return setEntryState('onboarding');
-        if (!loadActivePlan() && loadedAssessment) return setEntryState('candidates');
-        setEntryState('app');
+        if (loadedAssessment) return setEntryState('candidates');
+        setEntryState('onboarding');
       })
       .catch(() => setEntryState('onboarding'));
   }, [entryState]);
