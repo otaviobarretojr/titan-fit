@@ -4,8 +4,12 @@ export type {
   TitanEngineCandidateBlueprint,
   TitanEngineExercise,
   TitanEngineExercisePrescription,
+  TitanEngineExerciseRole,
+  TitanEngineFatigueCost,
   TitanEnginePrescriptionRule,
   TitanEngineResult,
+  TitanEngineStabilityDemand,
   TitanEngineStrategy,
+  TitanEngineTensionBias,
   TitanEngineWorkoutBlueprint,
 } from './types';
