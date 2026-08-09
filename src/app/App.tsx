@@ -22,7 +22,7 @@ type TabId = 'today' | 'programming' | 'cardio' | 'progress' | 'settings' | 'wor
 type NavigationTab = Exclude<TabId, 'workout'>;
 type GenerationContext = { profile: TitanProfile; assessment: TitanTrainingAssessment };
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
-const APP_VERSION = '0.38.0';
+const APP_VERSION = '0.50.1';
 const tabs: Array<{ id: NavigationTab; label: string }> = [
   { id: 'today', label: 'Hoje' }, { id: 'programming', label: 'Programação' }, { id: 'cardio', label: 'Cardio' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Configurações' }
 ];
