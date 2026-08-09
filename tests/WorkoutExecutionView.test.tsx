@@ -75,4 +75,15 @@ describe('WorkoutExecutionView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ver progresso' }));
     expect(onCompleted).toHaveBeenCalledOnce();
   });
+
+  it('renderiza corretamente vídeo Vimeo no modo treino', () => {
+    const vimeoWorkout: TitanWorkoutDay = {
+      id: 'pull-vimeo', day: 'Terça', title: 'Pull Vimeo',
+      exercises: [{ id: 'underhand', name: 'Puxada supinada', muscleGroup: 'Dorsais', exerciseType: 'strength', sets: 3, minReps: 8, maxReps: 12, targetRir: 2, restSeconds: 90 }]
+    };
+    const { container } = render(<WorkoutExecutionView planId="plan-vimeo" planName="Plano Vimeo" workout={vimeoWorkout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    const iframe = container.querySelector('iframe');
+    expect(iframe).not.toBeNull();
+    expect(iframe?.getAttribute('src')).toContain('player.vimeo.com/video/1098112218');
+  });
 });
