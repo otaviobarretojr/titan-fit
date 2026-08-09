@@ -1,6 +1,17 @@
 # Changelog
 
-## v0.40 — Base TITAN de prescrição
+## v0.40 — Foundation Upgrade + base TITAN de prescrição
+
+### Fundação
+
+- Arquitetura atualizada para refletir React, PWA, IndexedDB, perfil, planos, cardio, histórico, backup e Coach já existentes no código.
+- Modelo de dados alvo formalizado com relações por `profileId` e `projectId`.
+- Estratégia de migração definida para retirar dados de domínio do localStorage sem apagar registros existentes.
+- Modelo futuro de projetos estabelecido para suportar geração TITAN, importação e edição manual sobre contratos compatíveis.
+- Separação conceitual oficial entre TITAN FIT UI, TITAN Engine, Knowledge Base e TITAN Data.
+- Dívidas técnicas prioritárias registradas: versão técnica, plano ativo global, transição para IndexedDB e responsabilidades concentradas no `App.tsx`.
+
+### Base de prescrição
 
 - Catálogo estruturado inicial de exercícios por músculo, padrão de movimento, equipamento e experiência mínima.
 - Técnica, erros comuns, substituições, faixas de repetição, RIR e descanso incorporados ao catálogo.
