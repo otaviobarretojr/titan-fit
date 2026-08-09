@@ -1,4 +1,5 @@
 import { decideTitanProgression, type TitanProgressionDecision, type TitanProgressionPrescription } from '../../core/titan-engine';
+import { TITAN_COMPLETE_EXERCISE_CATALOG } from '../exercise-library/prescription';
 import type { HistoryExercise, WorkoutHistoryRecord } from './types';
 
 export type StrengthPr = {
@@ -38,14 +39,15 @@ export function calculateStrengthPr(records: WorkoutHistoryRecord[], exerciseId:
 }
 
 export function getProgressionAdvice(records: WorkoutHistoryRecord[], exerciseId: string, prescription: ProgressionPrescription = {}): ProgressionAdvice {
+  const catalogExercise = TITAN_COMPLETE_EXERCISE_CATALOG.find((exercise) => exercise.id === exerciseId);
   const sessions = getExerciseSessions(records, exerciseId)
     .filter(({ exercise }) => (exercise.exerciseType ?? 'strength') === 'strength')
     .slice(0, 3)
     .map(({ exercise }) => ({ sets: exercise.sets.map((set) => ({ weightKg: set.weightKg, repetitions: set.repetitions, rir: set.rir })) }));
   return decideTitanProgression(sessions, {
-    minReps: prescription.minReps ?? 6,
-    maxReps: prescription.maxReps ?? 12,
-    targetRir: prescription.targetRir ?? 2,
+    minReps: prescription.minReps ?? catalogExercise?.repRange[0] ?? 6,
+    maxReps: prescription.maxReps ?? catalogExercise?.repRange[1] ?? 12,
+    targetRir: prescription.targetRir ?? catalogExercise?.defaultRir ?? 2,
     loadIncrementPercent: prescription.loadIncrementPercent,
   });
 }
