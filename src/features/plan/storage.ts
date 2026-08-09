@@ -1,5 +1,6 @@
 import { deleteRecord, getRecord, putRecord } from '../../core/database/indexedDb';
 import { STORE_NAMES } from '../../core/database/schema';
+import { linkPlanToProject } from '../project/repository';
 import type { TitanPlan } from './types';
 
 const ACTIVE_PLAN_KEY = 'titan-fit.active-plan.v1';
@@ -36,14 +37,20 @@ export async function loadActivePlanFromDatabase(): Promise<TitanPlan | null> {
 
     const indexedLegacyPlan = await getRecord<TitanPlan>(STORE_NAMES.plans, LEGACY_ACTIVE_PLAN_RECORD_ID);
     if (indexedLegacyPlan) {
-      await persistActivePlan(indexedLegacyPlan);
-      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(indexedLegacyPlan));
-      return indexedLegacyPlan;
+      const linkedPlan = indexedLegacyPlan.projectId ? indexedLegacyPlan : await linkPlanToProject(indexedLegacyPlan, indexedLegacyPlan.profileId ?? null);
+      await persistActivePlan(linkedPlan);
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(linkedPlan));
+      return linkedPlan;
     }
 
     const legacyPlan = loadLegacyActivePlan();
-    if (legacyPlan) await persistActivePlan(legacyPlan);
-    return legacyPlan;
+    if (legacyPlan) {
+      const linkedPlan = legacyPlan.projectId ? legacyPlan : await linkPlanToProject(legacyPlan, legacyPlan.profileId ?? null);
+      await persistActivePlan(linkedPlan);
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(linkedPlan));
+      return linkedPlan;
+    }
+    return null;
   } catch (error) {
     reportMirrorFailure(error);
     return loadLegacyActivePlan();
@@ -58,7 +65,11 @@ async function persistActivePlan(plan: TitanPlan): Promise<void> {
 
 export function saveActivePlan(plan: TitanPlan): void {
   localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(plan));
-  void persistActivePlan(plan).catch(reportMirrorFailure);
+  void (async () => {
+    const linkedPlan = plan.projectId ? plan : await linkPlanToProject(plan, plan.profileId ?? null);
+    if (linkedPlan !== plan) localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(linkedPlan));
+    await persistActivePlan(linkedPlan);
+  })().catch(reportMirrorFailure);
 }
 
 export function removeActivePlan(): void {
