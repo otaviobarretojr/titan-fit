@@ -105,9 +105,9 @@ describe('TITAN Engine', () => {
   it('evita clonar sessões repetidas quando há alternativas equivalentes no pool', () => {
     const richPool: TitanEngineExercise[] = [
       { ...exercises[1], id: 'press-a' }, { ...exercises[1], id: 'press-b' }, { ...exercises[2], id: 'fly-a' },
-      { ...exercises[0], id: 'row-a' }, { ...exercises[0], id: 'row-b' },
+      { ...exercises[0], id: 'row-a' }, { ...exercises[0], id: 'row-b' }, { ...exercises[0], id: 'row-c' },
       { ...exercises[3], id: 'squat-a' }, { ...exercises[3], id: 'squat-b' },
-      { ...exercises[4], id: 'curl-a' }, { ...exercises[4], id: 'curl-b' },
+      { ...exercises[4], id: 'curl-a' }, { ...exercises[4], id: 'curl-b' }, { ...exercises[4], id: 'curl-c' },
       { id: 'triceps-a', name: 'Tríceps', primaryMuscle: 'Tríceps', movementPattern: 'elbow-extension', repRange: [8, 15], defaultRir: 1, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
       { id: 'shoulder-a', name: 'Desenvolvimento', primaryMuscle: 'Deltoides', movementPattern: 'vertical-push', repRange: [6, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
       { id: 'ham-a', name: 'RDL', primaryMuscle: 'Posteriores de coxa', movementPattern: 'hinge', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: '', commonMistakes: [], substitutions: [] },
