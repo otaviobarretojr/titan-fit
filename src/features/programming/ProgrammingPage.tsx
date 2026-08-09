@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { effectiveCardioWeek, getCardioWeekSchedule } from '../cardio/currentCardio';
 import { ExerciseLibraryPage } from '../exercise-library/ExerciseLibraryPage';
 import type { TitanCardioSession, TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 
@@ -14,7 +15,8 @@ export function ProgrammingPage({ plan }: Props) {
   const [activeTab, setActiveTab] = useState<ProgrammingTab>('strength');
   const today = JS_DAY_TO_TITAN[new Date().getDay()];
   const strength = useMemo(() => !plan ? [] : [...plan.workouts].filter((workout) => workout.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength')).sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
-  const cardio = useMemo(() => !plan ? [] : [...(plan.project?.cardioSchedule ?? [])].sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
+  const cardio = useMemo(() => !plan ? [] : getCardioWeekSchedule(plan).sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
+  const cardioWeek = plan ? effectiveCardioWeek(plan) : 1;
 
   if (selected?.type === 'strength') return <StrengthDetail workout={selected.workout} onBack={() => setSelected(null)} />;
   if (selected?.type === 'cardio') return <CardioDetail cardio={selected.cardio} onBack={() => setSelected(null)} />;
@@ -44,10 +46,10 @@ export function ProgrammingPage({ plan }: Props) {
     </>)}
 
     {activeTab === 'cardio' && (!plan ? <ProgrammingEmpty kind="cardio" /> : <>
-      <section className="programming-today cardio-summary" aria-label="Cardio de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayCardio.length ? todayCardio.map((item) => item.title).join(' + ') : 'Cardio a definir'}</h3><p>{todayCardio.length ? todayCardio.map((item) => `${item.durationMinutes} min · ${cardioZone(item)}${item.startTime ? ` · ${item.startTime}` : ''}`).join('  •  ') : 'Sem sessão configurada no projeto'}</p></div></section>
-      <section className="programming-section" aria-labelledby="cardio-program-title"><div className="programming-section-head"><div><span className="programming-section-icon cardio">♡</span><div><span className="eyebrow">CARDIO</span><h3 id="cardio-program-title">Cardio da semana</h3></div></div><small>{cardio.length} sessões</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
+      <section className="programming-today cardio-summary" aria-label="Cardio de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()} · SEMANA {cardioWeek}</span><h3>{todayCardio.length ? todayCardio.map((item) => item.title).join(' + ') : 'Cardio a definir'}</h3><p>{todayCardio.length ? todayCardio.map((item) => `${item.durationMinutes} min · ${cardioZone(item)}${item.startTime ? ` · ${item.startTime}` : ''}`).join('  •  ') : 'Sem sessão configurada para este dia'}</p></div></section>
+      <section className="programming-section" aria-labelledby="cardio-program-title"><div className="programming-section-head"><div><span className="programming-section-icon cardio">♡</span><div><span className="eyebrow">CARDIO · SEMANA {cardioWeek}</span><h3 id="cardio-program-title">Cardio da semana</h3></div></div><small>{cardio.length} sessões</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
         const sessions = cardio.filter((item) => normalize(item.day).includes(day)); const isToday = day === today; const isTomorrow = day === nextDay;
-        if (!sessions.length) return <article className={`programming-day-card unconfigured${isToday ? ' today' : ''}`} key={`cardio-${day}`}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>Cardio a definir</strong><small>Sem sessão configurada no projeto</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} fallback="A DEFINIR" /></article>;
+        if (!sessions.length) return <article className={`programming-day-card unconfigured${isToday ? ' today' : ''}`} key={`cardio-${day}`}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>Cardio a definir</strong><small>Sem sessão configurada para este dia</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} fallback="A DEFINIR" /></article>;
         return sessions.map((session) => <button type="button" className={`programming-day-card${isToday ? ' today cardio-today' : ''}`} key={session.id} onClick={() => setSelected({ type: 'cardio', cardio: session })}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>{session.title}</strong><small>{session.durationMinutes} min · {cardioZone(session)}{session.startTime ? ` · ${session.startTime}` : ''}</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} /></button>);
       })}</div></section>
     </>)}

@@ -13,15 +13,41 @@ export function currentProjectWeek(plan: TitanPlan, now = new Date()) {
   return Math.max(1, Math.floor(elapsedDays / 7) + 1);
 }
 
-export function getTodayCardioSession(plan: TitanPlan, now = new Date()): TitanCardioSession | null {
+export function getPlannedCardioWeeks(plan: TitanPlan) {
+  return [...new Set((plan.project?.cardioSchedule ?? [])
+    .map((session) => session.week)
+    .filter((week): week is number => typeof week === 'number' && Number.isFinite(week) && week > 0))]
+    .sort((a, b) => a - b);
+}
+
+export function effectiveCardioWeek(plan: TitanPlan, now = new Date()) {
+  const plannedWeeks = getPlannedCardioWeeks(plan);
+  if (!plannedWeeks.length) return currentProjectWeek(plan, now);
+  const projectWeek = currentProjectWeek(plan, now);
+  const reachedWeeks = plannedWeeks.filter((week) => week <= projectWeek);
+  return reachedWeeks.at(-1) ?? plannedWeeks[0];
+}
+
+export function getCardioWeekSchedule(plan: TitanPlan, now = new Date()) {
   const schedule = plan.project?.cardioSchedule ?? [];
+  if (!schedule.length) return [];
+  const plannedWeeks = getPlannedCardioWeeks(plan);
+  if (!plannedWeeks.length) return [...schedule];
+
+  const activeWeek = effectiveCardioWeek(plan, now);
+  const weekly = schedule.filter((session) => session.week === activeWeek);
+  const recurring = schedule.filter((session) => session.week === undefined);
+  if (!recurring.length) return weekly;
+
+  const daysWithWeeklySession = new Set(weekly.map((session) => weekdayFromValue(session.day)).filter(Boolean));
+  return [...weekly, ...recurring.filter((session) => !daysWithWeeklySession.has(weekdayFromValue(session.day)))];
+}
+
+export function getTodayCardioSession(plan: TitanPlan, now = new Date()): TitanCardioSession | null {
+  const schedule = getCardioWeekSchedule(plan, now);
   if (!schedule.length) return null;
   const today = WEEKDAYS[now.getDay()];
-  const week = currentProjectWeek(plan, now);
-  const sameDay = schedule.filter((session) => normalizeDay(session.day).includes(today));
-  return sameDay.find((session) => session.week === week)
-    ?? sameDay.find((session) => session.week === undefined)
-    ?? null;
+  return schedule.find((session) => normalizeDay(session.day).includes(today)) ?? null;
 }
 
 export function cardioZoneLabel(session: TitanCardioSession | null) {
@@ -34,6 +60,11 @@ export function cardioZoneLabel(session: TitanCardioSession | null) {
   if (session.type === 'bike') return 'Bike';
   if (session.type === 'stairs') return 'Escada';
   return 'Cardio';
+}
+
+function weekdayFromValue(value: string) {
+  const normalized = normalizeDay(value);
+  return WEEKDAYS.find((day) => normalized.includes(day)) ?? '';
 }
 
 function startOfDay(value: Date) {
