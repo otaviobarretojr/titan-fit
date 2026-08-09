@@ -3,11 +3,11 @@ import { TITAN_FULL_EXERCISE_CATALOG } from './library';
 import { getCatalogExerciseVideo, getVideoCoverage } from './videoLibrary';
 
 describe('Biblioteca TITAN em Vídeo — lote comum', () => {
-  it('mantém ao menos 66 exercícios com vídeo', () => {
-    expect(getVideoCoverage(TITAN_FULL_EXERCISE_CATALOG).covered).toBeGreaterThanOrEqual(66);
+  it('mantém ao menos 70 exercícios com vídeo', () => {
+    expect(getVideoCoverage(TITAN_FULL_EXERCISE_CATALOG).covered).toBeGreaterThanOrEqual(70);
   });
 
-  it.each(['push-up','weighted-push-up','dumbbell-row','barbell-row','goblet-squat','bulgarian-split-squat','walking-lunge','barbell-hip-thrust','dumbbell-curl','hammer-curl','cable-fly','close-grip-bench','step-up','dumbbell-fly','cable-pull-through','inverted-row'])('%s possui vídeo mapeado', (id) => {
+  it.each(['push-up','weighted-push-up','dumbbell-row','barbell-row','goblet-squat','bulgarian-split-squat','walking-lunge','barbell-hip-thrust','dumbbell-curl','hammer-curl','cable-fly','close-grip-bench','step-up','dumbbell-fly','cable-pull-through','inverted-row','hanging-leg-raise','hanging-knee-raise','concentration-curl','standing-leg-curl'])('%s possui vídeo mapeado', (id) => {
     const exercise = TITAN_FULL_EXERCISE_CATALOG.find((item) => item.id === id);
     expect(exercise).toBeTruthy();
     expect(exercise && getCatalogExerciseVideo(exercise)).toBeTruthy();
