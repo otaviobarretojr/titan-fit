@@ -1,0 +1,225 @@
+/* TITAN FIT v0.55 — auditoria global de UI
+   Camada final de estabilização visual. Mantém os módulos atuais e corrige
+   diferenças acumuladas de tipografia, espaçamento e densidade entre versões. */
+
+:root {
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --page-inline: 16px;
+  --card-radius: 22px;
+  --control-radius: 14px;
+  --tap-min: 48px;
+}
+
+html { font-family: var(--font-sans); -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body, button, input, textarea, select { font-family: var(--font-sans); }
+body { font-size: 16px; line-height: 1.45; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+button, input, textarea, select { font-size: 1rem; }
+
+/* Escala tipográfica única */
+.app-header h1 {
+  font-size: 1.05rem !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+  letter-spacing: -.02em !important;
+}
+
+.eyebrow,
+.info-label {
+  font-size: .69rem !important;
+  line-height: 1.25 !important;
+  font-weight: 800 !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase;
+}
+
+.section-header h2,
+.dashboard-heading h2,
+.cardio-hero h2,
+.evolution-center-header h2,
+.programming-header h2,
+.exercise-library-header h2,
+.programming-detail-hero h2,
+.profile-hero h1,
+.hero-card h2 {
+  font-size: clamp(1.72rem, 7vw, 2.1rem) !important;
+  line-height: 1.08 !important;
+  font-weight: 780 !important;
+  letter-spacing: -.035em !important;
+}
+
+h3,
+.cardio-section-title h3,
+.programming-section-head h3,
+.today-workout h3,
+.today-rest-card h3 {
+  font-size: 1.04rem;
+  line-height: 1.28;
+  font-weight: 760;
+  letter-spacing: -.018em;
+}
+
+p, small { line-height: 1.5; }
+small { font-size: .76rem; }
+
+/* Ritmo vertical comum entre todas as abas */
+.app-main { padding: 18px var(--page-inline) 30px !important; }
+.section-header,
+.cardio-hero,
+.evolution-center-header,
+.programming-header,
+.exercise-library-header {
+  margin: 0 0 16px !important;
+  padding: 6px 2px 2px !important;
+}
+.section-header p,
+.cardio-hero p,
+.evolution-center-header p,
+.programming-header p,
+.exercise-library-header p { margin-top: 7px !important; }
+
+.dashboard-page-clean,
+.cardio-page,
+.programming-page,
+.pr-hall-view,
+.body-dashboard-v22,
+.training-evolution-view,
+.exercise-library-page { gap: 14px !important; }
+
+/* Cartões: mesma densidade e raio, exceto superfícies deliberadamente especiais */
+.settings-card,
+.import-card,
+.cardio-session-card,
+.cardio-highlight-card,
+.cardio-last-card,
+.cardio-evolution-card,
+.history-session-card,
+.history-exercise-card,
+.latest-assessment-card,
+.body-comparison-section,
+.body-chart-section,
+.body-photo-section,
+.programming-section,
+.programming-today,
+.programming-detail-hero,
+.programming-instructions,
+.exercise-library-card,
+.exercise-library-detail,
+.weekly-coach-summary,
+.dashboard-coach-card {
+  border-radius: var(--card-radius) !important;
+}
+
+.settings-card,
+.import-card,
+.cardio-session-card,
+.cardio-highlight-card,
+.cardio-last-card,
+.cardio-evolution-card,
+.latest-assessment-card,
+.body-comparison-section,
+.body-chart-section,
+.body-photo-section,
+.programming-detail-hero,
+.programming-instructions,
+.weekly-coach-summary,
+.dashboard-coach-card { padding: 16px !important; }
+
+.settings-card + .settings-card { margin-top: 12px !important; }
+.settings-card { gap: 12px !important; }
+.settings-card strong { line-height: 1.3; }
+
+/* Controles consistentes e confortáveis para toque */
+.primary-action,
+.secondary-action,
+.danger-action,
+.profile-save,
+.programming-tabs button,
+.evolution-switch button,
+.cardio-mode-grid button {
+  min-height: var(--tap-min) !important;
+  border-radius: var(--control-radius) !important;
+  font-weight: 750 !important;
+}
+
+.primary-action { margin-top: 16px !important; }
+.primary-action:first-child { margin-top: 0 !important; }
+
+input, textarea, select {
+  min-height: 48px;
+  border-radius: 13px !important;
+  line-height: 1.35;
+}
+textarea { min-height: 96px; padding-block: 12px; }
+label { line-height: 1.35; }
+
+/* Navegação: rótulos legíveis e sem competição visual */
+.bottom-navigation button {
+  min-height: 60px !important;
+  gap: 4px !important;
+  font-size: .71rem !important;
+  line-height: 1.15 !important;
+  font-weight: 720 !important;
+}
+.nav-icon-wrap { flex: 0 0 auto; }
+
+/* Home: reduz título desproporcional e melhora leitura dos pequenos indicadores */
+.dashboard-heading { padding: 8px 2px 0 !important; }
+.dashboard-heading h2 { font-size: clamp(1.82rem, 7.5vw, 2.18rem) !important; }
+.dashboard-heading p { margin-top: 5px !important; font-size: .82rem; }
+.today-workout { padding: 18px !important; border-radius: 24px !important; }
+.today-workout-topline { gap: 8px; }
+.today-workout-metrics { gap: 12px; }
+.coach-weekly-metrics small,
+.titan-score-pillars small,
+.dashboard-cardio-stats small { font-size: .68rem !important; }
+
+/* Programação / biblioteca: evita blocos excessivamente apertados */
+.programming-tabs { margin-bottom: 14px !important; gap: 6px !important; }
+.programming-day-card { min-height: 72px; }
+.programming-day-copy small { line-height: 1.4; }
+.exercise-library-toolbar { gap: 10px !important; }
+.exercise-library-card { min-height: 76px; }
+
+/* Cardio: hierarquia mais neutra para diferentes objetivos do usuário */
+.cardio-section { margin-top: 2px; }
+.cardio-section-title { margin-bottom: 10px; }
+.cardio-live-timer { letter-spacing: -.04em; }
+.cardio-input-grid label > span { font-size: .72rem; font-weight: 750; }
+
+/* Evolução / treino: valores grandes sem esmagar os rótulos */
+.latest-metric-grid strong,
+.comparison-item strong,
+.training-evolution-view .progress-summary strong { line-height: 1.15; }
+.evolution-switch { margin-bottom: 14px !important; }
+
+/* Estados vazios e mensagens */
+.hero-card.compact,
+.history-empty,
+.cardio-empty,
+.empty-evolution,
+.programming-empty { padding: 20px !important; border-radius: 22px !important; }
+
+@media (max-width: 390px) {
+  :root { --page-inline: 15px; }
+  .section-header h2,
+  .cardio-hero h2,
+  .evolution-center-header h2,
+  .programming-header h2,
+  .exercise-library-header h2,
+  .dashboard-heading h2 { font-size: 1.8rem !important; }
+  .settings-card,
+  .cardio-session-card,
+  .programming-detail-hero,
+  .dashboard-coach-card { padding: 15px !important; }
+}
+
+@media (max-width: 350px) {
+  :root { --page-inline: 13px; }
+  .bottom-navigation button { font-size: .66rem !important; }
+}

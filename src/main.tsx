@@ -44,6 +44,7 @@ import './styles/workout-mode-v038.css';
 import './styles/profile-onboarding.css';
 import './styles/beta-v045.css';
 import './styles/exercise-library-v048.css';
+import './styles/ui-audit-v055.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
