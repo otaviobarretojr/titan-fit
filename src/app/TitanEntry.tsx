@@ -5,10 +5,12 @@ import { ProfileOnboarding } from '../features/profile/ProfileOnboarding';
 import { loadActiveAssessment, loadActiveProfile } from '../features/profile/repository';
 import type { TitanProfile, TitanTrainingAssessment } from '../features/profile/types';
 import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
-import { loadActivePlan } from '../features/plan/storage';
+import { PlanImporter } from '../features/plan/PlanImporter';
+import { loadActivePlan, saveActivePlan } from '../features/plan/storage';
+import type { TitanPlan } from '../features/plan/types';
 import { App } from './App';
 
-type EntryState = 'loading' | 'onboarding' | 'candidates' | 'app';
+type EntryState = 'loading' | 'onboarding' | 'import' | 'candidates' | 'app';
 
 export function TitanEntry() {
   const [entryState, setEntryState] = useState<EntryState>(() => loadActivePlan() ? 'app' : 'loading');
@@ -42,6 +44,12 @@ export function TitanEntry() {
     setEntryState('app');
   }
 
+  function activateImportedPlan(plan: TitanPlan) {
+    saveActivePlan(plan);
+    window.history.replaceState({ ...window.history.state, titanTab: 'today' }, '');
+    setEntryState('app');
+  }
+
   if (entryState === 'loading') {
     return <main className="profile-onboarding"><section className="profile-hero"><span className="eyebrow">TITAN FIT</span><h1>Preparando seu espaço…</h1></section></main>;
   }
@@ -51,12 +59,21 @@ export function TitanEntry() {
       onComplete={() => {
         void loadPlanningContext().then(() => setEntryState('candidates'));
       }}
-      onImportProject={() => {
-        window.history.replaceState({ ...window.history.state, titanTab: 'settings' }, '');
-        setEntryState('app');
-      }}
+      onImportProject={() => setEntryState('import')}
       onActivateDemo={() => void activateDemo()}
     />;
+  }
+
+  if (entryState === 'import') {
+    return <main className="profile-onboarding onboarding-import-flow">
+      <section className="profile-hero">
+        <button type="button" className="profile-back" onClick={() => setEntryState('onboarding')}>← Voltar</button>
+        <span className="eyebrow">INSERIR MEU PROJETO</span>
+        <h1>Importe seu projeto</h1>
+        <p>Selecione o arquivo do projeto. O TITAN valida a estrutura antes de ativá-lo.</p>
+      </section>
+      <PlanImporter onImport={activateImportedPlan} />
+    </main>;
   }
 
   if (entryState === 'candidates' && profile && assessment) {
