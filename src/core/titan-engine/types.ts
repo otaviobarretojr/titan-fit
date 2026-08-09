@@ -2,6 +2,7 @@ export type TitanEngineStrategy = 'adherence' | 'balanced' | 'availability';
 export type TitanEngineExperience = 'beginner' | 'intermediate' | 'advanced';
 export type TitanEngineEquipmentAccess = 'full-gym' | 'home-gym' | 'minimal' | 'bodyweight';
 export type TitanEngineMusclePriority = 'chest' | 'back' | 'shoulders' | 'arms' | 'quadriceps' | 'hamstrings-glutes' | 'calves' | 'core';
+export type TitanEngineMovementPattern = 'horizontal-push' | 'vertical-push' | 'horizontal-pull' | 'vertical-pull' | 'squat' | 'hinge' | 'knee-flexion' | 'elbow-flexion' | 'elbow-extension' | 'calf' | 'core';
 
 export type TitanEngineLimitation = { area: string; note?: string };
 
@@ -20,6 +21,7 @@ export type TitanEngineExercise = {
   id: string;
   name: string;
   primaryMuscle: string;
+  movementPattern?: TitanEngineMovementPattern;
   repRange: [number, number];
   defaultRir: number;
   restSeconds: number;
