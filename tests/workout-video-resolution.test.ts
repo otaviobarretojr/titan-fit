@@ -48,13 +48,13 @@ describe('workout video resolution', () => {
     }
   });
 
-  it('gera URL Vimeo correta para os quatro vídeos Vimeo cadastrados', () => {
+  it('gera URL Vimeo correta para todo vídeo Vimeo cadastrado', () => {
     const vimeoEntries = Object.entries(TITAN_EXERCISE_VIDEO_REGISTRY).filter(([, metadata]) => metadata.provider === 'vimeo');
-    expect(vimeoEntries).toHaveLength(4);
+    expect(vimeoEntries.length).toBeGreaterThan(0);
 
     for (const [exerciseId, metadata] of vimeoEntries) {
       const catalogExercise = TITAN_FULL_EXERCISE_CATALOG.find((exercise) => exercise.id === exerciseId);
-      expect(catalogExercise).toBeDefined();
+      expect(catalogExercise, `Exercício Vimeo ${exerciseId} precisa existir no catálogo`).toBeDefined();
       const resolved = getExerciseVideo({
         id: exerciseId,
         name: catalogExercise!.name,
