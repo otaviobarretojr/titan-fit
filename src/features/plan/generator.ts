@@ -1,8 +1,8 @@
 import { generateTitanEngineBlueprints, type TitanEngineExercise } from '../../core/titan-engine';
 import { generateCardioSchedule } from '../cardio/generator';
-import { getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
+import { TITAN_COMPLETE_EXERCISE_CATALOG, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
 import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
-import type { TitanPlan, TitanWorkoutDay } from './types';
+import type { TitanExerciseAlternative, TitanPlan, TitanWorkoutDay } from './types';
 
 function workoutTitle(focus: string) {
   if (focus === 'full-body') return 'Full Body';
@@ -24,6 +24,23 @@ function toEngineExercise(exercise: ReturnType<typeof getEligibleExercises>[numb
     technique: exercise.technique,
     commonMistakes: exercise.commonMistakes,
     substitutions: exercise.substitutions,
+  };
+}
+
+function toStructuredAlternative(id: string): TitanExerciseAlternative | null {
+  const exercise = TITAN_COMPLETE_EXERCISE_CATALOG.find((item) => item.id === id);
+  if (!exercise) return null;
+  return {
+    id: exercise.id,
+    name: exercise.name,
+    muscleGroup: exercise.primaryMuscle,
+    exerciseType: 'strength',
+    minReps: exercise.repRange[0],
+    maxReps: exercise.repRange[1],
+    targetRir: exercise.defaultRir,
+    restSeconds: exercise.restSeconds,
+    technique: exercise.technique,
+    commonMistakes: exercise.commonMistakes,
   };
 }
 
@@ -52,20 +69,28 @@ export function generateTitanPlanCandidates(
       day: workout.dayLabel,
       title: workoutTitle(workout.focus),
       focus: workout.focus,
-      exercises: workout.exercises.map((exercise) => ({
-        id: exercise.id,
-        name: exercise.name,
-        muscleGroup: exercise.primaryMuscle,
-        exerciseType: 'strength',
-        sets: exercise.sets,
-        minReps: exercise.repRange[0],
-        maxReps: exercise.repRange[1],
-        targetRir: exercise.defaultRir,
-        restSeconds: exercise.restSeconds,
-        technique: exercise.technique,
-        commonMistakes: exercise.commonMistakes,
-        alternatives: exercise.substitutions,
-      })),
+      exercises: workout.exercises.map((exercise) => {
+        const structuredAlternatives = exercise.substitutions
+          .map(toStructuredAlternative)
+          .filter((item): item is TitanExerciseAlternative => Boolean(item));
+        const resolvedIds = new Set(structuredAlternatives.map((item) => item.id));
+        const unresolvedAlternatives = exercise.substitutions.filter((id) => !resolvedIds.has(id));
+        return {
+          id: exercise.id,
+          name: exercise.name,
+          muscleGroup: exercise.primaryMuscle,
+          exerciseType: 'strength' as const,
+          sets: exercise.sets,
+          minReps: exercise.repRange[0],
+          maxReps: exercise.repRange[1],
+          targetRir: exercise.defaultRir,
+          restSeconds: exercise.restSeconds,
+          technique: exercise.technique,
+          commonMistakes: exercise.commonMistakes,
+          alternatives: unresolvedAlternatives.length ? unresolvedAlternatives : undefined,
+          alternativeExercises: structuredAlternatives.length ? structuredAlternatives : undefined,
+        };
+      }),
     }));
 
     const rationale = [...candidate.rationale];
