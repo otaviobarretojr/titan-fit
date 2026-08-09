@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { loadWorkoutHistory } from './storage';
 import type { WorkoutHistoryRecord } from './types';
 
@@ -11,7 +11,8 @@ function formatDuration(seconds: number) { const minutes = Math.round(seconds / 
 function completedRecords(record: WorkoutHistoryRecord) { return record.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0); }
 
 export function HistoryPage({ refreshKey = 0 }: HistoryPageProps) {
-  const records = useMemo(() => loadWorkoutHistory(), [refreshKey]);
+  void refreshKey;
+  const records = loadWorkoutHistory();
   const [selected, setSelected] = useState<WorkoutHistoryRecord | null>(null);
 
   if (selected) return <section className="history-detail-screen">
