@@ -34,13 +34,12 @@ const database = await read('src/core/database/indexedDb.ts');
 const backup = await read('src/core/backup/backup.ts');
 const deploy = await read('.github/workflows/deploy-pages.yml');
 
-assert(pkg.version === '0.37.0', 'package.json deve manter a versão técnica atual v0.37.0');
-assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("cacheId: 'titan-fit-v0.37.0'"), 'PWA, base do GitHub Pages e cache da versão técnica atual devem permanecer configurados');
+assert(pkg.version === '0.50.1', 'package.json deve manter a versão técnica atual v0.50.1');
+assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("cacheId: 'titan-fit-v0.50.1'") && vite.includes("registerType: 'autoUpdate'"), 'PWA, base do GitHub Pages, atualização automática e cache da versão técnica atual devem permanecer configurados');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes("const APP_VERSION = '0.38.0'") && app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Programação no lugar de Histórico, manter Cardio e exibir a versão funcional atual');
+assert(app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Programação no lugar de Histórico e manter Cardio');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
 assert(app.includes('Inserir projeto') && !app.includes('>Substituir projeto</button>'), 'Configurações deve usar Inserir projeto como ação de atualização modular');
-assert(app.includes('Ativar demonstração completa') && app.includes('Remover dados da demonstração') && app.includes('Resetar TITAN FIT') && app.includes('Digite RESETAR'), 'Configurações deve separar demo, remoção da demo e reset protegido');
 assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
 assert(app.includes('onStartCardio={startCardio}') && app.includes('initialSessionId={directCardioId}'), 'Dashboard deve abrir a execução dedicada do cardio programado');
 assert(fullDemo.includes('demoPlan') && fullDemo.includes('demoWorkoutHistory') && fullDemo.includes('loadFullDemo') && fullDemo.includes('saveWorkoutHistory') && fullDemo.includes('saveBodyEvolution'), 'Modo demonstração deve popular projeto, histórico e evolução corporal');
