@@ -1,8 +1,11 @@
 import type { TitanCatalogExercise } from './catalog';
 import { SPECIFIC_EXERCISE_VISUALS } from './specificVisuals';
+import { SPECIFIC_EXERCISE_VISUALS_EXTRA } from './specificVisualsExtra';
+
+const ALL_SPECIFIC_VISUALS = { ...SPECIFIC_EXERCISE_VISUALS, ...SPECIFIC_EXERCISE_VISUALS_EXTRA };
 
 export function ExerciseMotionVisual({ exercise, compact = false }: { exercise: TitanCatalogExercise; compact?: boolean }) {
-  const specific = SPECIFIC_EXERCISE_VISUALS[exercise.id];
+  const specific = ALL_SPECIFIC_VISUALS[exercise.id];
   const generic = visualConfig(exercise.pattern);
   const label = specific?.label ?? generic.label;
   const cue = specific?.cue ?? generic.cue;
@@ -14,8 +17,7 @@ export function ExerciseMotionVisual({ exercise, compact = false }: { exercise: 
   return <div className={`exercise-motion-visual${compact ? ' compact' : ''}${specific ? ' specific' : ''}`} aria-label={`Ilustração de ${label}`}>
     <svg viewBox="0 0 220 150" role="img" aria-hidden="true">
       <defs><marker id={`arrow-${exercise.id}`} markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" /></marker></defs>
-      {!specific && <circle className="motion-head" cx="110" cy="28" r="11" />}
-      {specific && <circle className="motion-head" cx="110" cy="28" r="10" />}
+      <circle className="motion-head" cx="110" cy="28" r={specific ? 10 : 11} />
       {specific?.equipmentPath && <path className="motion-equipment" d={specific.equipmentPath} />}
       <path className="motion-body" d={bodyPath} />
       <path className="motion-limb" d={armPath} />
