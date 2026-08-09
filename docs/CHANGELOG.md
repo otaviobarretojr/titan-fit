@@ -9,8 +9,13 @@
 - Prioridades musculares influenciam ordenação e volume por exercício de forma explicável.
 - Exercícios evitados e possíveis conflitos com limitações são filtrados antes da montagem das sessões.
 - Frequência de treino passa a suportar de 1 a 7 dias sem reduzir silenciosamente sete dias para seis.
+- Volume semanal por músculo passa a respeitar teto de prescrição; músculos prioritários recebem margem controlada de até 15%.
+- Cada candidato recebe métricas de cobertura do volume-alvo, equilíbrio entre sessões, fadiga estimada e adequação da estratégia.
+- A Engine calcula um `Score TITAN` de 0 a 100 e marca exatamente uma das três estratégias como recomendada.
+- Motivos da recomendação são devolvidos de forma explícita e determinística.
+- `GeneratedPlanCandidate` passa a expor `recommended`, `titanScore` e métricas da Engine para a futura tela comparativa.
 - A Engine emite warnings quando recebe frequência fora do intervalo suportado ou catálogo vazio.
-- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões e frequência de sete dias.
+- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões, frequência de sete dias, teto de volume e recomendação.
 
 ## v0.45 — Profile & Project Core
 
