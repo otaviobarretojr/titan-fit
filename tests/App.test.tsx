@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, vi } from 'vitest';
+import packageInfo from '../package.json';
 import { App } from '../src/app/App';
 
 vi.mock('virtual:pwa-register/react', () => ({
@@ -8,7 +9,7 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.50.1', () => {
+describe('TITAN FIT', () => {
   it('renderiza o estado vazio e oferece inserção de projeto', () => {
     render(<App />);
     expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
@@ -31,7 +32,7 @@ describe('TITAN FIT v0.50.1', () => {
     fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
     expect(screen.getByRole('heading', { name: 'Nenhum projeto ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
-    expect(screen.getByText('v0.50.1')).toBeInTheDocument();
+    expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
