@@ -19,16 +19,24 @@ export type ExerciseVideoMetadata = {
 };
 
 /**
- * Primeira camada formal de mídia da Biblioteca TITAN.
+ * Registro formal de mídia da Biblioteca TITAN.
  * `embedded-reference` significa que o TITAN apenas incorpora uma mídia pública
  * do provedor; o arquivo não é copiado nem tratado como conteúdo TITAN.
  * `licensed-external` só deve ser usado quando autor e licença forem verificados.
  */
 export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
+  'chest-press-machine': embedded('chest-press-machine','pnmUJSzBvXM','Chest press convergente — execução','Vinicius Piffardini'),
   'incline-barbell-press': embedded('incline-barbell-press','GhfwvlZbLGM','Supino inclinado com barra — execução','MyTrainingPRO'),
   'incline-dumbbell-press': embedded('incline-dumbbell-press','7V6kFe82iKk','Supino inclinado com halteres — execução','MyTrainingPRO'),
+  'incline-machine-press': embedded('incline-machine-press','5OayotgIe9M','Supino inclinado máquina','Pedro Lonngren'),
+
+  'lat-pulldown': embedded('lat-pulldown','VM4IQ4-km14','Puxada alta — execução','Marzrodie'),
   'one-arm-lat-pulldown': embedded('one-arm-lat-pulldown','t0yzt3Ba8kY','Puxada unilateral na polia alta','Prof. Matheus Gomes'),
   'straight-arm-pulldown': embedded('straight-arm-pulldown','WDOV2PDpkiU','Pulldown com braços estendidos','Colossus Fitness'),
+  'seated-row': embedded('seated-row','qqZHnqzvbXs','Remada baixa sentada — pegada neutra','Functional AF'),
+  'chest-supported-row': embedded('chest-supported-row','wDoIGNbiny0','Remada com peito apoiado','Gaintrust Bodybuilding'),
+  'machine-row': embedded('machine-row','veciiO2SU2c','Remada unilateral máquina — execução','Kiki Cunningham'),
+
   'machine-shoulder-press': embedded('machine-shoulder-press','WvLMauqrnK8','Desenvolvimento na máquina','Renaissance Periodization'),
   'machine-lateral-raise': embedded('machine-lateral-raise','LLZ0k0doyJs','Elevação lateral na máquina','Cezar Bononi'),
   'rear-delt-fly': embedded('rear-delt-fly','Q8DqRXPJk7g','Crucifixo inverso máquina','Cutler Nutrition'),
@@ -49,7 +57,6 @@ export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   'reverse-wrist-curl': embedded('reverse-wrist-curl','SngocRgAkvY','Extensão de punho — execução','AthleticMuscle'),
   'farmers-walk': embedded('farmers-walk','vi4X2iSOyiA','Caminhada do fazendeiro — técnica','Rogue Fitness'),
   'machine-shrug': embedded('machine-shrug','fChAG371a-s','Encolhimento máquina — execução','MrSupplement.com.au'),
-  'incline-machine-press': embedded('incline-machine-press','5OayotgIe9M','Supino inclinado máquina','Pedro Lonngren'),
 };
 
 function embedded(exerciseId:string,videoId:string,title:string,channel:string):ExerciseVideoMetadata{
