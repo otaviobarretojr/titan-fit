@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import packageInfo from '../../package.json';
 import { BackupPanel } from '../core/backup/BackupPanel';
 import { migrateLegacyStorage } from '../core/database/migrateLegacyStorage';
 import { resetAllAppData } from '../core/database/resetAppData';
@@ -22,7 +23,7 @@ type TabId = 'today' | 'programming' | 'cardio' | 'progress' | 'settings' | 'wor
 type NavigationTab = Exclude<TabId, 'workout'>;
 type GenerationContext = { profile: TitanProfile; assessment: TitanTrainingAssessment };
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
-const APP_VERSION = '0.50.1';
+const APP_VERSION = packageInfo.version;
 const tabs: Array<{ id: NavigationTab; label: string }> = [
   { id: 'today', label: 'Hoje' }, { id: 'programming', label: 'Programação' }, { id: 'cardio', label: 'Cardio' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Configurações' }
 ];
@@ -47,7 +48,7 @@ export function App() {
     const updateConnection = () => setIsOnline(navigator.onLine);
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
     const handlePopState = (event: PopStateEvent) => { const nextTab = isTabId(event.state?.titanTab) ? event.state.titanTab : 'today'; setActiveTab(nextTab); setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); setDirectCardioId(null); };
-    if (!isTabId(window.history.state?.titanTab)) window.history.replaceState({ ...window.history.state, titanTab: activeTab }, '');
+    if (!isTabId(window.history.state?.titanTab)) window.history.replaceState({ ...window.history.state, titanTab: 'today' }, '');
     window.addEventListener('online', updateConnection); window.addEventListener('offline', updateConnection); window.addEventListener('beforeinstallprompt', captureInstallPrompt); window.addEventListener('popstate', handlePopState);
     void migrateLegacyStorage().then(() => setDataEngineStatus('ready')).catch(() => setDataEngineStatus('unavailable'));
     return () => { window.removeEventListener('online', updateConnection); window.removeEventListener('offline', updateConnection); window.removeEventListener('beforeinstallprompt', captureInstallPrompt); window.removeEventListener('popstate', handlePopState); };
