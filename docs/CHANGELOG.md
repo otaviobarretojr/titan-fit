@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.45 — Profile & Project Core
+
+- Gestão de projetos adicionada em Configurações sem criar nova aba principal.
+- Projetos exibem origem, objetivo, perfil associado e status operacional.
+- Troca de projeto ativo carrega o plano correspondente sem apagar histórico anterior.
+- Projeto ativo pode ser pausado; projetos pausados podem ser concluídos ou arquivados.
+- Projetos importados sem perfil podem ser associados ao perfil ativo.
+- Testes adicionados para associação de perfil e ativação de projeto.
+
 ## v0.40 — Foundation Upgrade + base TITAN de prescrição
 
 ### Fundação
