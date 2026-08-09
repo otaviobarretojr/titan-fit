@@ -68,7 +68,7 @@ function rationaleFor(strategy: TitanEngineStrategy, assessment: TitanEngineAsse
     : strategy === 'balanced'
       ? ['Equilibra estímulo, recuperação e tempo de sessão.', 'É a recomendação padrão do TITAN para este perfil.']
       : ['Aproveita mais da disponibilidade informada.', 'Usa volume um pouco maior sem ultrapassar os limites definidos para a experiência atual.'];
-  rationale.push('Alterna exercícios compatíveis entre sessões repetidas para reduzir redundância sem abandonar a progressão dos movimentos-base.');
+  rationale.push('Alterna exercícios compatíveis entre sessões repetidas e combina padrões complementares dentro do treino para reduzir redundância.');
   if (assessment.musclePriorities?.length) rationale.push(`Prioriza ${assessment.musclePriorities.length} grupo(s) muscular(es) selecionado(s) sem abandonar o restante do corpo.`);
   if (assessment.limitations?.length) rationale.push('Considera as limitações informadas como filtro conservador; elas não substituem avaliação profissional.');
   return rationale;
@@ -158,6 +158,52 @@ function usageKey(exercise: TitanEngineExercise) {
   return `${exercise.primaryMuscle}::${exercise.movementPattern ?? 'unknown'}`;
 }
 
+function selectionScore(
+  exercise: TitanEngineExercise,
+  assessment: TitanEngineAssessment,
+  exerciseUsage: Record<string, number>,
+  patternUsage: Record<string, number>,
+  sessionMuscleUsage: Record<string, number>,
+  sessionPatternUsage: Record<string, number>,
+) {
+  const pattern = exercise.movementPattern ?? 'unknown';
+  return priorityScore(exercise.primaryMuscle, assessment.musclePriorities) * 100
+    - (exerciseUsage[exercise.id] ?? 0) * 28
+    - (patternUsage[usageKey(exercise)] ?? 0) * 8
+    - (sessionMuscleUsage[exercise.primaryMuscle] ?? 0) * 18
+    - (sessionPatternUsage[pattern] ?? 0) * 24;
+}
+
+function selectSessionExercises(
+  pool: TitanEngineExercise[],
+  count: number,
+  assessment: TitanEngineAssessment,
+  exerciseUsage: Record<string, number>,
+  patternUsage: Record<string, number>,
+) {
+  const remaining = [...pool];
+  const selected: TitanEngineExercise[] = [];
+  const sessionMuscleUsage: Record<string, number> = {};
+  const sessionPatternUsage: Record<string, number> = {};
+
+  while (remaining.length && selected.length < count) {
+    remaining.sort((a, b) => {
+      const scoreDiff = selectionScore(b, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage)
+        - selectionScore(a, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage);
+      if (scoreDiff) return scoreDiff;
+      return a.id.localeCompare(b.id);
+    });
+    const next = remaining.shift();
+    if (!next) break;
+    selected.push(next);
+    sessionMuscleUsage[next.primaryMuscle] = (sessionMuscleUsage[next.primaryMuscle] ?? 0) + 1;
+    const pattern = next.movementPattern ?? 'unknown';
+    sessionPatternUsage[pattern] = (sessionPatternUsage[pattern] ?? 0) + 1;
+  }
+
+  return selected;
+}
+
 function buildCandidate(
   strategy: TitanEngineStrategy,
   assessment: TitanEngineAssessment,
@@ -174,19 +220,10 @@ function buildCandidate(
     const pool = exercises
       .filter((exercise) => focusMatches(focus, exercise.primaryMuscle))
       .filter((exercise) => !avoided.has(exercise.id))
-      .filter((exercise) => !isPotentiallyLimited(exercise, assessment))
-      .sort((a, b) => {
-        const priorityDiff = priorityScore(b.primaryMuscle, assessment.musclePriorities) - priorityScore(a.primaryMuscle, assessment.musclePriorities);
-        if (priorityDiff) return priorityDiff;
-        const exerciseDiff = (exerciseUsage[a.id] ?? 0) - (exerciseUsage[b.id] ?? 0);
-        if (exerciseDiff) return exerciseDiff;
-        const patternDiff = (patternUsage[usageKey(a)] ?? 0) - (patternUsage[usageKey(b)] ?? 0);
-        if (patternDiff) return patternDiff;
-        return a.id.localeCompare(b.id);
-      });
+      .filter((exercise) => !isPotentiallyLimited(exercise, assessment));
     const requestedCount = Math.round(rule.maxExercisesPerSession * config.exerciseScale);
     const count = Math.max(1, Math.min(rule.maxExercisesPerSession, requestedCount));
-    const chosen = pool.slice(0, count);
+    const chosen = selectSessionExercises(pool, count, assessment, exerciseUsage, patternUsage);
     const prescribed: TitanEngineCandidateBlueprint['workouts'][number]['exercises'] = [];
     for (const exercise of chosen) {
       const priority = priorityScore(exercise.primaryMuscle, assessment.musclePriorities) > 0;
