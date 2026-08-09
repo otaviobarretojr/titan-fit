@@ -15,7 +15,7 @@ import { RESIDUAL_EXERCISE_VIDEO_BATCH_1 } from './videoRegistryResidualBatch1';
 import { RESIDUAL_EXERCISE_VIDEO_FINAL_BATCH } from './videoRegistryResidualFinalBatch';
 import { EXERCISE_VIDEO_REGISTRY, type ExerciseVideoMetadata } from './videoRegistry';
 
-export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
+const BASE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   ...EXERCISE_VIDEO_REGISTRY,
   ...COMMON_EXERCISE_VIDEO_BATCH,
   ...EXERCISE_VIDEO_BATCH_4,
@@ -31,6 +31,14 @@ export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata
   ...EXERCISE_VIDEO_100_PLUS_BATCH,
   ...RESIDUAL_EXERCISE_VIDEO_BATCH_1,
   ...RESIDUAL_EXERCISE_VIDEO_FINAL_BATCH,
+};
+
+export const TITAN_EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
+  ...BASE_VIDEO_REGISTRY,
+  // Compatibilidade com nomes legados/alternativas usados em projetos importados.
+  'barbell-stiff': BASE_VIDEO_REGISTRY['stiff-deadlift'],
+  'dumbbell-romanian-deadlift': BASE_VIDEO_REGISTRY['romanian-deadlift'],
+  'machine-pullover': BASE_VIDEO_REGISTRY['straight-arm-pulldown'],
 };
 
 export function getCatalogExerciseVideo(exercise: Pick<TitanCatalogExercise, 'id'>): ExerciseVideoMetadata | null {

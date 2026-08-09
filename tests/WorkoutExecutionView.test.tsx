@@ -15,9 +15,15 @@ beforeEach(() => {
   vi.stubGlobal('scrollTo', vi.fn());
 });
 
+function skipVideoGate() {
+  const skip = screen.queryByRole('button', { name: 'Pular demonstração' });
+  if (skip) fireEvent.click(skip);
+}
+
 describe('WorkoutExecutionView', () => {
   it('registra carga, repetições e RIR mantendo o cabeçalho compacto', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    skipVideoGate();
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
@@ -36,6 +42,7 @@ describe('WorkoutExecutionView', () => {
 
   it('inicia o descanso automático ao registrar a série', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    skipVideoGate();
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
@@ -44,6 +51,7 @@ describe('WorkoutExecutionView', () => {
   it('salva o histórico e apresenta o resumo final', () => {
     const onCompleted = vi.fn();
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);
+    skipVideoGate();
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
@@ -66,5 +74,16 @@ describe('WorkoutExecutionView', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Ver progresso' }));
     expect(onCompleted).toHaveBeenCalledOnce();
+  });
+
+  it('renderiza corretamente vídeo Vimeo no modo treino', () => {
+    const vimeoWorkout: TitanWorkoutDay = {
+      id: 'pull-vimeo', day: 'Terça', title: 'Pull Vimeo',
+      exercises: [{ id: 'underhand', name: 'Puxada supinada', muscleGroup: 'Dorsais', exerciseType: 'strength', sets: 3, minReps: 8, maxReps: 12, targetRir: 2, restSeconds: 90 }]
+    };
+    const { container } = render(<WorkoutExecutionView planId="plan-vimeo" planName="Plano Vimeo" workout={vimeoWorkout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    const iframe = container.querySelector('iframe');
+    expect(iframe).not.toBeNull();
+    expect(iframe?.getAttribute('src')).toContain('player.vimeo.com/video/1098112218');
   });
 });
