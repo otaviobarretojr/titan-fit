@@ -18,7 +18,14 @@ function weeklySplit(candidate: GeneratedPlanCandidate<TitanPlan>) {
   return candidate.plan.workouts.map((workout) => workout.title).join(' · ');
 }
 
-export function PlanCandidatesPage({ profile, assessment, onActivate }: { profile: TitanProfile; assessment: TitanTrainingAssessment; onActivate: () => void }) {
+type Props = {
+  profile: TitanProfile;
+  assessment: TitanTrainingAssessment;
+  onActivate: () => void;
+  onCancel?: () => void;
+};
+
+export function PlanCandidatesPage({ profile, assessment, onActivate, onCancel }: Props) {
   const candidates = useMemo(() => generateTitanPlanCandidates(profile, assessment), [profile, assessment]);
   const recommended = candidates.find((candidate) => candidate.recommended) ?? candidates[0];
 
@@ -34,6 +41,7 @@ export function PlanCandidatesPage({ profile, assessment, onActivate }: { profil
 
   return <main className="profile-onboarding plan-candidates-page">
     <section className="profile-hero candidate-hero">
+      {onCancel && <button type="button" className="profile-back" onClick={onCancel}>← Voltar</button>}
       <span className="eyebrow">COACH TITAN</span>
       <h1>Escolha sua estratégia</h1>
       <p>Geramos três opções válidas para o seu perfil. O TITAN comparou volume, equilíbrio entre sessões, fadiga e aderência ao seu contexto antes de destacar a recomendação.</p>
