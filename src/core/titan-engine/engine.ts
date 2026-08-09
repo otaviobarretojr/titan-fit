@@ -68,7 +68,7 @@ function rationaleFor(strategy: TitanEngineStrategy, assessment: TitanEngineAsse
     : strategy === 'balanced'
       ? ['Equilibra estímulo, recuperação e tempo de sessão.', 'É a recomendação padrão do TITAN para este perfil.']
       : ['Aproveita mais da disponibilidade informada.', 'Usa volume um pouco maior sem ultrapassar os limites definidos para a experiência atual.'];
-  rationale.push('Alterna exercícios compatíveis entre sessões repetidas e combina padrões complementares dentro do treino para reduzir redundância.');
+  rationale.push('Combina padrões e papéis complementares, controlando redundância e custo de fadiga dentro da sessão.');
   if (assessment.musclePriorities?.length) rationale.push(`Prioriza ${assessment.musclePriorities.length} grupo(s) muscular(es) selecionado(s) sem abandonar o restante do corpo.`);
   if (assessment.limitations?.length) rationale.push('Considera as limitações informadas como filtro conservador; elas não substituem avaliação profissional.');
   return rationale;
@@ -93,11 +93,7 @@ function volumeCoverage(setsByMuscle: Record<string, number>, target: [number, n
   const totals = Object.values(setsByMuscle);
   if (!totals.length) return 0;
   const [minimum, maximum] = target;
-  const scores = totals.map((sets) => {
-    if (sets >= minimum && sets <= maximum) return 100;
-    if (sets < minimum) return (sets / Math.max(1, minimum)) * 100;
-    return Math.max(0, 100 - ((sets - maximum) / Math.max(1, maximum)) * 100);
-  });
+  const scores = totals.map((sets) => sets >= minimum && sets <= maximum ? 100 : sets < minimum ? (sets / Math.max(1, minimum)) * 100 : Math.max(0, 100 - ((sets - maximum) / Math.max(1, maximum)) * 100));
   return clampScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
 }
 
@@ -108,8 +104,7 @@ function frequencyCoverage(frequencyByMuscle: Record<string, number>, assessment
   const scores = entries.map(([muscle, frequency]) => {
     const priority = priorityScore(muscle, assessment.musclePriorities) > 0;
     const target = priority && assessment.trainingDaysPerWeek >= 3 ? 2 : baseTarget;
-    if (frequency >= target) return 100;
-    return (frequency / Math.max(1, target)) * 100;
+    return frequency >= target ? 100 : (frequency / Math.max(1, target)) * 100;
   });
   return clampScore(scores.reduce((sum, score) => sum + score, 0) / scores.length);
 }
@@ -123,13 +118,19 @@ function sessionBalance(workouts: TitanEngineCandidateBlueprint['workouts']) {
   return clampScore(100 - (meanDeviation / average) * 100);
 }
 
+function fatigueMultiplier(exercise: TitanEngineExercise) {
+  const fatigue = exercise.fatigueCost === 'high' ? 1.3 : exercise.fatigueCost === 'low' ? 0.8 : 1;
+  const stability = exercise.stabilityDemand === 'high' ? 1.1 : exercise.stabilityDemand === 'low' ? 0.95 : 1;
+  return fatigue * stability;
+}
+
 function fatigueScore(workouts: TitanEngineCandidateBlueprint['workouts'], preferredSessionMinutes: number) {
   if (!workouts.length) return 0;
   const expectedLoadCapacity = Math.max(8, preferredSessionMinutes / 3);
   const sessionScores = workouts.map((workout) => {
     const weightedLoad = workout.exercises.reduce((sum, exercise) => {
       const restWeight = Math.max(0.75, Math.min(1.5, exercise.restSeconds / 120));
-      return sum + exercise.sets * restWeight;
+      return sum + exercise.sets * restWeight * fatigueMultiplier(exercise);
     }, 0);
     return clampScore(100 - Math.max(0, weightedLoad - expectedLoadCapacity) * 6);
   });
@@ -154,9 +155,7 @@ function metricsFor(candidate: TitanEngineCandidateBlueprint, assessment: TitanE
   return { weeklySetsByMuscle: weekly, weeklyFrequencyByMuscle: frequency, volumeTargetCoverage: volume, frequencyScore, sessionBalance: balance, fatigueScore: fatigue, strategyFit: fit, score };
 }
 
-function usageKey(exercise: TitanEngineExercise) {
-  return `${exercise.primaryMuscle}::${exercise.movementPattern ?? 'unknown'}`;
-}
+function usageKey(exercise: TitanEngineExercise) { return `${exercise.primaryMuscle}::${exercise.movementPattern ?? 'unknown'}`; }
 
 function selectionScore(
   exercise: TitanEngineExercise,
@@ -165,33 +164,38 @@ function selectionScore(
   patternUsage: Record<string, number>,
   sessionMuscleUsage: Record<string, number>,
   sessionPatternUsage: Record<string, number>,
+  sessionRoleUsage: Record<string, number>,
+  sessionTensionUsage: Record<string, number>,
+  highFatigueCount: number,
 ) {
   const pattern = exercise.movementPattern ?? 'unknown';
+  const role = exercise.exerciseRole ?? 'compound';
+  const tension = exercise.tensionBias ?? 'unknown';
+  const rolePenalty = (sessionRoleUsage[role] ?? 0) >= 2 ? 12 : 0;
+  const tensionPenalty = tension !== 'unknown' ? (sessionTensionUsage[tension] ?? 0) * 10 : 0;
+  const fatiguePenalty = exercise.fatigueCost === 'high' ? highFatigueCount * 18 : 0;
   return priorityScore(exercise.primaryMuscle, assessment.musclePriorities) * 100
     - (exerciseUsage[exercise.id] ?? 0) * 28
     - (patternUsage[usageKey(exercise)] ?? 0) * 8
     - (sessionMuscleUsage[exercise.primaryMuscle] ?? 0) * 18
-    - (sessionPatternUsage[pattern] ?? 0) * 24;
+    - (sessionPatternUsage[pattern] ?? 0) * 24
+    - rolePenalty - tensionPenalty - fatiguePenalty;
 }
 
-function selectSessionExercises(
-  pool: TitanEngineExercise[],
-  count: number,
-  assessment: TitanEngineAssessment,
-  exerciseUsage: Record<string, number>,
-  patternUsage: Record<string, number>,
-) {
+function selectSessionExercises(pool: TitanEngineExercise[], count: number, assessment: TitanEngineAssessment, exerciseUsage: Record<string, number>, patternUsage: Record<string, number>) {
   const remaining = [...pool];
   const selected: TitanEngineExercise[] = [];
   const sessionMuscleUsage: Record<string, number> = {};
   const sessionPatternUsage: Record<string, number> = {};
+  const sessionRoleUsage: Record<string, number> = {};
+  const sessionTensionUsage: Record<string, number> = {};
+  let highFatigueCount = 0;
 
   while (remaining.length && selected.length < count) {
     remaining.sort((a, b) => {
-      const scoreDiff = selectionScore(b, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage)
-        - selectionScore(a, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage);
-      if (scoreDiff) return scoreDiff;
-      return a.id.localeCompare(b.id);
+      const scoreDiff = selectionScore(b, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage, sessionRoleUsage, sessionTensionUsage, highFatigueCount)
+        - selectionScore(a, assessment, exerciseUsage, patternUsage, sessionMuscleUsage, sessionPatternUsage, sessionRoleUsage, sessionTensionUsage, highFatigueCount);
+      return scoreDiff || a.id.localeCompare(b.id);
     });
     const next = remaining.shift();
     if (!next) break;
@@ -199,17 +203,16 @@ function selectSessionExercises(
     sessionMuscleUsage[next.primaryMuscle] = (sessionMuscleUsage[next.primaryMuscle] ?? 0) + 1;
     const pattern = next.movementPattern ?? 'unknown';
     sessionPatternUsage[pattern] = (sessionPatternUsage[pattern] ?? 0) + 1;
+    const role = next.exerciseRole ?? 'compound';
+    sessionRoleUsage[role] = (sessionRoleUsage[role] ?? 0) + 1;
+    const tension = next.tensionBias ?? 'unknown';
+    if (tension !== 'unknown') sessionTensionUsage[tension] = (sessionTensionUsage[tension] ?? 0) + 1;
+    if (next.fatigueCost === 'high') highFatigueCount += 1;
   }
-
   return selected;
 }
 
-function buildCandidate(
-  strategy: TitanEngineStrategy,
-  assessment: TitanEngineAssessment,
-  exercises: TitanEngineExercise[],
-  rule: TitanEnginePrescriptionRule,
-): TitanEngineCandidateBlueprint {
+function buildCandidate(strategy: TitanEngineStrategy, assessment: TitanEngineAssessment, exercises: TitanEngineExercise[], rule: TitanEnginePrescriptionRule): TitanEngineCandidateBlueprint {
   const config = strategySettings(strategy);
   const split = buildSplit(assessment.trainingDaysPerWeek);
   const avoided = new Set(assessment.avoidedExerciseIds ?? []);
@@ -217,10 +220,7 @@ function buildCandidate(
   const exerciseUsage: Record<string, number> = {};
   const patternUsage: Record<string, number> = {};
   const workouts = split.map((focus, dayIndex) => {
-    const pool = exercises
-      .filter((exercise) => focusMatches(focus, exercise.primaryMuscle))
-      .filter((exercise) => !avoided.has(exercise.id))
-      .filter((exercise) => !isPotentiallyLimited(exercise, assessment));
+    const pool = exercises.filter((exercise) => focusMatches(focus, exercise.primaryMuscle)).filter((exercise) => !avoided.has(exercise.id)).filter((exercise) => !isPotentiallyLimited(exercise, assessment));
     const requestedCount = Math.round(rule.maxExercisesPerSession * config.exerciseScale);
     const count = Math.max(1, Math.min(rule.maxExercisesPerSession, requestedCount));
     const chosen = selectSessionExercises(pool, count, assessment, exerciseUsage, patternUsage);
@@ -238,12 +238,7 @@ function buildCandidate(
       patternUsage[usageKey(exercise)] = (patternUsage[usageKey(exercise)] ?? 0) + 1;
       prescribed.push({ ...exercise, priority, sets });
     }
-    return {
-      dayIndex,
-      dayLabel: assessment.availableTrainingDays?.[dayIndex] ?? DAY_NAMES[dayIndex] ?? `Dia ${dayIndex + 1}`,
-      focus,
-      exercises: prescribed,
-    };
+    return { dayIndex, dayLabel: assessment.availableTrainingDays?.[dayIndex] ?? DAY_NAMES[dayIndex] ?? `Dia ${dayIndex + 1}`, focus, exercises: prescribed };
   });
   const base = { strategy, title: config.title, rationale: rationaleFor(strategy, assessment), workouts, metrics: {} as TitanEngineCandidateMetrics, recommended: false };
   return { ...base, metrics: metricsFor(base, assessment, rule) };
@@ -254,16 +249,12 @@ function recommendationReasons(candidate: TitanEngineCandidateBlueprint) {
   if (candidate.metrics.volumeTargetCoverage >= 80) reasons.push('Mantém boa cobertura do volume semanal alvo.');
   if (candidate.metrics.frequencyScore >= 85) reasons.push('Distribui os músculos em frequência compatível com a rotina semanal.');
   if (candidate.metrics.sessionBalance >= 85) reasons.push('Distribui o trabalho de forma equilibrada entre as sessões.');
-  if (candidate.metrics.fatigueScore >= 85) reasons.push('Mantém a carga por sessão compatível com o tempo e descansos prescritos.');
+  if (candidate.metrics.fatigueScore >= 85) reasons.push('Mantém a carga por sessão compatível com tempo, estabilidade e custo de fadiga dos exercícios.');
   if (candidate.strategy === 'balanced') reasons.push('Equilibra aderência, estímulo e recuperação como padrão da Engine.');
   return reasons;
 }
 
-export function generateTitanEngineBlueprints(
-  assessment: TitanEngineAssessment,
-  exercises: TitanEngineExercise[],
-  rule: TitanEnginePrescriptionRule,
-): TitanEngineResult {
+export function generateTitanEngineBlueprints(assessment: TitanEngineAssessment, exercises: TitanEngineExercise[], rule: TitanEnginePrescriptionRule): TitanEngineResult {
   const warnings: string[] = [];
   if (assessment.trainingDaysPerWeek < 1 || assessment.trainingDaysPerWeek > 7) warnings.push('Dias de treino ajustados para o intervalo suportado de 1 a 7.');
   if (!exercises.length) warnings.push('Nenhum exercício elegível foi fornecido à TITAN Engine.');
@@ -271,11 +262,5 @@ export function generateTitanEngineBlueprints(
   const scored = strategies.map((strategy) => buildCandidate(strategy, assessment, exercises, rule));
   const recommended = [...scored].sort((a, b) => b.metrics.score - a.metrics.score || strategies.indexOf(a.strategy) - strategies.indexOf(b.strategy))[0];
   const candidates = scored.map((candidate) => ({ ...candidate, recommended: candidate.strategy === recommended.strategy }));
-  return {
-    engineVersion: 1,
-    candidates,
-    recommendedStrategy: recommended.strategy,
-    recommendationReasons: recommendationReasons(recommended),
-    warnings,
-  };
+  return { engineVersion: 1, candidates, recommendedStrategy: recommended.strategy, recommendationReasons: recommendationReasons(recommended), warnings };
 }
