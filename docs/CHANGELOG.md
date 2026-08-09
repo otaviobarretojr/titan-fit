@@ -7,6 +7,7 @@
 - Arquitetura atualizada para refletir React, PWA, IndexedDB, perfil, planos, cardio, histórico, backup e Coach já existentes no código.
 - Modelo de dados alvo formalizado com relações por `profileId` e `projectId`.
 - Estratégia de migração definida para retirar dados de domínio do localStorage sem apagar registros existentes.
+- Bootstrap do plano ativo atualizado para preferir IndexedDB, com fallback e espelhamento legado para evitar perda de projeto durante a transição.
 - Modelo futuro de projetos estabelecido para suportar geração TITAN, importação e edição manual sobre contratos compatíveis.
 - Separação conceitual oficial entre TITAN FIT UI, TITAN Engine, Knowledge Base e TITAN Data.
 - Dívidas técnicas prioritárias registradas: versão técnica, plano ativo global, transição para IndexedDB e responsabilidades concentradas no `App.tsx`.
