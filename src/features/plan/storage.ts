@@ -3,7 +3,8 @@ import { STORE_NAMES } from '../../core/database/schema';
 import type { TitanPlan } from './types';
 
 const ACTIVE_PLAN_KEY = 'titan-fit.active-plan.v1';
-const ACTIVE_PLAN_RECORD_ID = 'active';
+const LEGACY_ACTIVE_PLAN_RECORD_ID = 'active';
+const ACTIVE_PLAN_POINTER = 'active-plan-id';
 
 function reportMirrorFailure(error: unknown) {
   console.warn('Não foi possível sincronizar a ficha com o IndexedDB.', error);
@@ -24,16 +25,24 @@ export function loadActivePlan(): TitanPlan | null {
 
 export async function loadActivePlanFromDatabase(): Promise<TitanPlan | null> {
   try {
-    const indexedPlan = await getRecord<TitanPlan>(STORE_NAMES.plans, ACTIVE_PLAN_RECORD_ID);
-    if (indexedPlan) {
-      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(indexedPlan));
-      return indexedPlan;
+    const activePlanId = await getRecord<string>(STORE_NAMES.preferences, ACTIVE_PLAN_POINTER);
+    if (activePlanId) {
+      const plan = await getRecord<TitanPlan>(STORE_NAMES.plans, activePlanId);
+      if (plan) {
+        localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(plan));
+        return plan;
+      }
+    }
+
+    const indexedLegacyPlan = await getRecord<TitanPlan>(STORE_NAMES.plans, LEGACY_ACTIVE_PLAN_RECORD_ID);
+    if (indexedLegacyPlan) {
+      await persistActivePlan(indexedLegacyPlan);
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(indexedLegacyPlan));
+      return indexedLegacyPlan;
     }
 
     const legacyPlan = loadLegacyActivePlan();
-    if (legacyPlan) {
-      await putRecord(STORE_NAMES.plans, ACTIVE_PLAN_RECORD_ID, legacyPlan);
-    }
+    if (legacyPlan) await persistActivePlan(legacyPlan);
     return legacyPlan;
   } catch (error) {
     reportMirrorFailure(error);
@@ -41,14 +50,25 @@ export async function loadActivePlanFromDatabase(): Promise<TitanPlan | null> {
   }
 }
 
+async function persistActivePlan(plan: TitanPlan): Promise<void> {
+  await putRecord(STORE_NAMES.plans, plan.id, plan);
+  await putRecord(STORE_NAMES.preferences, ACTIVE_PLAN_POINTER, plan.id);
+  await putRecord(STORE_NAMES.plans, LEGACY_ACTIVE_PLAN_RECORD_ID, plan);
+}
+
 export function saveActivePlan(plan: TitanPlan): void {
   localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(plan));
-  void putRecord(STORE_NAMES.plans, ACTIVE_PLAN_RECORD_ID, plan).catch(reportMirrorFailure);
+  void persistActivePlan(plan).catch(reportMirrorFailure);
 }
 
 export function removeActivePlan(): void {
+  const legacyPlan = loadLegacyActivePlan();
   localStorage.removeItem(ACTIVE_PLAN_KEY);
-  void deleteRecord(STORE_NAMES.plans, ACTIVE_PLAN_RECORD_ID).catch(reportMirrorFailure);
+  void (async () => {
+    if (legacyPlan?.id) await deleteRecord(STORE_NAMES.plans, legacyPlan.id);
+    await deleteRecord(STORE_NAMES.plans, LEGACY_ACTIVE_PLAN_RECORD_ID);
+    await deleteRecord(STORE_NAMES.preferences, ACTIVE_PLAN_POINTER);
+  })().catch(reportMirrorFailure);
 }
 
-export { ACTIVE_PLAN_KEY, ACTIVE_PLAN_RECORD_ID };
+export { ACTIVE_PLAN_KEY, LEGACY_ACTIVE_PLAN_RECORD_ID as ACTIVE_PLAN_RECORD_ID, ACTIVE_PLAN_POINTER };
