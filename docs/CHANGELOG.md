@@ -2,11 +2,16 @@
 
 ## v0.45 — Profile & Project Core
 
+- Perfil e avaliação passam a ser editáveis diretamente em Configurações sem recriar o usuário.
+- Edição cobre nome, nascimento, sexo biológico, altura, peso, objetivo, experiência, frequência e duração da musculação.
+- Estrutura disponível, prioridades musculares, limitações, objetivo cardiovascular, nível cardiovascular e dias de cardio também podem ser atualizados.
+- Mudanças no perfil atualizam o contexto do Coach sem reescrever silenciosamente o projeto ativo.
 - Gestão de projetos adicionada em Configurações sem criar nova aba principal.
 - Projetos exibem origem, objetivo, perfil associado e status operacional.
 - Troca de projeto ativo carrega o plano correspondente sem apagar histórico anterior.
 - Projeto ativo pode ser pausado; projetos pausados podem ser concluídos ou arquivados.
 - Projetos importados sem perfil podem ser associados ao perfil ativo.
+- Gestão de projetos passa a tratar indisponibilidade do IndexedDB sem gerar rejeições não tratadas.
 - Testes adicionados para associação de perfil e ativação de projeto.
 
 ## v0.40 — Foundation Upgrade + base TITAN de prescrição
