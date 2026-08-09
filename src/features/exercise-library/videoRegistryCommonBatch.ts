@@ -17,7 +17,11 @@ export const COMMON_EXERCISE_VIDEO_BATCH: Record<string, ExerciseVideoMetadata> 
   'dumbbell-row': fittr('dumbbell-row', '8p36XRW3ZlU', 'Remada unilateral com halter — execução'),
   'barbell-row': fittr('barbell-row', 'XeICq5Hlj8o', 'Remada curvada com barra — execução'),
   'goblet-squat': fittr('goblet-squat', 'RMLonZPjnNU', 'Agachamento goblet — execução'),
+  'bulgarian-split-squat': fittr('bulgarian-split-squat', 'vUPDmVVpDuc', 'Agachamento búlgaro — execução'),
+  'walking-lunge': fittr('walking-lunge', '7hp6omsUDVg', 'Passada com halteres — execução'),
   'barbell-hip-thrust': fittr('barbell-hip-thrust', 'a2Y_5wTtzMY', 'Hip thrust com barra — execução'),
+  'dumbbell-curl': fittr('dumbbell-curl', '2k9co4UIlEw', 'Rosca com halteres — execução'),
+  'hammer-curl': fittr('hammer-curl', '9Mpl_rio1Hk', 'Rosca martelo — execução'),
   'cable-fly': {
     exerciseId: 'cable-fly',
     provider: 'youtube',
