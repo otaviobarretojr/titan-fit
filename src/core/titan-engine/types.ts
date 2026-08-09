@@ -47,7 +47,9 @@ export type TitanEngineWorkoutBlueprint = {
 
 export type TitanEngineCandidateMetrics = {
   weeklySetsByMuscle: Record<string, number>;
+  weeklyFrequencyByMuscle: Record<string, number>;
   volumeTargetCoverage: number;
+  frequencyScore: number;
   sessionBalance: number;
   fatigueScore: number;
   strategyFit: number;
