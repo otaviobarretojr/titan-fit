@@ -24,7 +24,8 @@ export function CardioPage({ plan, refreshKey = 0, onHistoryChange, initialSessi
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [summary, setSummary] = useState<Summary | null>(null);
-  const history = useMemo(() => loadWorkoutHistory(), [refreshKey, summary]);
+  void refreshKey;
+  const history = loadWorkoutHistory();
   const recent = useMemo<RecentCardio[]>(() => history.flatMap((record) => record.exercises
     .filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance')
     .map((exercise) => ({ id:`${record.id}:${exercise.exerciseId}`, title:exercise.name, completedAt:record.completedAt, durationSeconds:exercise.totalDurationSeconds, distanceMeters:exercise.totalDistanceMeters, heartRate:exercise.averageHeartRate, pace:exercise.sets.find((set)=>set.averagePace)?.averagePace ?? null })))
