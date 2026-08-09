@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.50 — TITAN Engine
+
+- Criado `src/core/titan-engine` como núcleo independente de React, IndexedDB e componentes de interface.
+- A Engine passa a receber avaliação, catálogo elegível e regras de prescrição e devolver blueprints determinísticos.
+- O gerador de planos foi transformado em adaptador: converte o blueprint da Engine para `TitanPlan` e adiciona cardio/metadados do aplicativo.
+- Três estratégias continuam disponíveis: maior aderência, equilíbrio e maior disponibilidade.
+- Prioridades musculares influenciam ordenação e volume por exercício de forma explicável.
+- Exercícios evitados e possíveis conflitos com limitações são filtrados antes da montagem das sessões.
+- Frequência de treino passa a suportar de 1 a 7 dias sem reduzir silenciosamente sete dias para seis.
+- A Engine emite warnings quando recebe frequência fora do intervalo suportado ou catálogo vazio.
+- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões e frequência de sete dias.
+
 ## v0.45 — Profile & Project Core
 
 - Perfil e avaliação passam a ser editáveis diretamente em Configurações sem recriar o usuário.
