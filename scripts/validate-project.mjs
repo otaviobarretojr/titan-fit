@@ -33,9 +33,12 @@ const videoLibrary = await read('src/features/exercise-library/videos.ts');
 const database = await read('src/core/database/indexedDb.ts');
 const backup = await read('src/core/backup/backup.ts');
 const deploy = await read('.github/workflows/deploy-pages.yml');
+const ci = await read('.github/workflows/ci.yml');
 
-assert(pkg.version === '0.50.1', 'package.json deve manter a versão técnica atual v0.50.1');
-assert(vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("cacheId: 'titan-fit-v0.50.1'") && vite.includes("registerType: 'autoUpdate'"), 'PWA, base do GitHub Pages, atualização automática e cache da versão técnica atual devem permanecer configurados');
+assert(/^\d+\.\d+\.\d+$/.test(pkg.version), 'package.json deve declarar uma versão semântica válida');
+assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'A versão visível do app deve vir diretamente do package.json');
+assert(vite.includes("import packageInfo from './package.json'") && vite.includes('cacheId: `titan-fit-v${packageInfo.version}`') && vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("registerType: 'autoUpdate'"), 'PWA, versão de cache, base do GitHub Pages e atualização automática devem permanecer ligados ao package.json');
+assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar a mesma versão do Node.js');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
 assert(app.includes('Hoje') && app.includes('Programação') && app.includes('Cardio') && app.includes('Progresso') && app.includes('Configurações') && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Programação no lugar de Histórico e manter Cardio');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
@@ -88,4 +91,4 @@ async function walk(dir) {
 }
 await walk(root);
 if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
-console.log('Validação do TITAN FIT concluída com sucesso.');
+console.log(`Validação do TITAN FIT v${pkg.version} concluída com sucesso.`);
