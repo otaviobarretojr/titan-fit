@@ -1,0 +1,18 @@
+/* Production settings cleanup
+   Keep user-facing controls visible and hide development/test diagnostics. */
+
+/* Demo/test controls are useful during development, but add noise and risk in production. */
+.settings-data-card {
+  display: none !important;
+}
+
+/* Connection is already visible in the app header; engine status is an internal diagnostic. */
+.settings-card[aria-label="Aplicativo"] > div:nth-of-type(2),
+.settings-card[aria-label="Aplicativo"] > div:nth-of-type(3) {
+  display: none !important;
+}
+
+/* Once installed, don't show a dead "Instalação indisponível" action. */
+.settings-card[aria-label="Aplicativo"] > button:disabled {
+  display: none !important;
+}
