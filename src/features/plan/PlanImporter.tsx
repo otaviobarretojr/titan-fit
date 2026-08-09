@@ -15,7 +15,15 @@ export function PlanImporter({ onImport }: Props) {
 
   async function readFile(file: File) {
     setErrors([]); setWarnings([]); setPreview(null); setSummary(null); setFileName(file.name);
-    if (!file.name.toLowerCase().endsWith('.json') && !file.name.toLowerCase().endsWith('.titan')) { setErrors(['Selecione um arquivo .json ou .titan.']); return; }
+    const lowerName = file.name.toLowerCase();
+    if (lowerName.endsWith('.titan-cardio')) {
+      setErrors(['Este é um arquivo de cardio. Abra a área Cardio e use a opção de importar plano de cardio.']);
+      return;
+    }
+    if (!lowerName.endsWith('.json') && !lowerName.endsWith('.titan')) {
+      setErrors(['Selecione um arquivo de projeto .json ou .titan.']);
+      return;
+    }
     if (file.size > 1_000_000) { setErrors(['O arquivo excede o limite de 1 MB.']); return; }
     try {
       const parsed: unknown = JSON.parse(await file.text());
@@ -36,8 +44,8 @@ export function PlanImporter({ onImport }: Props) {
   }
 
   return <section className="import-card" aria-labelledby="import-title">
-    <div><span className="eyebrow">INSERIR MEU PROJETO</span><h3 id="import-title">Projeto externo</h3><p>Importe uma programação pronta. O TITAN valida, preserva a origem e usa os dados para execução, histórico e acompanhamento sem substituir silenciosamente o que foi prescrito.</p></div>
-    <input ref={inputRef} className="file-input" type="file" accept="application/json,.json,.titan" aria-label="Selecionar Projeto TITAN" onChange={(event)=>{const file=event.target.files?.[0];if(file)void readFile(file);}} />
+    <div><span className="eyebrow">INSERIR MEU PROJETO</span><h3 id="import-title">Projeto externo</h3><p>Importe aqui sua programação de musculação em .titan ou .json. Planos de cardio são importados separadamente na área Cardio.</p></div>
+    <input ref={inputRef} className="file-input" type="file" accept="application/json,.json,.titan,.titan-cardio" aria-label="Selecionar Projeto TITAN" onChange={(event)=>{const file=event.target.files?.[0];if(file)void readFile(file);}} />
     <button type="button" className="primary-action" onClick={()=>inputRef.current?.click()}>Selecionar projeto</button>
     {fileName&&<p className="selected-file">Arquivo: <strong>{fileName}</strong></p>}
     {errors.length>0&&<div className="validation-message error" role="alert"><strong>Não foi possível importar</strong><ul>{errors.slice(0,8).map((error)=><li key={error}>{error}</li>)}</ul></div>}
