@@ -29,14 +29,12 @@ export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   'incline-barbell-press': embedded('incline-barbell-press','GhfwvlZbLGM','Supino inclinado com barra — execução','MyTrainingPRO'),
   'incline-dumbbell-press': embedded('incline-dumbbell-press','7V6kFe82iKk','Supino inclinado com halteres — execução','MyTrainingPRO'),
   'incline-machine-press': embedded('incline-machine-press','5OayotgIe9M','Supino inclinado máquina','Pedro Lonngren'),
-
   'lat-pulldown': embedded('lat-pulldown','VM4IQ4-km14','Puxada alta — execução','Marzrodie'),
   'one-arm-lat-pulldown': embedded('one-arm-lat-pulldown','t0yzt3Ba8kY','Puxada unilateral na polia alta','Prof. Matheus Gomes'),
   'straight-arm-pulldown': embedded('straight-arm-pulldown','WDOV2PDpkiU','Pulldown com braços estendidos','Colossus Fitness'),
   'seated-row': embedded('seated-row','qqZHnqzvbXs','Remada baixa sentada — pegada neutra','Functional AF'),
   'chest-supported-row': embedded('chest-supported-row','wDoIGNbiny0','Remada com peito apoiado','Gaintrust Bodybuilding'),
   'machine-row': embedded('machine-row','veciiO2SU2c','Remada unilateral máquina — execução','Kiki Cunningham'),
-
   'machine-shoulder-press': embedded('machine-shoulder-press','WvLMauqrnK8','Desenvolvimento na máquina','Renaissance Periodization'),
   'dumbbell-lateral-raise': embedded('dumbbell-lateral-raise','JeYouxFZZiI','Elevação lateral com halteres — execução','FITTR'),
   'cable-lateral-raise': embedded('cable-lateral-raise','GMuw8OAelS4','Elevação lateral unilateral na polia','Artagnan Consultoria Online'),
@@ -44,19 +42,16 @@ export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   'arnold-press': embedded('arnold-press','TEzehbTzBD0','Desenvolvimento Arnold — execução','FITTR'),
   'rear-delt-fly': embedded('rear-delt-fly','Q8DqRXPJk7g','Crucifixo inverso máquina','Cutler Nutrition'),
   'face-pull': embedded('face-pull','ljgqer1ZpXg','Face pull — execução','ATHLEAN-X'),
-
   'barbell-curl': embedded('barbell-curl','doiWKI0SgC8','Rosca direta com barra — execução','FITTR'),
   'ez-bar-curl': embedded('ez-bar-curl','Bi9GdTBXZtw','Rosca com barra W — execução','FITTR'),
   'preacher-curl': embedded('preacher-curl','AR-oARBkYxI','Rosca Scott — execução','Colossus Fitness'),
   'incline-dumbbell-curl': embedded('incline-dumbbell-curl','PAnypqTfEuU','Rosca inclinada — execução','Colossus Fitness'),
   'rope-hammer-curl': embedded('rope-hammer-curl','1Quc_tOv97I','Rosca martelo na corda — execução','ScottHermanFitness'),
-
   'skull-crusher': embedded('skull-crusher','4FWMMVhdBg8','Tríceps testa / skull crusher — execução','FITTR'),
   'dumbbell-overhead-extension': embedded('dumbbell-overhead-extension','T1EO7u2n7WU','Tríceps francês com halter — execução','FITTR'),
   'single-arm-pushdown': embedded('single-arm-pushdown','BnQ2rqS2K18','Tríceps unilateral na polia','Blueprint Fitness'),
   'rope-pushdown': embedded('rope-pushdown','4weS5P02X9k','Tríceps corda — execução','Gean Vernes'),
   'overhead-cable-extension': embedded('overhead-cable-extension','osFW51jFGgU','Extensão de tríceps acima da cabeça','T Nation'),
-
   'hack-squat': embedded('hack-squat','weyTbC-AjRg','Hack squat — execução e erros','FISIculturismo.com.br'),
   'leg-press': embedded('leg-press','SV3-hWw50_A','Leg press 45° — execução','Training Fit'),
   'leg-extension': embedded('leg-extension','y6juG3XuRe4','Cadeira extensora — execução','Tay Training'),
@@ -64,13 +59,13 @@ export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   'lying-leg-curl': embedded('lying-leg-curl','vl5nUdE9mWM','Mesa flexora — execução','Physique Development'),
   'single-leg-curl': embedded('single-leg-curl','J88VHzTDPyQ','Flexora unilateral — execução','Miqueias Alves Personal'),
   'machine-hip-thrust': embedded('machine-hip-thrust','tztHvSLdXLA','Hip thrust máquina — execução','Colossus Fitness'),
-
   'leg-press-calf-raise': embedded('leg-press-calf-raise','8k435cj30gc','Panturrilha no leg press','NASM'),
   'smith-calf-raise': embedded('smith-calf-raise','jZynHLSRxys','Panturrilha em pé no Smith','Adilson Silva'),
   'seated-calf-raise': embedded('seated-calf-raise','y2ueC0LggrI','Panturrilha sentada','AMOFitnessTraining'),
   'pallof-press': embedded('pallof-press','_2xWmYNnFS8','Pallof press — execução','Colossus Fitness'),
   'ab-wheel': embedded('ab-wheel','nCh8VfWY5_g','Roda abdominal — execução e erros','Redefining Strength'),
   'reverse-wrist-curl': embedded('reverse-wrist-curl','SngocRgAkvY','Extensão de punho — execução','AthleticMuscle'),
+  'reverse-curl': embedded('reverse-curl','f7FOpwcB-Rg','Rosca inversa com barra W — execução','YST Exercises'),
   'farmers-walk': embedded('farmers-walk','vi4X2iSOyiA','Caminhada do fazendeiro — técnica','Rogue Fitness'),
   'machine-shrug': embedded('machine-shrug','fChAG371a-s','Encolhimento máquina — execução','MrSupplement.com.au'),
 };
