@@ -1,18 +1,28 @@
 import type { TitanCatalogExercise } from './catalog';
+import { SPECIFIC_EXERCISE_VISUALS } from './specificVisuals';
 
 export function ExerciseMotionVisual({ exercise, compact = false }: { exercise: TitanCatalogExercise; compact?: boolean }) {
-  const config = visualConfig(exercise.pattern);
-  return <div className={`exercise-motion-visual${compact ? ' compact' : ''}`} aria-label={`Ilustração do padrão ${config.label}`}>
+  const specific = SPECIFIC_EXERCISE_VISUALS[exercise.id];
+  const generic = visualConfig(exercise.pattern);
+  const label = specific?.label ?? generic.label;
+  const cue = specific?.cue ?? generic.cue;
+  const bodyPath = specific?.bodyPath ?? 'M110 40 L110 82';
+  const armPath = specific?.armPath ?? generic.arms;
+  const legPath = specific?.legPath ?? generic.legs;
+  const motionPath = specific?.motionPath ?? generic.arrow;
+
+  return <div className={`exercise-motion-visual${compact ? ' compact' : ''}${specific ? ' specific' : ''}`} aria-label={`Ilustração de ${label}`}>
     <svg viewBox="0 0 220 150" role="img" aria-hidden="true">
       <defs><marker id={`arrow-${exercise.id}`} markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" /></marker></defs>
-      <circle className="motion-head" cx="110" cy="28" r="11" />
-      <path className="motion-body" d="M110 40 L110 82" />
-      <path className="motion-limb" d={config.arms} />
-      <path className="motion-limb" d={config.legs} />
-      <path className="motion-guide" d={config.arrow} markerEnd={`url(#arrow-${exercise.id})`} />
-      <circle className="motion-joint" cx="110" cy="82" r="4" />
+      {!specific && <circle className="motion-head" cx="110" cy="28" r="11" />}
+      {specific && <circle className="motion-head" cx="110" cy="28" r="10" />}
+      {specific?.equipmentPath && <path className="motion-equipment" d={specific.equipmentPath} />}
+      <path className="motion-body" d={bodyPath} />
+      <path className="motion-limb" d={armPath} />
+      <path className="motion-limb" d={legPath} />
+      <path className="motion-guide" d={motionPath} markerEnd={`url(#arrow-${exercise.id})`} />
     </svg>
-    {!compact && <div><strong>{config.label}</strong><span>{config.cue}</span></div>}
+    {!compact && <div><strong>{label}</strong><span>{cue}</span>{specific && <small>Ilustração específica TITAN</small>}</div>}
   </div>;
 }
 
