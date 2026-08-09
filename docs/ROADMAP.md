@@ -42,6 +42,10 @@ Objetivo: preparar a arquitetura definitiva antes de ampliar a geração intelig
 
 Objetivo: transformar perfil e projeto em entidades operacionais do produto.
 
+- Tela editável de perfil e avaliação em Configurações. ✅
+- Editar dados pessoais, objetivo, experiência, dias de treino, duração e equipamentos. ✅
+- Editar prioridades musculares, limitações e contexto de cardio. ✅
+- Alterações de perfil não reescrevem silenciosamente o projeto ativo. ✅
 - Lista de projetos em Configurações. ✅
 - Status de projeto: ativo, pausado, concluído, arquivado e rascunho. ✅
 - Troca de projeto ativo sem apagar histórico. ✅
@@ -49,7 +53,7 @@ Objetivo: transformar perfil e projeto em entidades operacionais do produto.
 - Associar projeto importado sem perfil ao perfil ativo. ✅
 - Carregar automaticamente o plano ligado ao projeto selecionado. ✅
 - Preservar projetos antigos como ciclos históricos. ✅
-- Próximo: tela dedicada de perfil e edição da avaliação.
+- Preparar seleção futura de múltiplos perfis. ✅
 
 ## v0.50 — TITAN Engine
 
