@@ -57,9 +57,14 @@ export const EXERCISE_VIDEO_REGISTRY: Record<string, ExerciseVideoMetadata> = {
   'rope-pushdown': embedded('rope-pushdown','4weS5P02X9k','Tríceps corda — execução','Gean Vernes'),
   'overhead-cable-extension': embedded('overhead-cable-extension','osFW51jFGgU','Extensão de tríceps acima da cabeça','T Nation'),
 
+  'hack-squat': embedded('hack-squat','weyTbC-AjRg','Hack squat — execução e erros','FISIculturismo.com.br'),
+  'leg-press': embedded('leg-press','SV3-hWw50_A','Leg press 45° — execução','Training Fit'),
+  'leg-extension': embedded('leg-extension','y6juG3XuRe4','Cadeira extensora — execução','Tay Training'),
+  'seated-leg-curl': embedded('seated-leg-curl','Zss6E3VU6X0','Cadeira flexora — execução','Leandro Twin'),
   'lying-leg-curl': embedded('lying-leg-curl','vl5nUdE9mWM','Mesa flexora — execução','Physique Development'),
   'single-leg-curl': embedded('single-leg-curl','J88VHzTDPyQ','Flexora unilateral — execução','Miqueias Alves Personal'),
   'machine-hip-thrust': embedded('machine-hip-thrust','tztHvSLdXLA','Hip thrust máquina — execução','Colossus Fitness'),
+
   'leg-press-calf-raise': embedded('leg-press-calf-raise','8k435cj30gc','Panturrilha no leg press','NASM'),
   'smith-calf-raise': embedded('smith-calf-raise','jZynHLSRxys','Panturrilha em pé no Smith','Adilson Silva'),
   'seated-calf-raise': embedded('seated-calf-raise','y2ueC0LggrI','Panturrilha sentada','AMOFitnessTraining'),
