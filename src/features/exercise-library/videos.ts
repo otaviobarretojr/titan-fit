@@ -1,4 +1,6 @@
 import type { TitanExercise } from '../plan/types';
+import { TITAN_FULL_EXERCISE_CATALOG } from './library';
+import { TITAN_EXERCISE_VIDEO_REGISTRY } from './videoLibrary';
 
 export type CuratedExerciseVideo = {
   videoId: string;
@@ -51,17 +53,38 @@ const CURATED_VIDEOS: Array<{ match: RegExp; video: CuratedExerciseVideo }> = [
   { match: /supino inclinado.*m[aá]quina/i, video: { videoId: '5OayotgIe9M', title: 'Supino Inclinado na Máquina', source: 'YouTube · Pedro Lonngren' } },
   { match: /crucifixo inclinado/i, video: { videoId: 'DBHJKvY8mX0', title: 'Incline Cable Fly', source: 'YouTube · Exercises.com.au' } },
   { match: /encolhimento.*m[aá]quina/i, video: { videoId: 'fChAG371a-s', title: 'Machine Shrug Exercise', source: 'YouTube · MrSupplement.com.au' } },
-  { match: /rosca inversa.*ez|rosca inversa.*barra/i, video: { videoId: 'f7FOpwcB-Rg', title: 'Reverse Curl EZ Bar', source: 'YouTube · YST Exercises' } }
+  { match: /rosca inversa.*ez|rosca inversa.*barra/i, video: { videoId: 'f7FOpwcB-Rg', title: 'Reverse Curl EZ Bar', source: 'YouTube · YST Exercises' } },
 ];
+
+function normalize(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function centralVideoFor(exercise: TitanExercise): CuratedExerciseVideo | null {
+  const direct = TITAN_EXERCISE_VIDEO_REGISTRY[exercise.id];
+  const catalogMatch = direct
+    ? null
+    : TITAN_FULL_EXERCISE_CATALOG.find((item) => normalize(item.name) === normalize(exercise.name));
+  const metadata = direct ?? (catalogMatch ? TITAN_EXERCISE_VIDEO_REGISTRY[catalogMatch.id] : undefined);
+  if (!metadata || metadata.provider !== 'youtube' || !metadata.videoId) return null;
+  return {
+    videoId: metadata.videoId,
+    title: metadata.title,
+    source: metadata.sourceName,
+  };
+}
 
 export function getExerciseVideo(exercise: TitanExercise): CuratedExerciseVideo | null {
   if (exercise.video?.videoId) {
     return {
       videoId: exercise.video.videoId,
       title: exercise.video.title ?? `Execução de ${exercise.name}`,
-      source: exercise.video.channel ? `YouTube · ${exercise.video.channel}` : 'Vídeo da ficha'
+      source: exercise.video.channel ? `YouTube · ${exercise.video.channel}` : 'Vídeo da ficha',
     };
   }
+
+  const central = centralVideoFor(exercise);
+  if (central) return central;
 
   return CURATED_VIDEOS.find((entry) => entry.match.test(exercise.name))?.video ?? null;
 }
