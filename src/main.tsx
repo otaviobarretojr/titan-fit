@@ -42,7 +42,6 @@ import './styles/programming-v033.css';
 import './styles/exercise-alternatives-v036.css';
 import './styles/workout-mode-v038.css';
 import './styles/profile-onboarding.css';
-import './styles/beta-v045.css';
 import './styles/exercise-library-v048.css';
 import './styles/ui-audit-v055.css';
 import './styles/exercise-video-v059.css';
