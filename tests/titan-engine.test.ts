@@ -10,11 +10,11 @@ const assessment: TitanEngineAssessment = {
 };
 
 const exercises: TitanEngineExercise[] = [
-  { id: 'row', name: 'Remada', primaryMuscle: 'Costas', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: [], commonMistakes: [], substitutions: [] },
-  { id: 'press', name: 'Supino máquina', primaryMuscle: 'Peitoral', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: [], commonMistakes: [], substitutions: [] },
-  { id: 'fly', name: 'Crucifixo', primaryMuscle: 'Peitoral', repRange: [10, 15], defaultRir: 2, restSeconds: 90, technique: [], commonMistakes: [], substitutions: [] },
-  { id: 'squat', name: 'Agachamento', primaryMuscle: 'Quadríceps', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: [], commonMistakes: [], substitutions: [] },
-  { id: 'curl', name: 'Rosca direta', primaryMuscle: 'Bíceps', repRange: [8, 12], defaultRir: 2, restSeconds: 90, technique: [], commonMistakes: [], substitutions: [] },
+  { id: 'row', name: 'Remada', primaryMuscle: 'Costas', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'press', name: 'Supino máquina', primaryMuscle: 'Peitoral', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'fly', name: 'Crucifixo', primaryMuscle: 'Peitoral', repRange: [10, 15], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'squat', name: 'Agachamento', primaryMuscle: 'Quadríceps', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'curl', name: 'Rosca direta', primaryMuscle: 'Bíceps', repRange: [8, 12], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
 ];
 
 const rule = { weeklySetsPerMuscle: [8, 14] as [number, number], maxExercisesPerSession: 6 };
