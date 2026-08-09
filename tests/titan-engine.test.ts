@@ -54,4 +54,25 @@ describe('TITAN Engine', () => {
     expect(result.candidates.every((candidate) => candidate.workouts.length === 7)).toBe(true);
     expect(result.warnings.some((warning) => warning.includes('1 a 7'))).toBe(true);
   });
+
+  it('calcula volume, fadiga, equilíbrio e score para cada candidato', () => {
+    const result = generateTitanEngineBlueprints(assessment, exercises, rule);
+    for (const candidate of result.candidates) {
+      expect(Object.keys(candidate.metrics.weeklySetsByMuscle).length).toBeGreaterThan(0);
+      expect(candidate.metrics.volumeTargetCoverage).toBeGreaterThanOrEqual(0);
+      expect(candidate.metrics.volumeTargetCoverage).toBeLessThanOrEqual(100);
+      expect(candidate.metrics.sessionBalance).toBeGreaterThanOrEqual(0);
+      expect(candidate.metrics.fatigueScore).toBeGreaterThanOrEqual(0);
+      expect(candidate.metrics.score).toBeGreaterThanOrEqual(0);
+      expect(candidate.metrics.score).toBeLessThanOrEqual(100);
+    }
+  });
+
+  it('marca exatamente uma estratégia como recomendada e explica a escolha', () => {
+    const result = generateTitanEngineBlueprints(assessment, exercises, rule);
+    expect(result.candidates.filter((candidate) => candidate.recommended)).toHaveLength(1);
+    expect(result.candidates.find((candidate) => candidate.recommended)?.strategy).toBe(result.recommendedStrategy);
+    expect(result.recommendationReasons.length).toBeGreaterThan(0);
+    expect(result.recommendationReasons[0]).toContain('Score TITAN');
+  });
 });
