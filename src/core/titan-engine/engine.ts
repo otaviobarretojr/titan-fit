@@ -136,6 +136,7 @@ function buildCandidate(
   const config = strategySettings(strategy);
   const split = buildSplit(assessment.trainingDaysPerWeek);
   const avoided = new Set(assessment.avoidedExerciseIds ?? []);
+  const accumulatedSets: Record<string, number> = {};
   const workouts = split.map((focus, dayIndex) => {
     const pool = exercises
       .filter((exercise) => focusMatches(focus, exercise.primaryMuscle))
@@ -145,14 +146,23 @@ function buildCandidate(
     const requestedCount = Math.round(rule.maxExercisesPerSession * config.exerciseScale);
     const count = Math.max(1, Math.min(rule.maxExercisesPerSession, requestedCount));
     const chosen = pool.slice(0, count);
+    const prescribed: TitanEngineCandidateBlueprint['workouts'][number]['exercises'] = [];
+    for (const exercise of chosen) {
+      const priority = priorityScore(exercise.primaryMuscle, assessment.musclePriorities) > 0;
+      const desiredSets = Math.max(2, Math.round((priority ? 3.5 : 3) * config.setScale));
+      const weeklyCeiling = Math.round(rule.weeklySetsPerMuscle[1] * (priority ? 1.15 : 1));
+      const currentSets = accumulatedSets[exercise.primaryMuscle] ?? 0;
+      const remaining = weeklyCeiling - currentSets;
+      if (remaining < 2) continue;
+      const sets = Math.min(desiredSets, remaining);
+      accumulatedSets[exercise.primaryMuscle] = currentSets + sets;
+      prescribed.push({ ...exercise, priority, sets });
+    }
     return {
       dayIndex,
       dayLabel: assessment.availableTrainingDays?.[dayIndex] ?? DAY_NAMES[dayIndex] ?? `Dia ${dayIndex + 1}`,
       focus,
-      exercises: chosen.map((exercise) => {
-        const priority = priorityScore(exercise.primaryMuscle, assessment.musclePriorities) > 0;
-        return { ...exercise, priority, sets: Math.max(2, Math.round((priority ? 3.5 : 3) * config.setScale)) };
-      }),
+      exercises: prescribed,
     };
   });
   const base = { strategy, title: config.title, rationale: rationaleFor(strategy, assessment), workouts, metrics: {} as TitanEngineCandidateMetrics, recommended: false };
