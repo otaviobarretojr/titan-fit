@@ -25,6 +25,6 @@ describe('PlanCandidatesPage', () => {
     expect(screen.getByText('★ RECOMENDADO PELO TITAN')).toBeInTheDocument();
     expect(screen.getByLabelText('Score TITAN 94 de 100')).toBeInTheDocument();
     expect(screen.getByText('92%')).toBeInTheDocument();
-    expect(screen.getByText('Upper · Lower')).toBeInTheDocument();
+    expect(screen.getAllByText('Upper · Lower')).toHaveLength(3);
   });
 });
