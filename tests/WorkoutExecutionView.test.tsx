@@ -8,6 +8,11 @@ const workout: TitanWorkoutDay = {
   exercises: [{ id: 'bench', name: 'Supino máquina', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 8, maxReps: 10, targetRir: 2, restSeconds: 90 }]
 };
 
+function unlockVideoIfPresent() {
+  const skip = screen.queryByRole('button', { name: 'Pular demonstração' });
+  if (skip) fireEvent.click(skip);
+}
+
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -16,8 +21,18 @@ beforeEach(() => {
 });
 
 describe('WorkoutExecutionView', () => {
+  it('exibe a demonstração cadastrada antes de liberar as séries', () => {
+    render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    expect(screen.getByTitle('Chest press convergente — execução')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Supino máquina série 1 carga')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Já assisti · começar séries' }));
+    expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
+  });
+
   it('registra carga, repetições e RIR mantendo o cabeçalho compacto', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    unlockVideoIfPresent();
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
@@ -36,14 +51,34 @@ describe('WorkoutExecutionView', () => {
 
   it('inicia o descanso automático ao registrar a série', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    unlockVideoIfPresent();
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
   });
 
+  it('troca para uma alternativa oficial e exibe o vídeo próprio dela', () => {
+    const workoutWithAlternative: TitanWorkoutDay = {
+      ...workout,
+      exercises: [{
+        ...workout.exercises[0],
+        id: 'chest-press-machine',
+        alternativeExercises: [{ id: 'bench-press', name: 'Supino reto com barra', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 5, maxReps: 10, targetRir: 2, restSeconds: 150 }],
+      }],
+    };
+    render(<WorkoutExecutionView planId="plan-alt" planName="Plano A" workout={workoutWithAlternative} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    unlockVideoIfPresent();
+    fireEvent.click(screen.getByText('Trocar'));
+    fireEvent.click(screen.getByRole('button', { name: /Alternativa Supino reto com barra/i }));
+    expect(screen.getByText('Alternativa selecionada · histórico próprio')).toBeInTheDocument();
+    expect(screen.getByTitle('Supino reto com barra — execução')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();
+  });
+
   it('salva o histórico e apresenta o resumo final', () => {
     const onCompleted = vi.fn();
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);
+    unlockVideoIfPresent();
 
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
