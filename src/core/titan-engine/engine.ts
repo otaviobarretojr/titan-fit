@@ -68,6 +68,7 @@ function rationaleFor(strategy: TitanEngineStrategy, assessment: TitanEngineAsse
     : strategy === 'balanced'
       ? ['Equilibra estímulo, recuperação e tempo de sessão.', 'É a recomendação padrão do TITAN para este perfil.']
       : ['Aproveita mais da disponibilidade informada.', 'Usa volume um pouco maior sem ultrapassar os limites definidos para a experiência atual.'];
+  rationale.push('Alterna exercícios compatíveis entre sessões repetidas para reduzir redundância sem abandonar a progressão dos movimentos-base.');
   if (assessment.musclePriorities?.length) rationale.push(`Prioriza ${assessment.musclePriorities.length} grupo(s) muscular(es) selecionado(s) sem abandonar o restante do corpo.`);
   if (assessment.limitations?.length) rationale.push('Considera as limitações informadas como filtro conservador; elas não substituem avaliação profissional.');
   return rationale;
@@ -153,6 +154,10 @@ function metricsFor(candidate: TitanEngineCandidateBlueprint, assessment: TitanE
   return { weeklySetsByMuscle: weekly, weeklyFrequencyByMuscle: frequency, volumeTargetCoverage: volume, frequencyScore, sessionBalance: balance, fatigueScore: fatigue, strategyFit: fit, score };
 }
 
+function usageKey(exercise: TitanEngineExercise) {
+  return `${exercise.primaryMuscle}::${exercise.movementPattern ?? 'unknown'}`;
+}
+
 function buildCandidate(
   strategy: TitanEngineStrategy,
   assessment: TitanEngineAssessment,
@@ -163,12 +168,22 @@ function buildCandidate(
   const split = buildSplit(assessment.trainingDaysPerWeek);
   const avoided = new Set(assessment.avoidedExerciseIds ?? []);
   const accumulatedSets: Record<string, number> = {};
+  const exerciseUsage: Record<string, number> = {};
+  const patternUsage: Record<string, number> = {};
   const workouts = split.map((focus, dayIndex) => {
     const pool = exercises
       .filter((exercise) => focusMatches(focus, exercise.primaryMuscle))
       .filter((exercise) => !avoided.has(exercise.id))
       .filter((exercise) => !isPotentiallyLimited(exercise, assessment))
-      .sort((a, b) => priorityScore(b.primaryMuscle, assessment.musclePriorities) - priorityScore(a.primaryMuscle, assessment.musclePriorities));
+      .sort((a, b) => {
+        const priorityDiff = priorityScore(b.primaryMuscle, assessment.musclePriorities) - priorityScore(a.primaryMuscle, assessment.musclePriorities);
+        if (priorityDiff) return priorityDiff;
+        const exerciseDiff = (exerciseUsage[a.id] ?? 0) - (exerciseUsage[b.id] ?? 0);
+        if (exerciseDiff) return exerciseDiff;
+        const patternDiff = (patternUsage[usageKey(a)] ?? 0) - (patternUsage[usageKey(b)] ?? 0);
+        if (patternDiff) return patternDiff;
+        return a.id.localeCompare(b.id);
+      });
     const requestedCount = Math.round(rule.maxExercisesPerSession * config.exerciseScale);
     const count = Math.max(1, Math.min(rule.maxExercisesPerSession, requestedCount));
     const chosen = pool.slice(0, count);
@@ -182,6 +197,8 @@ function buildCandidate(
       if (remaining < 2) continue;
       const sets = Math.min(desiredSets, remaining);
       accumulatedSets[exercise.primaryMuscle] = currentSets + sets;
+      exerciseUsage[exercise.id] = (exerciseUsage[exercise.id] ?? 0) + 1;
+      patternUsage[usageKey(exercise)] = (patternUsage[usageKey(exercise)] ?? 0) + 1;
       prescribed.push({ ...exercise, priority, sets });
     }
     return {
