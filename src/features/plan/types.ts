@@ -12,5 +12,5 @@ export type TitanExercise = { id:string; name:string; muscleGroup:string; exerci
 export type TitanWorkoutDay = { id:string; day:string; title:string; focus?:string; exercises:TitanExercise[] };
 export type TitanCardioSession = { id:string; day:string; startTime:string; title:string; type:'walk'|'zone2'|'run-walk'|'run'|'hiit'|'bike'|'stairs'|'other'; durationMinutes:number; week?:number; phase?:string; goal?:string; instructions?:string[] };
 export type TitanProject = { name:string; objective:string; startDate?:string; durationWeeks?:number; strengthStartTime?:string; cardioGoal?:string; cardioSchedule?:TitanCardioSession[]; source?:PlanOrigin; originalAuthor?:string; importedAt?:string; sourceFile?:string };
-export type TitanPlan = { schemaVersion:typeof TITAN_PLAN_SCHEMA_VERSION; id:string; name:string; description?:string; createdAt:string; author?:string; project?:TitanProject; videoLibrary?:TitanVideoLibrary; workouts:TitanWorkoutDay[] };
+export type TitanPlan = { schemaVersion:typeof TITAN_PLAN_SCHEMA_VERSION; id:string; profileId?:string; projectId?:string; name:string; description?:string; createdAt:string; author?:string; project?:TitanProject; videoLibrary?:TitanVideoLibrary; workouts:TitanWorkoutDay[] };
 export type PlanValidationResult = { ok:true; plan:TitanPlan; warnings:string[] } | { ok:false; errors:string[] };
