@@ -16,15 +16,10 @@ import { ProgrammingPage } from '../features/programming/ProgrammingPage';
 type TabId = 'today' | 'programming' | 'cardio' | 'progress' | 'settings' | 'workout';
 type NavigationTab = Exclude<TabId, 'workout'>;
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
-const APP_VERSION = '0.37.0';
+const APP_VERSION = '0.38.0';
 const tabs: Array<{ id: NavigationTab; label: string }> = [
-  { id: 'today', label: 'Hoje' },
-  { id: 'programming', label: 'Programação' },
-  { id: 'cardio', label: 'Cardio' },
-  { id: 'progress', label: 'Progresso' },
-  { id: 'settings', label: 'Configurações' }
+  { id: 'today', label: 'Hoje' }, { id: 'programming', label: 'Programação' }, { id: 'cardio', label: 'Cardio' }, { id: 'progress', label: 'Progresso' }, { id: 'settings', label: 'Configurações' }
 ];
-
 function isTabId(value: unknown): value is TabId { return value === 'workout' || tabs.some((tab) => tab.id === value); }
 
 export function App() {
@@ -32,6 +27,7 @@ export function App() {
   const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
   const [showImporter, setShowImporter] = useState(false);
   const [directWorkoutId, setDirectWorkoutId] = useState<string | null>(null);
+  const [directCardioId, setDirectCardioId] = useState<string | null>(null);
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [demoMode, setDemoMode] = useState(() => isDemoMode());
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -43,104 +39,39 @@ export function App() {
   useEffect(() => {
     const updateConnection = () => setIsOnline(navigator.onLine);
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
-    const handlePopState = (event: PopStateEvent) => {
-      const nextTab = isTabId(event.state?.titanTab) ? event.state.titanTab : 'today';
-      setActiveTab(nextTab);
-      setShowImporter(false);
-      setDirectWorkoutId(null);
-    };
+    const handlePopState = (event: PopStateEvent) => { const nextTab = isTabId(event.state?.titanTab) ? event.state.titanTab : 'today'; setActiveTab(nextTab); setShowImporter(false); setDirectWorkoutId(null); setDirectCardioId(null); };
     if (!isTabId(window.history.state?.titanTab)) window.history.replaceState({ ...window.history.state, titanTab: activeTab }, '');
-    window.addEventListener('online', updateConnection);
-    window.addEventListener('offline', updateConnection);
-    window.addEventListener('beforeinstallprompt', captureInstallPrompt);
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('online', updateConnection); window.addEventListener('offline', updateConnection); window.addEventListener('beforeinstallprompt', captureInstallPrompt); window.addEventListener('popstate', handlePopState);
     void migrateLegacyStorage().then(() => setDataEngineStatus('ready')).catch(() => setDataEngineStatus('unavailable'));
-    return () => {
-      window.removeEventListener('online', updateConnection);
-      window.removeEventListener('offline', updateConnection);
-      window.removeEventListener('beforeinstallprompt', captureInstallPrompt);
-      window.removeEventListener('popstate', handlePopState);
-    };
+    return () => { window.removeEventListener('online', updateConnection); window.removeEventListener('offline', updateConnection); window.removeEventListener('beforeinstallprompt', captureInstallPrompt); window.removeEventListener('popstate', handlePopState); };
   }, []);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
-  async function checkForUpdate() {
-    try {
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        await registration?.update();
-      }
-    } catch (error) {
-      console.warn('Não foi possível verificar a atualização do PWA.', error);
-    } finally {
-      window.location.reload();
-    }
-  }
-  function navigate(tab: TabId, replace = false) {
-    if (tab !== activeTab || directWorkoutId || showImporter) {
-      const state = { ...window.history.state, titanTab: tab };
-      if (replace) window.history.replaceState(state, ''); else window.history.pushState(state, '');
-    }
-    setActiveTab(tab);
-    if (tab !== 'settings') setShowImporter(false);
-    if (tab !== 'workout') setDirectWorkoutId(null);
-  }
-  function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setDirectWorkoutId(null); setDemoMode(false); localStorage.removeItem('titan-fit:demo-mode'); navigate('today', true); }
-  function deletePlan() {
-    const message = demoMode
-      ? 'Remover apenas o projeto demonstrativo ativo? O histórico, cardio e avaliações da demonstração continuarão salvos. Para apagar toda a demonstração, use “Remover dados da demonstração” em Configurações.'
-      : 'Remover apenas o projeto ativo? Seu histórico de treinos, PRs, cardio, evolução corporal e fotos serão preservados.';
-    if (!window.confirm(message)) return;
-    removeActivePlan();
-    setActivePlan(null);
-    setShowImporter(false);
-  }
+  async function checkForUpdate() { try { if ('serviceWorker' in navigator) { const registration = await navigator.serviceWorker.getRegistration(); await registration?.update(); } } catch (error) { console.warn('Não foi possível verificar a atualização do PWA.', error); } finally { window.location.reload(); } }
+  function navigate(tab: TabId, replace = false) { if (tab !== activeTab || directWorkoutId || directCardioId || showImporter) { const state = { ...window.history.state, titanTab: tab }; if (replace) window.history.replaceState(state, ''); else window.history.pushState(state, ''); } setActiveTab(tab); if (tab !== 'settings') setShowImporter(false); if (tab !== 'workout') setDirectWorkoutId(null); if (tab !== 'cardio') setDirectCardioId(null); }
+  function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setDirectWorkoutId(null); setDirectCardioId(null); setDemoMode(false); localStorage.removeItem('titan-fit:demo-mode'); navigate('today', true); }
+  function deletePlan() { const message = demoMode ? 'Remover apenas o projeto demonstrativo ativo? O histórico, cardio e avaliações da demonstração continuarão salvos. Para apagar toda a demonstração, use “Remover dados da demonstração” em Configurações.' : 'Remover apenas o projeto ativo? Seu histórico de treinos, PRs, cardio, evolução corporal e fotos serão preservados.'; if (!window.confirm(message)) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); }
   function historyChanged() { setHistoryRefresh((value) => value + 1); navigate('today'); }
+  function cardioHistoryChanged() { setHistoryRefresh((value) => value + 1); }
   function openTab(tab: NavigationTab) { navigate(tab); }
   function openProjectSettings() { setShowImporter(!activePlan); navigate('settings'); }
   function startWorkout(workoutId: string) { setShowImporter(false); setDirectWorkoutId(workoutId); navigate('workout'); }
+  function startCardio(sessionId: string) { setShowImporter(false); setDirectCardioId(sessionId); navigate('cardio'); }
 
-  async function loadDemoData() {
-    if (!window.confirm('Ativar a demonstração completa? Os dados locais atuais serão substituídos por um projeto de exemplo e registros de treino, cardio e evolução corporal.')) return;
-    await resetAllAppData();
-    await loadFullDemo();
-    setActivePlan(demoPlan);
-    setDemoMode(true);
-    setHistoryRefresh((value) => value + 1);
-    window.alert('Modo Demonstração completo ativado. Todas as abas agora possuem dados de exemplo.');
-    navigate('today', true);
-  }
-
-  async function removeDemoData() {
-    if (!demoMode) return;
-    if (!window.confirm('Remover todos os dados da demonstração? Projeto demo, histórico, cardio e avaliações corporais fictícias serão apagados.')) return;
-    await resetAllAppData();
-    setActivePlan(null);
-    setDemoMode(false);
-    setShowImporter(false);
-    setDirectWorkoutId(null);
-    setHistoryRefresh((value) => value + 1);
-    window.alert('Dados da demonstração removidos. O TITAN FIT voltou ao estado inicial.');
-    navigate('today', true);
-  }
-
-  async function resetApp() {
-    const confirmation = window.prompt('Esta ação apaga permanentemente TODOS os dados deste aparelho: projeto, treinos, histórico, cardio, evolução corporal, fotos e preferências. Digite RESETAR para confirmar.');
-    if (confirmation !== 'RESETAR') return;
-    await resetAllAppData();
-    window.location.reload();
-  }
+  async function loadDemoData() { if (!window.confirm('Ativar a demonstração completa? Os dados locais atuais serão substituídos por um projeto de exemplo e registros de treino, cardio e evolução corporal.')) return; await resetAllAppData(); await loadFullDemo(); setActivePlan(demoPlan); setDemoMode(true); setHistoryRefresh((value) => value + 1); window.alert('Modo Demonstração completo ativado. Todas as abas agora possuem dados de exemplo.'); navigate('today', true); }
+  async function removeDemoData() { if (!demoMode) return; if (!window.confirm('Remover todos os dados da demonstração? Projeto demo, histórico, cardio e avaliações corporais fictícias serão apagados.')) return; await resetAllAppData(); setActivePlan(null); setDemoMode(false); setShowImporter(false); setDirectWorkoutId(null); setDirectCardioId(null); setHistoryRefresh((value) => value + 1); window.alert('Dados da demonstração removidos. O TITAN FIT voltou ao estado inicial.'); navigate('today', true); }
+  async function resetApp() { const confirmation = window.prompt('Esta ação apaga permanentemente TODOS os dados deste aparelho: projeto, treinos, histórico, cardio, evolução corporal, fotos e preferências. Digite RESETAR para confirmar.'); if (confirmation !== 'RESETAR') return; await resetAllAppData(); window.location.reload(); }
 
   return <div className="app-shell">
     <header className="app-header"><div><span className="eyebrow">TREINO E PROGRESSÃO</span><h1>TITAN FIT</h1></div><div className="header-status-group">{demoMode && <span className="demo-pill">DEMO</span>}<span className={`status-pill ${isOnline ? 'online' : 'offline'}`}>{isOnline ? 'Online' : 'Offline'}</span></div></header>
     <main className="app-main">
-      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openProjectSettings} onStartWorkout={startWorkout} onOpenProgress={() => openTab('progress')} />}
+      {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openProjectSettings} onStartWorkout={startWorkout} onStartCardio={startCardio} onOpenProgress={() => openTab('progress')} />}
       {activeTab === 'programming' && <ProgrammingPage plan={activePlan} />}
-      {activeTab === 'cardio' && <CardioPage plan={activePlan} refreshKey={historyRefresh} />}
+      {activeTab === 'cardio' && <CardioPage plan={activePlan} refreshKey={historyRefresh} initialSessionId={directCardioId} onHistoryChange={cardioHistoryChanged} onCloseExecution={() => { setDirectCardioId(null); navigate('today'); }} />}
       {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
       {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} />}
       {activeTab === 'settings' && <><EmptyPage title="Configurações" body="Projeto, dados, backup, instalação e manutenção do TITAN FIT." />
-        <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Substituir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. Histórico, cardio e evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar substituição</button>}</div>}</section>
+        <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Inserir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. Histórico, cardio e evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar</button>}</div>}</section>
         <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v{APP_VERSION}</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => void checkForUpdate()}>Verificar atualização</button></section>
         <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, histórico de treino, cargas, cardio e evolução corporal fictícios para testar todas as funções.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button>{demoMode && <button type="button" className="secondary-action" onClick={() => void removeDemoData()}>Remover dados da demonstração</button>}<div className="settings-danger-zone"><span className="info-label">Zona de segurança</span><strong>Apagar todos os dados</strong><small>Remove permanentemente projeto, sessões, histórico, evolução corporal, cardio, fotos e preferências salvas neste aparelho.</small><button type="button" className="secondary-action danger-action" onClick={() => void resetApp()}>Resetar TITAN FIT</button></div></section><BackupPanel /></>}
     </main>
@@ -150,12 +81,5 @@ export function App() {
   </div>;
 }
 
-function NavIcon({ id }: { id: NavigationTab }) {
-  if (id === 'today') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>;
-  if (id === 'programming') return <svg className="nav-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M8 14h2M14 14h2M8 18h2"/></svg>;
-  if (id === 'cardio') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/><path d="M3.5 13h4l1.5-3 2.5 6 2-4h7"/></svg>;
-  if (id === 'progress') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 18 9 13l3.5 3.5L20 8"/><path d="M15 8h5v5"/></svg>;
-  return <svg className="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.5v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.5h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4.1v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8c.14.42.36.77.6 1 .3.27.68.4 1.1.4h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>;
-}
-
+function NavIcon({ id }: { id: NavigationTab }) { if (id === 'today') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>; if (id === 'programming') return <svg className="nav-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M8 14h2M14 14h2M8 18h2"/></svg>; if (id === 'cardio') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/><path d="M3.5 13h4l1.5-3 2.5 6 2-4h7"/></svg>; if (id === 'progress') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 18 9 13l3.5 3.5L20 8"/><path d="M15 8h5v5"/></svg>; return <svg className="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.5v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.5h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4.1v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8c.14.42.36.77.6 1 .3.27.68.4 1.1.4h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>; }
 function EmptyPage({ title, body }: { title: string; body: string }) { return <section className="hero-card compact" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{title}</h2><p>{body}</p></section>; }

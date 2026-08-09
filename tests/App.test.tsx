@@ -8,11 +8,11 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT v0.37.0', () => {
-  it('renderiza o estado vazio e oferece importação de projeto', () => {
+describe('TITAN FIT v0.38.0', () => {
+  it('renderiza o estado vazio e oferece inserção de projeto', () => {
     render(<App />);
     expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Importar projeto' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Inserir projeto' })).toBeEnabled();
     expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
   });
 
@@ -31,7 +31,7 @@ describe('TITAN FIT v0.37.0', () => {
     fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
     expect(screen.getByRole('heading', { name: 'Nenhum projeto ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Configurações$/i }));
-    expect(screen.getByText('v0.37.0')).toBeInTheDocument();
+    expect(screen.getByText('v0.38.0')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
