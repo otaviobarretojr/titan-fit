@@ -56,3 +56,14 @@ export async function ensureProjectForPlan(plan: TitanPlan, profileId: string | 
   }
   return createProjectForPlan(plan, profileId, plan.project?.source ?? 'imported');
 }
+
+export async function linkPlanToProject(plan: TitanPlan, profileId: string | null): Promise<TitanPlan> {
+  const project = await ensureProjectForPlan(plan, profileId);
+  return {
+    ...plan,
+    profileId: profileId ?? plan.profileId,
+    projectId: project.id,
+  };
+}
+
+export { ACTIVE_PROJECT_POINTER };
