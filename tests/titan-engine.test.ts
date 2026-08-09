@@ -55,12 +55,15 @@ describe('TITAN Engine', () => {
     expect(result.warnings.some((warning) => warning.includes('1 a 7'))).toBe(true);
   });
 
-  it('calcula volume, fadiga, equilíbrio e score para cada candidato', () => {
+  it('calcula volume, frequência, fadiga, equilíbrio e score para cada candidato', () => {
     const result = generateTitanEngineBlueprints(assessment, exercises, rule);
     for (const candidate of result.candidates) {
       expect(Object.keys(candidate.metrics.weeklySetsByMuscle).length).toBeGreaterThan(0);
+      expect(Object.keys(candidate.metrics.weeklyFrequencyByMuscle).length).toBeGreaterThan(0);
       expect(candidate.metrics.volumeTargetCoverage).toBeGreaterThanOrEqual(0);
       expect(candidate.metrics.volumeTargetCoverage).toBeLessThanOrEqual(100);
+      expect(candidate.metrics.frequencyScore).toBeGreaterThanOrEqual(0);
+      expect(candidate.metrics.frequencyScore).toBeLessThanOrEqual(100);
       expect(candidate.metrics.sessionBalance).toBeGreaterThanOrEqual(0);
       expect(candidate.metrics.fatigueScore).toBeGreaterThanOrEqual(0);
       expect(candidate.metrics.score).toBeGreaterThanOrEqual(0);
@@ -75,6 +78,28 @@ describe('TITAN Engine', () => {
       expect(candidate.metrics.weeklySetsByMuscle.Quadríceps ?? 0).toBeLessThanOrEqual(14);
       expect(candidate.metrics.weeklySetsByMuscle.Peitoral ?? 0).toBeLessThanOrEqual(Math.round(14 * 1.15));
     }
+  });
+
+  it('distribui músculos em mais de uma sessão quando a rotina tem quatro dias ou mais', () => {
+    const balanced = generateTitanEngineBlueprints(assessment, exercises, rule).candidates[1];
+    expect(balanced.metrics.weeklyFrequencyByMuscle.Peitoral).toBeGreaterThanOrEqual(2);
+    expect(balanced.metrics.weeklyFrequencyByMuscle.Costas).toBeGreaterThanOrEqual(2);
+    expect(balanced.metrics.frequencyScore).toBeGreaterThanOrEqual(75);
+  });
+
+  it('não ultrapassa o limite de exercícios por sessão', () => {
+    const result = generateTitanEngineBlueprints({ ...assessment, trainingDaysPerWeek: 6 }, exercises, rule);
+    for (const candidate of result.candidates) {
+      for (const workout of candidate.workouts) expect(workout.exercises.length).toBeLessThanOrEqual(rule.maxExercisesPerSession);
+    }
+  });
+
+  it('penaliza mais uma sessão com descansos longos na métrica de fadiga', () => {
+    const longRestExercises = exercises.map((exercise) => ({ ...exercise, restSeconds: 180 }));
+    const shortRestExercises = exercises.map((exercise) => ({ ...exercise, restSeconds: 60 }));
+    const longRest = generateTitanEngineBlueprints(assessment, longRestExercises, rule).candidates[1].metrics.fatigueScore;
+    const shortRest = generateTitanEngineBlueprints(assessment, shortRestExercises, rule).candidates[1].metrics.fatigueScore;
+    expect(longRest).toBeLessThanOrEqual(shortRest);
   });
 
   it('marca exatamente uma estratégia como recomendada e explica a escolha', () => {
