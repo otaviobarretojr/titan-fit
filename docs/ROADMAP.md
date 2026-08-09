@@ -40,14 +40,16 @@ Objetivo: preparar a arquitetura definitiva antes de ampliar a geração intelig
 
 ## v0.45 — Profile & Project Core
 
-Objetivo: transformar o perfil e o projeto em entidades completas de produto.
+Objetivo: transformar perfil e projeto em entidades operacionais do produto.
 
-- Tela de perfil e edição dos dados principais.
-- Lista de projetos por perfil.
-- Criar, ativar, pausar, concluir e arquivar projeto.
-- Associar projeto importado sem perfil a um perfil existente.
-- Preservar histórico ao trocar de projeto.
-- Preparar seleção futura de múltiplos perfis.
+- Lista de projetos em Configurações. ✅
+- Status de projeto: ativo, pausado, concluído, arquivado e rascunho. ✅
+- Troca de projeto ativo sem apagar histórico. ✅
+- Pausar, concluir e arquivar projetos. ✅
+- Associar projeto importado sem perfil ao perfil ativo. ✅
+- Carregar automaticamente o plano ligado ao projeto selecionado. ✅
+- Preservar projetos antigos como ciclos históricos. ✅
+- Próximo: tela dedicada de perfil e edição da avaliação.
 
 ## v0.50 — TITAN Engine
 
