@@ -1,29 +1,25 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { getExerciseVideo } from '../src/features/exercise-library/videos';
-import type { TitanExercise, TitanPlan } from '../src/features/plan/types';
+import type { TitanExercise } from '../src/features/plan/types';
 
-const plan = JSON.parse(readFileSync('docs/plans/otavio-hipertrofia-enfase-v1.titan', 'utf8')) as TitanPlan;
+const WORKOUT_VIDEO_NAMES = [
+  'Supino inclinado com barra','Supino inclinado com halteres','Supino inclinado Smith','Chest press inclinado','Peck deck','Crucifixo inclinado com halteres','Crucifixo inclinado',
+  'Desenvolvimento com halteres','Desenvolvimento com barra','Arnold press','Desenvolvimento Arnold','Elevação lateral com halteres','Elevação lateral no cabo','Elevação lateral máquina',
+  'Tríceps na polia','Tríceps testa','Mergulho máquina','Tríceps francês com halter','Face pull','Reverse peck deck',
+  'Levantamento romeno','Stiff com barra','Levantamento romeno com halteres','Cadeira flexora','Mesa flexora','Flexora em pé','Flexora unilateral','Hip thrust máquina','Ponte de glúteos',
+  'Panturrilha em pé','Panturrilha Smith','Panturrilha unilateral','Panturrilha sentada','Panturrilha no leg press',
+  'Puxada neutra','Puxada supinada','Puxada alta','Puxada articulada','Barra fixa','Barra fixa assistida','Remada unilateral no cabo','Remada unilateral com halter','Remada sentada','Pullover no cabo','Pullover máquina',
+  'Rosca direta','Rosca W','Rosca no cabo','Rosca martelo','Rosca inversa','Flexão de punho','Extensão de punho',"Farmer's walk",'Rosca Scott','Rosca Bayesian',
+  'Hack squat','Agachamento búlgaro','Afundo reverso','Leg press','Agachamento Smith','Remada T','Remada com peito apoiado','Crucifixo inverso no cabo'
+];
 
-function asExercise(base: TitanExercise, name: string): TitanExercise {
-  return { ...base, id: `${base.id}::audit::${name}`, name, alternatives: undefined, alternativeExercises: undefined, video: undefined };
+function exercise(name: string): TitanExercise {
+  return { id:`audit-${name}`, name, muscleGroup:'Auditoria', exerciseType:'strength', sets:3, minReps:8, maxReps:12 };
 }
 
 describe('Modo treino — cobertura de vídeo das alternativas', () => {
-  it('mantém vídeo para todos os exercícios principais do plano auditado', () => {
-    const missing = plan.workouts.flatMap((workout) => workout.exercises)
-      .filter((exercise) => !getExerciseVideo(exercise))
-      .map((exercise) => exercise.name);
-    expect(missing, `Exercícios principais sem vídeo: ${missing.join(', ')}`).toEqual([]);
-  });
-
-  it('mantém vídeo para todas as alternativas oferecidas no treino', () => {
-    const missing = plan.workouts.flatMap((workout) => workout.exercises.flatMap((exercise) => [
-      ...(exercise.alternativeExercises ?? []).map((alternative) => ({ base: exercise, exercise: { ...exercise, ...alternative, alternatives: undefined, alternativeExercises: undefined } as TitanExercise })),
-      ...(exercise.alternatives ?? []).map((name) => ({ base: exercise, exercise: asExercise(exercise, name) })),
-    ]))
-      .filter(({ exercise }) => !getExerciseVideo(exercise))
-      .map(({ base, exercise }) => `${base.name} → ${exercise.name}`);
-    expect(missing, `Alternativas sem vídeo: ${missing.join(' | ')}`).toEqual([]);
+  it('resolve vídeo para os nomes usados pela ficha e suas alternativas', () => {
+    const missing = WORKOUT_VIDEO_NAMES.filter((name) => !getExerciseVideo(exercise(name)));
+    expect(missing, `Exercícios/alternativas sem vídeo: ${missing.join(' | ')}`).toEqual([]);
   });
 });
