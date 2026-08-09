@@ -85,15 +85,15 @@ export async function createProjectForPlan(plan: TitanPlan, profileId: string | 
     updatedAt: now,
   };
   await putRecord(STORE_NAMES.projects, project.id, project);
-  await setActiveProjectId(project.id);
-  return project;
+  const activated = await activateProjectRecord(project.id);
+  return activated ?? project;
 }
 
 export async function ensureProjectForPlan(plan: TitanPlan, profileId: string | null): Promise<TitanProjectRecord> {
   if (plan.projectId) {
     const existing = await loadProject(plan.projectId);
     if (existing) {
-      await setActiveProjectId(existing.id);
+      await activateProjectRecord(existing.id);
       return existing;
     }
   }
