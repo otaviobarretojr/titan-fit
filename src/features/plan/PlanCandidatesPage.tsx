@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
+import { linkPlanToProject } from '../project/repository';
 import { saveGeneratedPlanCandidates } from './candidateRepository';
 import { generateTitanPlanCandidates } from './generator';
 import { saveActivePlan } from './storage';
@@ -12,8 +13,9 @@ export function PlanCandidatesPage({ profile, assessment, onActivate }: { profil
     void saveGeneratedPlanCandidates(candidates).catch((error) => console.warn('Não foi possível salvar as propostas TITAN.', error));
   }, [candidates]);
 
-  function activate(candidate: GeneratedPlanCandidate<TitanPlan>) {
-    saveActivePlan(candidate.plan);
+  async function activate(candidate: GeneratedPlanCandidate<TitanPlan>) {
+    const linkedPlan = await linkPlanToProject(candidate.plan, profile.id);
+    saveActivePlan(linkedPlan);
     onActivate();
   }
 
@@ -33,7 +35,7 @@ export function PlanCandidatesPage({ profile, assessment, onActivate }: { profil
           </div>
           <span>{candidate.plan.workouts.length} dias de musculação{cardioCount ? ` · ${cardioCount} sessões de cardio` : ''}</span>
           <ul>{candidate.rationale.map((reason) => <li key={reason}>{reason}</li>)}</ul>
-          <button type="button" className="profile-save" onClick={() => activate(candidate)}>Usar este plano</button>
+          <button type="button" className="profile-save" onClick={() => void activate(candidate)}>Usar este plano</button>
         </article>;
       })}
     </section>
