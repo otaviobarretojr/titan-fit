@@ -10,11 +10,11 @@ const assessment: TitanEngineAssessment = {
 };
 
 const exercises: TitanEngineExercise[] = [
-  { id: 'row', name: 'Remada', primaryMuscle: 'Costas', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
-  { id: 'press', name: 'Supino máquina', primaryMuscle: 'Peitoral', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
-  { id: 'fly', name: 'Crucifixo', primaryMuscle: 'Peitoral', repRange: [10, 15], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
-  { id: 'squat', name: 'Agachamento', primaryMuscle: 'Quadríceps', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: '', commonMistakes: [], substitutions: [] },
-  { id: 'curl', name: 'Rosca direta', primaryMuscle: 'Bíceps', repRange: [8, 12], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'row', name: 'Remada', primaryMuscle: 'Costas', movementPattern: 'horizontal-pull', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'press', name: 'Supino máquina', primaryMuscle: 'Peitoral', movementPattern: 'horizontal-push', repRange: [8, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'fly', name: 'Crucifixo', primaryMuscle: 'Peitoral', movementPattern: 'horizontal-push', repRange: [10, 15], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'squat', name: 'Agachamento', primaryMuscle: 'Quadríceps', movementPattern: 'squat', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: '', commonMistakes: [], substitutions: [] },
+  { id: 'curl', name: 'Rosca direta', primaryMuscle: 'Bíceps', movementPattern: 'elbow-flexion', repRange: [8, 12], defaultRir: 2, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
 ];
 
 const rule = { weeklySetsPerMuscle: [8, 14] as [number, number], maxExercisesPerSession: 6 };
@@ -100,6 +100,24 @@ describe('TITAN Engine', () => {
     const longRest = generateTitanEngineBlueprints(assessment, longRestExercises, rule).candidates[1].metrics.fatigueScore;
     const shortRest = generateTitanEngineBlueprints(assessment, shortRestExercises, rule).candidates[1].metrics.fatigueScore;
     expect(longRest).toBeLessThanOrEqual(shortRest);
+  });
+
+  it('evita clonar sessões repetidas quando há alternativas equivalentes no pool', () => {
+    const richPool: TitanEngineExercise[] = [
+      { ...exercises[1], id: 'press-a' }, { ...exercises[1], id: 'press-b' }, { ...exercises[2], id: 'fly-a' },
+      { ...exercises[0], id: 'row-a' }, { ...exercises[0], id: 'row-b' },
+      { ...exercises[3], id: 'squat-a' }, { ...exercises[3], id: 'squat-b' },
+      { ...exercises[4], id: 'curl-a' }, { ...exercises[4], id: 'curl-b' },
+      { id: 'triceps-a', name: 'Tríceps', primaryMuscle: 'Tríceps', movementPattern: 'elbow-extension', repRange: [8, 15], defaultRir: 1, restSeconds: 90, technique: '', commonMistakes: [], substitutions: [] },
+      { id: 'shoulder-a', name: 'Desenvolvimento', primaryMuscle: 'Deltoides', movementPattern: 'vertical-push', repRange: [6, 12], defaultRir: 2, restSeconds: 120, technique: '', commonMistakes: [], substitutions: [] },
+      { id: 'ham-a', name: 'RDL', primaryMuscle: 'Posteriores de coxa', movementPattern: 'hinge', repRange: [6, 10], defaultRir: 2, restSeconds: 150, technique: '', commonMistakes: [], substitutions: [] },
+    ];
+    const balanced = generateTitanEngineBlueprints({ ...assessment, trainingDaysPerWeek: 6 }, richPool, rule).candidates[1];
+    const pushDays = balanced.workouts.filter((workout) => workout.focus === 'push');
+    expect(pushDays).toHaveLength(2);
+    expect(pushDays[0].exercises.map((exercise) => exercise.id)).not.toEqual(pushDays[1].exercises.map((exercise) => exercise.id));
+    const pullDays = balanced.workouts.filter((workout) => workout.focus === 'pull');
+    expect(pullDays[0].exercises.map((exercise) => exercise.id)).not.toEqual(pullDays[1].exercises.map((exercise) => exercise.id));
   });
 
   it('marca exatamente uma estratégia como recomendada e explica a escolha', () => {
