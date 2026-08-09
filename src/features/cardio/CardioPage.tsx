@@ -4,6 +4,7 @@ import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanCardioSession, TitanPlan } from '../plan/types';
 import { cardioZoneLabel, getTodayCardioSession } from './currentCardio';
 
+type _CardioSessionType = TitanCardioSession;
 type Props = { plan: TitanPlan | null; refreshKey?: number; onHistoryChange?: () => void; initialSessionId?: string | null; onCloseExecution?: () => void };
 type RecentCardio = { id:string; title:string; completedAt:string; durationSeconds:number; distanceMeters:number; heartRate:number|null; pace:string|null };
 type Summary = { title:string; durationSeconds:number; distanceMeters:number; zone:string; heartRate:number|null; pace:string|null; effort:string };
