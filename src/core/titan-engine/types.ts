@@ -45,15 +45,28 @@ export type TitanEngineWorkoutBlueprint = {
   exercises: TitanEngineExercisePrescription[];
 };
 
+export type TitanEngineCandidateMetrics = {
+  weeklySetsByMuscle: Record<string, number>;
+  volumeTargetCoverage: number;
+  sessionBalance: number;
+  fatigueScore: number;
+  strategyFit: number;
+  score: number;
+};
+
 export type TitanEngineCandidateBlueprint = {
   strategy: TitanEngineStrategy;
   title: string;
   rationale: string[];
   workouts: TitanEngineWorkoutBlueprint[];
+  metrics: TitanEngineCandidateMetrics;
+  recommended: boolean;
 };
 
 export type TitanEngineResult = {
   engineVersion: 1;
   candidates: TitanEngineCandidateBlueprint[];
+  recommendedStrategy: TitanEngineStrategy;
+  recommendationReasons: string[];
   warnings: string[];
 };
