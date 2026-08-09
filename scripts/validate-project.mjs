@@ -10,6 +10,7 @@ const assert = (condition, message) => { if (!condition) failures.push(message);
 const pkg = JSON.parse(await read('package.json'));
 const vite = await read('vite.config.ts');
 const app = await read('src/app/App.tsx');
+const appTest = await read('tests/App.test.tsx');
 const types = await read('src/features/plan/types.ts');
 const validation = await read('src/features/plan/validation.ts');
 const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
@@ -36,7 +37,9 @@ const deploy = await read('.github/workflows/deploy-pages.yml');
 const ci = await read('.github/workflows/ci.yml');
 
 assert(/^\d+\.\d+\.\d+$/.test(pkg.version), 'package.json deve declarar uma versão semântica válida');
+assert(pkg.scripts?.lint?.includes('--max-warnings 0'), 'Lint deve falhar quando houver qualquer warning novo');
 assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'A versão visível do app deve vir diretamente do package.json');
+assert(appTest.includes("import packageInfo from '../package.json'") && appTest.includes('`v${packageInfo.version}`') && !/TITAN FIT v\d+\.\d+\.\d+/.test(appTest), 'Testes do App não podem congelar um número de versão; devem usar package.json');
 assert(vite.includes("import packageInfo from './package.json'") && vite.includes('cacheId: `titan-fit-v${packageInfo.version}`') && vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("registerType: 'autoUpdate'"), 'PWA, versão de cache, base do GitHub Pages e atualização automática devem permanecer ligados ao package.json');
 assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar a mesma versão do Node.js');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
