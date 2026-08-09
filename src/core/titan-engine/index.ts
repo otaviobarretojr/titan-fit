@@ -1,4 +1,5 @@
 export { generateTitanEngineBlueprints } from './engine';
+export { orderTitanSessionExercises } from './ordering';
 export type {
   TitanEngineAssessment,
   TitanEngineCandidateBlueprint,
