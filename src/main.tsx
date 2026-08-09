@@ -46,6 +46,7 @@ import './styles/beta-v045.css';
 import './styles/exercise-library-v048.css';
 import './styles/ui-audit-v055.css';
 import './styles/exercise-video-v059.css';
+import './styles/project-management.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();

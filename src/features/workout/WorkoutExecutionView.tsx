@@ -139,7 +139,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
 
       {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
         {videoIsRequired ? <>
-          <div className="exercise-video"><iframe title={exerciseVideo.title} src={`https://www.youtube-nocookie.com/embed/${exerciseVideo.videoId}?rel=0&modestbranding=1`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>
+          <div className="exercise-video"><iframe title={exerciseVideo.title} src={exerciseVideo.embedUrl} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>
           <div className="video-stage-meta"><strong>{exerciseVideo.title}</strong><small>{exerciseVideo.source}</small></div>
           <button type="button" className="primary-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Já assisti · começar séries</button>
           <button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Pular demonstração</button>

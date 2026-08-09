@@ -1,10 +1,11 @@
 export const TITAN_DB_NAME = 'titan-fit';
-export const TITAN_DB_VERSION = 2;
+export const TITAN_DB_VERSION = 3;
 
 export const STORE_NAMES = {
   metadata: 'metadata',
   profiles: 'profiles',
   assessments: 'assessments',
+  projects: 'projects',
   plans: 'plans',
   generatedPlanCandidates: 'generated-plan-candidates',
   coachDecisions: 'coach-decisions',

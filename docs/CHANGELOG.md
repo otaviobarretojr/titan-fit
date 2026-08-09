@@ -1,12 +1,63 @@
 # Changelog
 
-## v0.40 — Base TITAN de prescrição
+## v0.50 — TITAN Engine
+
+- Criado `src/core/titan-engine` como núcleo independente de React, IndexedDB e componentes de interface.
+- A Engine passa a receber avaliação, catálogo elegível e regras de prescrição e devolver blueprints determinísticos.
+- O gerador de planos foi transformado em adaptador: converte o blueprint da Engine para `TitanPlan` e adiciona cardio/metadados do aplicativo.
+- Três estratégias continuam disponíveis: maior aderência, equilíbrio e maior disponibilidade.
+- Prioridades musculares influenciam ordenação e volume por exercício de forma explicável.
+- Exercícios evitados e possíveis conflitos com limitações são filtrados antes da montagem das sessões.
+- Frequência de treino passa a suportar de 1 a 7 dias sem reduzir silenciosamente sete dias para seis.
+- Volume semanal por músculo passa a respeitar teto de prescrição; músculos prioritários recebem margem controlada de até 15%.
+- Cada candidato recebe métricas de cobertura do volume-alvo, equilíbrio entre sessões, fadiga estimada e adequação da estratégia.
+- A Engine calcula um `Score TITAN` de 0 a 100 e marca exatamente uma das três estratégias como recomendada.
+- Motivos da recomendação são devolvidos de forma explícita e determinística.
+- `GeneratedPlanCandidate` passa a expor `recommended`, `titanScore` e métricas da Engine.
+- Tela comparativa mobile das três estratégias passa a exibir Score TITAN, divisão semanal, volume, equilíbrio, fadiga, adequação e justificativas.
+- Destaque “Recomendado pelo TITAN” passa a obedecer a decisão real da Engine, sem estratégia fixa na interface.
+- Usuário continua livre para ativar qualquer uma das três opções; a escolha é vinculada ao fluxo Perfil → Projeto → Plano.
+- Configurações ganha “Gerar novas opções”, reutilizando Perfil e Avaliação já salvos sem refazer onboarding.
+- A ativação de uma nova proposta cria um novo ciclo/projeto e pausa automaticamente o projeto anteriormente ativo, preservando histórico e ciclos anteriores.
+- A Engine emite warnings quando recebe frequência fora do intervalo suportado ou catálogo vazio.
+- Testes específicos adicionados para determinismo, prioridades, limitações, exclusões, frequência de sete dias, teto de volume, recomendação e comparação visual.
+
+## v0.45 — Profile & Project Core
+
+- Perfil e avaliação passam a ser editáveis diretamente em Configurações sem recriar o usuário.
+- Edição cobre nome, nascimento, sexo biológico, altura, peso, objetivo, experiência, frequência e duração da musculação.
+- Estrutura disponível, prioridades musculares, limitações, objetivo cardiovascular, nível cardiovascular e dias de cardio também podem ser atualizados.
+- Mudanças no perfil atualizam o contexto do Coach sem reescrever silenciosamente o projeto ativo.
+- Gestão de projetos adicionada em Configurações sem criar nova aba principal.
+- Projetos exibem origem, objetivo, perfil associado e status operacional.
+- Troca de projeto ativo carrega o plano correspondente sem apagar histórico anterior.
+- Projeto ativo pode ser pausado; projetos pausados podem ser concluídos ou arquivados.
+- Projetos importados sem perfil podem ser associados ao perfil ativo.
+- Gestão de projetos passa a tratar indisponibilidade do IndexedDB sem gerar rejeições não tratadas.
+- Testes adicionados para associação de perfil e ativação de projeto.
+
+## v0.40 — Foundation Upgrade + base TITAN de prescrição
+
+### Fundação
+
+- Arquitetura atualizada para refletir React, PWA, IndexedDB, perfil, planos, cardio, histórico, backup e Coach já existentes no código.
+- Modelo de dados alvo formalizado com relações por `profileId` e `projectId`.
+- Estratégia de migração definida para retirar dados de domínio do localStorage sem apagar registros existentes.
+- Modelo futuro de projetos estabelecido para suportar geração TITAN, importação e edição manual sobre contratos compatíveis.
+- Separação conceitual oficial entre TITAN FIT UI, TITAN Engine, Knowledge Base e TITAN Data.
+- IndexedDB atualizado para schema v3 com store própria de projetos.
+- Perfis e avaliações passam a ser persistidos pelos IDs reais, com ponteiros ativos em `preferences` e compatibilidade temporária com a chave legada `active`.
+- Planos passam a suportar `profileId` e `projectId` e são persistidos pelo `plan.id`, mantendo ponteiro de plano ativo e espelho legado durante a migração.
+- Projeto ativo passa a possuir entidade própria e ponteiro `active-project-id`.
+- Planos gerados pelo TITAN já nascem vinculados ao perfil e a um projeto; projetos importados sem perfil permanecem válidos como não atribuídos até associação futura.
+
+### Base de prescrição
 
 - Catálogo estruturado inicial de exercícios por músculo, padrão de movimento, equipamento e experiência mínima.
 - Técnica, erros comuns, substituições, faixas de repetição, RIR e descanso incorporados ao catálogo.
 - Regras iniciais de volume semanal e limite de exercícios por duração da sessão.
 - Seleção de exercícios compatível com experiência e estrutura disponível.
-- Templates de divisão para 2 a 6 dias de musculação.
+- Templates de divisão inicialmente definidos para até 6 dias de musculação; a v0.50 amplia a Engine para 7 dias.
 - Testes automatizados para volume, elegibilidade de exercícios e divisão semanal.
 
 ## v0.9.0 — Dashboard inteligente

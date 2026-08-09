@@ -1,12 +1,24 @@
 import type { TitanExercise } from '../plan/types';
+import { TITAN_FULL_EXERCISE_CATALOG } from './library';
+import { TITAN_EXERCISE_VIDEO_REGISTRY } from './videoLibrary';
+import type { ExerciseVideoProvider } from './videoRegistry';
 
 export type CuratedExerciseVideo = {
+  provider: ExerciseVideoProvider;
+  videoId?: string;
+  videoUrl?: string;
+  embedUrl: string;
+  title: string;
+  source: string;
+};
+
+type LegacyYoutubeVideo = {
   videoId: string;
   title: string;
   source: string;
 };
 
-const CURATED_VIDEOS: Array<{ match: RegExp; video: CuratedExerciseVideo }> = [
+const CURATED_VIDEOS: Array<{ match: RegExp; video: LegacyYoutubeVideo }> = [
   { match: /supino inclinado.*barra/i, video: { videoId: 'GhfwvlZbLGM', title: 'Supino Inclinado com Barra — execução', source: 'YouTube · MyTrainingPRO' } },
   { match: /supino inclinado.*halter/i, video: { videoId: '7V6kFe82iKk', title: 'Supino Inclinado com Halteres — execução', source: 'YouTube · MyTrainingPRO' } },
   { match: /chest press convergente/i, video: { videoId: 'pnmUJSzBvXM', title: 'Chest Press Convergente — execução', source: 'YouTube · Vinicius Piffardini' } },
@@ -51,17 +63,70 @@ const CURATED_VIDEOS: Array<{ match: RegExp; video: CuratedExerciseVideo }> = [
   { match: /supino inclinado.*m[aá]quina/i, video: { videoId: '5OayotgIe9M', title: 'Supino Inclinado na Máquina', source: 'YouTube · Pedro Lonngren' } },
   { match: /crucifixo inclinado/i, video: { videoId: 'DBHJKvY8mX0', title: 'Incline Cable Fly', source: 'YouTube · Exercises.com.au' } },
   { match: /encolhimento.*m[aá]quina/i, video: { videoId: 'fChAG371a-s', title: 'Machine Shrug Exercise', source: 'YouTube · MrSupplement.com.au' } },
-  { match: /rosca inversa.*ez|rosca inversa.*barra/i, video: { videoId: 'f7FOpwcB-Rg', title: 'Reverse Curl EZ Bar', source: 'YouTube · YST Exercises' } }
+  { match: /rosca inversa.*ez|rosca inversa.*barra/i, video: { videoId: 'f7FOpwcB-Rg', title: 'Reverse Curl EZ Bar', source: 'YouTube · YST Exercises' } },
 ];
 
-export function getExerciseVideo(exercise: TitanExercise): CuratedExerciseVideo | null {
-  if (exercise.video?.videoId) {
+function normalize(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function youtubeVideo(videoId: string, title: string, source: string): CuratedExerciseVideo {
+  return {
+    provider: 'youtube',
+    videoId,
+    embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`,
+    title,
+    source,
+  };
+}
+
+function registeredVideo(exercise: TitanExercise): CuratedExerciseVideo | null {
+  const direct = TITAN_EXERCISE_VIDEO_REGISTRY[exercise.id];
+  const catalogMatch = direct
+    ? null
+    : TITAN_FULL_EXERCISE_CATALOG.find((item) => normalize(item.name) === normalize(exercise.name));
+  const metadata = direct ?? (catalogMatch ? TITAN_EXERCISE_VIDEO_REGISTRY[catalogMatch.id] : undefined);
+  if (!metadata) return null;
+
+  if (metadata.provider === 'youtube' && metadata.videoId) {
+    return youtubeVideo(metadata.videoId, metadata.title, metadata.sourceName);
+  }
+
+  if (metadata.provider === 'vimeo' && metadata.videoId) {
     return {
-      videoId: exercise.video.videoId,
-      title: exercise.video.title ?? `Execução de ${exercise.name}`,
-      source: exercise.video.channel ? `YouTube · ${exercise.video.channel}` : 'Vídeo da ficha'
+      provider: 'vimeo',
+      videoId: metadata.videoId,
+      embedUrl: `https://player.vimeo.com/video/${metadata.videoId}`,
+      title: metadata.title,
+      source: metadata.sourceName,
     };
   }
 
-  return CURATED_VIDEOS.find((entry) => entry.match.test(exercise.name))?.video ?? null;
+  if (metadata.provider === 'hosted' && metadata.videoUrl) {
+    return {
+      provider: 'hosted',
+      videoUrl: metadata.videoUrl,
+      embedUrl: metadata.videoUrl,
+      title: metadata.title,
+      source: metadata.sourceName,
+    };
+  }
+
+  return null;
+}
+
+export function getExerciseVideo(exercise: TitanExercise): CuratedExerciseVideo | null {
+  if (exercise.video?.videoId) {
+    return youtubeVideo(
+      exercise.video.videoId,
+      exercise.video.title ?? `Execução de ${exercise.name}`,
+      exercise.video.channel ? `YouTube · ${exercise.video.channel}` : 'Vídeo da ficha',
+    );
+  }
+
+  const central = registeredVideo(exercise);
+  if (central) return central;
+
+  const legacy = CURATED_VIDEOS.find((entry) => entry.match.test(exercise.name))?.video;
+  return legacy ? youtubeVideo(legacy.videoId, legacy.title, legacy.source) : null;
 }

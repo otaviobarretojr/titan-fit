@@ -42,4 +42,21 @@ export type TitanTrainingAssessment = {
 export type PlanSource = 'titan-generated' | 'imported' | 'manual';
 export type PlanGenerationRequest = { profile: TitanProfile; assessment: TitanTrainingAssessment; requestedAt: string };
 export type PlanCandidateStrategy = 'adherence' | 'balanced' | 'availability';
-export type GeneratedPlanCandidate<TPlan = unknown> = { id: string; profileId: string; strategy: PlanCandidateStrategy; title: string; rationale: string[]; source: 'titan-generated'; plan: TPlan; createdAt: string };
+export type GeneratedPlanCandidate<TPlan = unknown> = {
+  id: string;
+  profileId: string;
+  strategy: PlanCandidateStrategy;
+  title: string;
+  rationale: string[];
+  source: 'titan-generated';
+  plan: TPlan;
+  createdAt: string;
+  recommended?: boolean;
+  titanScore?: number;
+  engineMetrics?: {
+    volumeTargetCoverage: number;
+    sessionBalance: number;
+    fatigueScore: number;
+    strategyFit: number;
+  };
+};

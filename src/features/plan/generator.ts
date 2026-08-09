@@ -1,19 +1,179 @@
-import type { GeneratedPlanCandidate, MusclePriority, PlanCandidateStrategy, TitanProfile, TitanTrainingAssessment } from '../profile/types';
-import { buildSplitTemplate, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
+import { generateTitanEngineBlueprints, orderTitanSessionExercises, type TitanEngineExercise, type TitanEngineTensionBias } from '../../core/titan-engine';
 import { generateCardioSchedule } from '../cardio/generator';
-import type { TitanPlan, TitanWorkoutDay } from './types';
+import { TITAN_COMPLETE_EXERCISE_CATALOG, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
+import type { TitanCatalogExercise } from '../exercise-library/catalog';
+import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
+import type { TitanExerciseAlternative, TitanPlan, TitanWorkoutDay } from './types';
 
-const DAY_NAMES=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
-const PRIORITY_TERMS: Record<MusclePriority,string[]>={ chest:['peitoral'], back:['costas','dorsais'], shoulders:['deltoides'], arms:['bíceps','tríceps'], quadriceps:['quadríceps'], 'hamstrings-glutes':['posteriores','glúteos'], calves:['panturrilhas'], core:['abdômen','core'] };
-function focusMatches(focus:string,muscle:string){const m=muscle.toLowerCase();if(focus==='full-body')return true;if(focus==='push')return['peitoral','deltoides','tríceps'].some(x=>m.includes(x));if(focus==='pull')return['costas','dorsais','bíceps'].some(x=>m.includes(x));if(focus==='legs')return['quadríceps','posteriores','panturrilhas','glúteos'].some(x=>m.includes(x));if(focus==='upper')return['peitoral','deltoides','tríceps','costas','dorsais','bíceps'].some(x=>m.includes(x));if(focus==='lower')return['quadríceps','posteriores','panturrilhas','glúteos','abdômen','core'].some(x=>m.includes(x));return true;}
-function candidateSettings(strategy:PlanCandidateStrategy){if(strategy==='adherence')return{setScale:.75,exerciseScale:.8,suffix:'Maior aderência'};if(strategy==='availability')return{setScale:1.15,exerciseScale:1,suffix:'Maior disponibilidade'};return{setScale:1,exerciseScale:1,suffix:'Equilíbrio'};}
-function priorityScore(muscle:string, priorities:MusclePriority[]=[]){const normalized=muscle.toLowerCase();return priorities.some(priority=>PRIORITY_TERMS[priority].some(term=>normalized.includes(term)))?1:0;}
-function limitationTerms(assessment:TitanTrainingAssessment){return (assessment.limitations??[]).flatMap(item=>`${item.area} ${item.note??''}`.toLowerCase().split(/[^a-zà-ú]+/)).filter(term=>term.length>4);}
-function isPotentiallyLimited(name:string,muscle:string,assessment:TitanTrainingAssessment){const terms=limitationTerms(assessment);if(!terms.length)return false;const text=`${name} ${muscle}`.toLowerCase();return terms.some(term=>text.includes(term));}
+function workoutTitle(focus: string) {
+  if (focus === 'full-body') return 'Full Body';
+  if (focus === 'upper') return 'Upper';
+  if (focus === 'lower') return 'Lower';
+  if (focus === 'push') return 'Push';
+  if (focus === 'pull') return 'Pull';
+  return 'Legs';
+}
 
-export function generateTitanPlanCandidates(profile:TitanProfile,assessment:TitanTrainingAssessment):Array<GeneratedPlanCandidate<TitanPlan>>{
- const input={experience:assessment.experience,trainingDaysPerWeek:assessment.trainingDaysPerWeek,preferredSessionMinutes:assessment.preferredSessionMinutes,equipmentAccess:assessment.equipmentAccess}; const rule=getPrescriptionRule(input); const eligible=getEligibleExercises(input); const split=buildSplitTemplate(assessment.trainingDaysPerWeek); const strategies:PlanCandidateStrategy[]=['adherence','balanced','availability']; const cardioSchedule=generateCardioSchedule(assessment);
- return strategies.map(strategy=>{const config=candidateSettings(strategy); const workouts:TitanWorkoutDay[]=split.map(([focus],dayIndex)=>{const pool=eligible.filter(exercise=>focusMatches(focus,exercise.primaryMuscle)&&!(assessment.avoidedExerciseIds??[]).includes(exercise.id)&&!isPotentiallyLimited(exercise.name,exercise.primaryMuscle,assessment)).sort((a,b)=>priorityScore(b.primaryMuscle,assessment.musclePriorities)-priorityScore(a.primaryMuscle,assessment.musclePriorities)); const count=Math.max(4,Math.min(rule.maxExercisesPerSession,Math.round(rule.maxExercisesPerSession*config.exerciseScale))); const chosen=pool.slice(0,count); return{id:`${strategy}-${dayIndex+1}`,day:assessment.availableTrainingDays?.[dayIndex]??DAY_NAMES[dayIndex]??`Dia ${dayIndex+1}`,title:focus==='full-body'?'Full Body':focus==='upper'?'Upper':focus==='lower'?'Lower':focus==='push'?'Push':focus==='pull'?'Pull':'Legs',focus,exercises:chosen.map(exercise=>({id:exercise.id,name:exercise.name,muscleGroup:exercise.primaryMuscle,exerciseType:'strength',sets:Math.max(2,Math.round((priorityScore(exercise.primaryMuscle,assessment.musclePriorities)?3.5:3)*config.setScale)),minReps:exercise.repRange[0],maxReps:exercise.repRange[1],targetRir:exercise.defaultRir,restSeconds:exercise.restSeconds,technique:exercise.technique,commonMistakes:exercise.commonMistakes,alternatives:exercise.substitutions}))};});
- const plan:TitanPlan={schemaVersion:1,id:crypto.randomUUID(),name:`Plano TITAN — ${config.suffix}`,description:`Plano gerado localmente para ${profile.displayName}, com base no perfil, prioridades e disponibilidade informados.`,createdAt:new Date().toISOString(),author:'TITAN',project:{name:`Projeto ${profile.displayName}`,objective:profile.primaryGoal??'general-fitness',cardioGoal:assessment.cardioGoal,cardioSchedule},workouts};
- const rationale=strategy==='adherence'?['Menor volume por sessão para facilitar consistência.',`Respeita ${assessment.trainingDaysPerWeek} dias disponíveis e cerca de ${assessment.preferredSessionMinutes} min por treino.`]:strategy==='balanced'?['Equilibra estímulo, recuperação e tempo de sessão.','É a recomendação padrão do TITAN para este perfil.']:['Aproveita mais da disponibilidade informada.','Usa volume um pouco maior sem ultrapassar os limites definidos para a experiência atual.']; if(assessment.musclePriorities?.length)rationale.push(`Prioriza ${assessment.musclePriorities.length} grupo(s) muscular(es) selecionado(s) sem abandonar o restante do corpo.`); if(assessment.limitations?.length)rationale.push('Considera as limitações informadas como filtro conservador; elas não substituem avaliação profissional.'); if(cardioSchedule.length)rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`); return{id:crypto.randomUUID(),profileId:profile.id,strategy,title:config.suffix,rationale,source:'titan-generated',plan,createdAt:new Date().toISOString()};});
+const ISOLATION_IDS = new Set([
+  'cable-fly','pec-deck','dumbbell-fly','straight-arm-pulldown','dumbbell-lateral-raise','cable-lateral-raise','machine-lateral-raise',
+  'rear-delt-fly','cable-rear-delt-fly','face-pull','leg-extension','cable-kickback','hip-abduction-machine','cable-hip-abduction',
+]);
+const LENGTHENED_BIAS_IDS = new Set([
+  'romanian-deadlift','stiff-deadlift','seated-leg-curl','incline-dumbbell-curl','bayesian-curl','overhead-cable-extension','dumbbell-overhead-extension',
+]);
+const SHORTENED_BIAS_IDS = new Set(['barbell-hip-thrust','machine-hip-thrust','glute-bridge','cable-kickback','cable-pushdown','rope-pushdown']);
+
+function exerciseRole(exercise: TitanCatalogExercise): 'compound' | 'isolation' {
+  if (ISOLATION_IDS.has(exercise.id)) return 'isolation';
+  if (['elbow-flexion','elbow-extension','knee-flexion','calf','core'].includes(exercise.pattern)) return 'isolation';
+  return 'compound';
+}
+
+function stabilityDemand(exercise: TitanCatalogExercise): 'low' | 'medium' | 'high' {
+  if (exercise.equipment.includes('machine')) return 'low';
+  if (exercise.equipment.includes('cable')) return 'medium';
+  if (exercise.equipment.includes('barbell') || exercise.equipment.includes('bodyweight')) return 'high';
+  return 'medium';
+}
+
+function fatigueCost(exercise: TitanCatalogExercise): 'low' | 'medium' | 'high' {
+  const role = exerciseRole(exercise);
+  if (role === 'isolation' && exercise.restSeconds <= 90) return 'low';
+  if (exercise.restSeconds >= 150) return 'high';
+  return 'medium';
+}
+
+function tensionBias(exercise: TitanCatalogExercise): TitanEngineTensionBias {
+  if (LENGTHENED_BIAS_IDS.has(exercise.id)) return 'lengthened';
+  if (SHORTENED_BIAS_IDS.has(exercise.id)) return 'shortened';
+  return 'unknown';
+}
+
+function toEngineExercise(exercise: ReturnType<typeof getEligibleExercises>[number]): TitanEngineExercise {
+  return {
+    id: exercise.id,
+    name: exercise.name,
+    primaryMuscle: exercise.primaryMuscle,
+    movementPattern: exercise.pattern,
+    exerciseRole: exerciseRole(exercise),
+    stabilityDemand: stabilityDemand(exercise),
+    fatigueCost: fatigueCost(exercise),
+    tensionBias: tensionBias(exercise),
+    repRange: exercise.repRange,
+    defaultRir: exercise.defaultRir,
+    restSeconds: exercise.restSeconds,
+    technique: exercise.technique,
+    commonMistakes: exercise.commonMistakes,
+    substitutions: exercise.substitutions,
+  };
+}
+
+function toStructuredAlternative(id: string): TitanExerciseAlternative | null {
+  const exercise = TITAN_COMPLETE_EXERCISE_CATALOG.find((item) => item.id === id);
+  if (!exercise) return null;
+  return {
+    id: exercise.id,
+    name: exercise.name,
+    muscleGroup: exercise.primaryMuscle,
+    exerciseType: 'strength',
+    minReps: exercise.repRange[0],
+    maxReps: exercise.repRange[1],
+    targetRir: exercise.defaultRir,
+    restSeconds: exercise.restSeconds,
+    technique: exercise.technique,
+    commonMistakes: exercise.commonMistakes,
+  };
+}
+
+export function generateTitanPlanCandidates(
+  profile: TitanProfile,
+  assessment: TitanTrainingAssessment,
+): Array<GeneratedPlanCandidate<TitanPlan>> {
+  const prescriptionInput = {
+    experience: assessment.experience,
+    trainingDaysPerWeek: assessment.trainingDaysPerWeek,
+    preferredSessionMinutes: assessment.preferredSessionMinutes,
+    equipmentAccess: assessment.equipmentAccess,
+  };
+  const rule = getPrescriptionRule(prescriptionInput);
+  const eligible = getEligibleExercises(prescriptionInput).map(toEngineExercise);
+  const engine = generateTitanEngineBlueprints(assessment, eligible, {
+    weeklySetsPerMuscle: rule.weeklySetsPerMuscle,
+    maxExercisesPerSession: rule.maxExercisesPerSession,
+  });
+  const cardioSchedule = generateCardioSchedule(assessment);
+  const createdAt = new Date().toISOString();
+
+  return engine.candidates.map((candidate) => {
+    const workouts: TitanWorkoutDay[] = candidate.workouts.map((workout) => ({
+      id: `${candidate.strategy}-${workout.dayIndex + 1}`,
+      day: workout.dayLabel,
+      title: workoutTitle(workout.focus),
+      focus: workout.focus,
+      exercises: orderTitanSessionExercises(workout.exercises).map((exercise) => {
+        const structuredAlternatives = exercise.substitutions
+          .map(toStructuredAlternative)
+          .filter((item): item is TitanExerciseAlternative => Boolean(item));
+        const resolvedIds = new Set(structuredAlternatives.map((item) => item.id));
+        const unresolvedAlternatives = exercise.substitutions.filter((id) => !resolvedIds.has(id));
+        return {
+          id: exercise.id,
+          name: exercise.name,
+          muscleGroup: exercise.primaryMuscle,
+          exerciseType: 'strength' as const,
+          sets: exercise.sets,
+          minReps: exercise.repRange[0],
+          maxReps: exercise.repRange[1],
+          targetRir: exercise.defaultRir,
+          restSeconds: exercise.restSeconds,
+          technique: exercise.technique,
+          commonMistakes: exercise.commonMistakes,
+          alternatives: unresolvedAlternatives.length ? unresolvedAlternatives : undefined,
+          alternativeExercises: structuredAlternatives.length ? structuredAlternatives : undefined,
+        };
+      }),
+    }));
+
+    const rationale = [...candidate.rationale];
+    if (candidate.recommended) rationale.unshift(...engine.recommendationReasons);
+    if (cardioSchedule.length) rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`);
+    rationale.push('A ordem da sessão prioriza músculos-alvo, compostos de maior demanda e acessórios de menor custo no fim.');
+    rationale.push(`Prescrição processada pela TITAN Engine v${engine.engineVersion}.`);
+    rationale.push(...engine.warnings);
+
+    const plan: TitanPlan = {
+      schemaVersion: 1,
+      id: crypto.randomUUID(),
+      name: `Plano TITAN — ${candidate.title}`,
+      description: `Plano gerado localmente para ${profile.displayName}, com base no perfil, prioridades e disponibilidade informados.`,
+      createdAt,
+      author: 'TITAN',
+      project: {
+        name: `Projeto ${profile.displayName}`,
+        objective: profile.primaryGoal ?? 'general-fitness',
+        cardioGoal: assessment.cardioGoal,
+        cardioSchedule,
+      },
+      workouts,
+    };
+
+    return {
+      id: crypto.randomUUID(),
+      profileId: profile.id,
+      strategy: candidate.strategy,
+      title: candidate.title,
+      rationale,
+      source: 'titan-generated',
+      plan,
+      createdAt,
+      recommended: candidate.recommended,
+      titanScore: candidate.metrics.score,
+      engineMetrics: {
+        volumeTargetCoverage: candidate.metrics.volumeTargetCoverage,
+        sessionBalance: candidate.metrics.sessionBalance,
+        fatigueScore: candidate.metrics.fatigueScore,
+        strategyFit: candidate.metrics.strategyFit,
+      },
+    };
+  });
 }

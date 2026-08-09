@@ -1,12 +1,111 @@
-# Roadmap
+# Roadmap oficial — TITAN FIT
 
-- v0.1 — Shell e PWA
-- v0.2 — Importação da ficha
-- v0.3 — Visualização completa da ficha e vídeos do YouTube
-- v0.4 — Execução série por série
-- v0.5 — Histórico e progressão
-- v0.6 — Cardio
-- v0.7 — Backup e restauração
-- v0.8 — Polimento e acessibilidade
-- v0.9 — Testes finais
-- v1.0 — Primeira versão estável
+O roadmap abaixo substitui a sequência histórica simplificada. O código atual já ultrapassou as primeiras etapas de PWA, importação, execução, histórico, cardio, Coach, backup e evolução.
+
+## Histórico consolidado
+
+- v0.1 — Shell mobile e PWA.
+- v0.2 — Importação de projeto/ficha.
+- v0.3 — Visualização completa da ficha e vídeos.
+- v0.4 — Execução série por série.
+- v0.5 — Histórico e progressão.
+- v0.6 — Cardio e estrutura para 5 km.
+- v0.7 — Coach TITAN inicial.
+- v0.8 — IndexedDB, backup e migração de dados.
+- v0.9 — Dashboard e evolução integrados.
+- v0.10–v0.38 — expansão incremental de treino, biblioteca, vídeos, cardio, progressão, UX e testes.
+
+## v0.40 — Foundation Upgrade + base de prescrição
+
+Objetivo: preparar a arquitetura definitiva antes de ampliar a geração inteligente de programas.
+
+### Fundação
+
+- Atualizar documentação de arquitetura para refletir o código real. ✅
+- Formalizar modelo de dados por perfil, projeto, plano e histórico. ✅
+- Migrar perfil, avaliação e plano ativo para persistência por IDs reais com ponteiros ativos. ✅
+- Criar entidade `Project` e store própria no IndexedDB. ✅
+- Vincular planos gerados a `profileId` e `projectId`. ✅
+- Manter projetos importados sem perfil compatíveis como não atribuídos. ✅
+- Unificar versão técnica exibida pelo app, package, lockfile e cache PWA.
+- Reduzir responsabilidades concentradas em `App.tsx`.
+
+### Base de prescrição
+
+- Consolidar catálogo estruturado de exercícios.
+- Formalizar padrões de movimento, músculos, equipamentos, experiência mínima e limitações.
+- Padronizar técnica, erros comuns, substituições, faixas de repetição, RIR e descanso.
+- Versionar regras de volume semanal e duração de sessão.
+- Manter testes automatizados das regras de elegibilidade e prescrição.
+
+## v0.45 — Profile & Project Core
+
+Objetivo: transformar perfil e projeto em entidades operacionais do produto.
+
+- Tela editável de perfil e avaliação em Configurações. ✅
+- Editar dados pessoais, objetivo, experiência, dias de treino, duração e equipamentos. ✅
+- Editar prioridades musculares, limitações e contexto de cardio. ✅
+- Alterações de perfil não reescrevem silenciosamente o projeto ativo. ✅
+- Lista de projetos em Configurações. ✅
+- Status de projeto: ativo, pausado, concluído, arquivado e rascunho. ✅
+- Troca de projeto ativo sem apagar histórico. ✅
+- Pausar, concluir e arquivar projetos. ✅
+- Associar projeto importado sem perfil ao perfil ativo. ✅
+- Carregar automaticamente o plano ligado ao projeto selecionado. ✅
+- Preservar projetos antigos como ciclos históricos. ✅
+- Preparar seleção futura de múltiplos perfis. ✅
+
+## v0.50 — TITAN Engine
+
+Objetivo: separar regras de prescrição da interface.
+
+- Criar `core/titan-engine`. ✅
+- Separar decisão de prescrição da montagem do `TitanPlan`. ✅
+- Avaliar experiência, dias, duração, equipamentos, prioridades e limitações. ✅
+- Gerar três candidatos de programação com justificativas. ✅
+- Produzir blueprints determinísticos e testáveis, sem dependência de React ou persistência. ✅
+- Suportar de 1 a 7 dias sem reduzir silenciosamente a frequência informada. ✅
+- Aplicar teto de volume semanal por grupo muscular, com margem controlada para prioridades. ✅
+- Calcular cobertura do volume-alvo, equilíbrio entre sessões e carga de fadiga. ✅
+- Criar score interno dos candidatos e marcar uma recomendação padrão explicável. ✅
+- Expor `recommended`, `titanScore` e métricas para a tela das três opções. ✅
+- Criar comparação mobile das três estratégias com recomendação dinâmica, Score TITAN e métricas explicáveis. ✅
+- Permitir ativar qualquer candidato preservando o fluxo Perfil → Projeto → Plano. ✅
+- Refinar distribuição de frequência e fadiga usando histórico real de execução.
+- Integrar contexto futuro de histórico/progressão sem acoplar a Engine ao banco local.
+
+## v0.60 — Knowledge Base
+
+Objetivo: transformar a Biblioteca TITAN em base de conhecimento estruturada.
+
+- Expandir catálogo de exercícios.
+- Versionar evidências e parâmetros de prescrição.
+- Melhorar substituições por equipamento, dor e limitação.
+- Criar cobertura de testes da base.
+
+## v0.70 — Coach & Progression
+
+- Recomendações contextuais baseadas no histórico real.
+- Progressão por técnica, repetições, carga e RIR.
+- Tendências de treino, cardio e evolução.
+- Decisões do Coach registradas e explicáveis.
+
+## v0.80 — Nutrition & Recovery
+
+- Refeições, macros, pendências e substituições.
+- Água, sono, recuperação e suplementação.
+- Integração com Score TITAN sem inventar dados ausentes.
+
+## v0.90 — Multi-profile, sync readiness & polish
+
+- Estrutura final para múltiplos perfis.
+- Preparação para sincronização futura sem abandonar local-first.
+- Testes de atualização, backup, restauração e migração.
+- Polimento mobile e acessibilidade.
+
+## v1.0 — Primeira versão estável
+
+- Fluxo completo de perfil → projeto → treino/cardio → registro → evolução → Coach.
+- PWA estável, offline e atualizável.
+- Backups compatíveis entre versões suportadas.
+- Critérios de aceite e documentação finalizados.
