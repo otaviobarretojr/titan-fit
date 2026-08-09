@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { resetAllAppData } from '../core/database/resetAppData';
+import { loadFullDemo } from '../features/demo/fullDemo';
 import { ProfileOnboarding } from '../features/profile/ProfileOnboarding';
 import { loadActiveAssessment, loadActiveProfile } from '../features/profile/repository';
 import type { TitanProfile, TitanTrainingAssessment } from '../features/profile/types';
@@ -31,6 +33,15 @@ export function TitanEntry() {
       .catch(() => setEntryState('onboarding'));
   }, [entryState]);
 
+  async function activateDemo() {
+    await resetAllAppData();
+    await loadFullDemo();
+    window.history.replaceState({ ...window.history.state, titanTab: 'today' }, '');
+    setProfile(null);
+    setAssessment(null);
+    setEntryState('app');
+  }
+
   if (entryState === 'loading') {
     return <main className="profile-onboarding"><section className="profile-hero"><span className="eyebrow">TITAN FIT</span><h1>Preparando seu espaço…</h1></section></main>;
   }
@@ -44,6 +55,7 @@ export function TitanEntry() {
         window.history.replaceState({ ...window.history.state, titanTab: 'settings' }, '');
         setEntryState('app');
       }}
+      onActivateDemo={() => void activateDemo()}
     />;
   }
 
