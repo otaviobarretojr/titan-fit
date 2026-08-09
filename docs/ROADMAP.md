@@ -68,7 +68,9 @@ Objetivo: separar regras de prescrição da interface.
 - Aplicar teto de volume semanal por grupo muscular, com margem controlada para prioridades. ✅
 - Calcular cobertura do volume-alvo, equilíbrio entre sessões e carga de fadiga. ✅
 - Criar score interno dos candidatos e marcar uma recomendação padrão explicável. ✅
-- Expor `recommended`, `titanScore` e métricas para a futura tela das três opções. ✅
+- Expor `recommended`, `titanScore` e métricas para a tela das três opções. ✅
+- Criar comparação mobile das três estratégias com recomendação dinâmica, Score TITAN e métricas explicáveis. ✅
+- Permitir ativar qualquer candidato preservando o fluxo Perfil → Projeto → Plano. ✅
 - Refinar distribuição de frequência e fadiga usando histórico real de execução.
 - Integrar contexto futuro de histórico/progressão sem acoplar a Engine ao banco local.
 
