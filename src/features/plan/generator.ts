@@ -1,4 +1,4 @@
-import { generateTitanEngineBlueprints, type TitanEngineExercise, type TitanEngineTensionBias } from '../../core/titan-engine';
+import { generateTitanEngineBlueprints, orderTitanSessionExercises, type TitanEngineExercise, type TitanEngineTensionBias } from '../../core/titan-engine';
 import { generateCardioSchedule } from '../cardio/generator';
 import { TITAN_COMPLETE_EXERCISE_CATALOG, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
 import type { TitanCatalogExercise } from '../exercise-library/catalog';
@@ -110,7 +110,7 @@ export function generateTitanPlanCandidates(
       day: workout.dayLabel,
       title: workoutTitle(workout.focus),
       focus: workout.focus,
-      exercises: workout.exercises.map((exercise) => {
+      exercises: orderTitanSessionExercises(workout.exercises).map((exercise) => {
         const structuredAlternatives = exercise.substitutions
           .map(toStructuredAlternative)
           .filter((item): item is TitanExerciseAlternative => Boolean(item));
@@ -137,6 +137,7 @@ export function generateTitanPlanCandidates(
     const rationale = [...candidate.rationale];
     if (candidate.recommended) rationale.unshift(...engine.recommendationReasons);
     if (cardioSchedule.length) rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`);
+    rationale.push('A ordem da sessão prioriza músculos-alvo, compostos de maior demanda e acessórios de menor custo no fim.');
     rationale.push(`Prescrição processada pela TITAN Engine v${engine.engineVersion}.`);
     rationale.push(...engine.warnings);
 
