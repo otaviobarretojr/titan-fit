@@ -53,7 +53,7 @@ class TitanSamsungHealthPlugin : Plugin() {
     }
 
     @PluginMethod
-    fun requestPermissions(call: PluginCall) {
+    fun requestSamsungHealthPermissions(call: PluginCall) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             call.resolve(JSObject().put("granted", false))
             return
