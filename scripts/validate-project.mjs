@@ -41,7 +41,7 @@ assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('av
 assert(execution.includes('getExerciseVideo(activeExercise)') && execution.includes('exerciseOptions(baseExercise)') && execution.includes('selectedExerciseId: option.id'), 'Modo treino deve preservar vídeo e substituições');
 
 assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Progresso deve manter evolução e PRs');
-assert(evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa'), 'Evolução corporal deve permanecer funcional');
+assert(evolution.includes('Bioimpedância automática do relógio') && evolution.includes('Medidas e fotos') && evolution.includes('A bioimpedância vem automaticamente do Samsung Health'), 'Evolução corporal deve manter bioimpedância automática e registros manuais complementares');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução deve permanecer versionado');
 assert(evolutionStorage.includes('body-evolution-v1'), 'Evolução deve permanecer persistida');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice'), 'Motor de progressão deve permanecer disponível');
