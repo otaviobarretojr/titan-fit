@@ -54,12 +54,20 @@ jobs:
 
           python3 - <<'PY'
           from pathlib import Path
+          import json
+
+          package = json.loads(Path('package.json').read_text())
+          version_name = package['version']
+          major, minor, patch = [int(part) for part in version_name.split('.')]
+          version_code = major * 1000000 + minor * 1000 + patch
 
           app = Path('android/app/build.gradle')
           text = app.read_text()
           if "org.jetbrains.kotlin.android" not in text:
               text = text.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\napply plugin: 'org.jetbrains.kotlin.android'")
           text = text.replace('minSdkVersion rootProject.ext.minSdkVersion', 'minSdkVersion 26')
+          text = text.replace('versionCode 1', f'versionCode {version_code}')
+          text = text.replace('versionName "1.0"', f'versionName "{version_name}"')
           if 'androidx.health.connect:connect-client:1.1.0' not in text:
               text = text.replace('dependencies {', "dependencies {\n    implementation 'androidx.health.connect:connect-client:1.1.0'\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'")
           app.write_text(text)
