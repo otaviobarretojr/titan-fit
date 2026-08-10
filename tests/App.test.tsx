@@ -31,7 +31,7 @@ describe('TITAN FIT', () => {
     expect(nav.queryByRole('button', { name: /^Semana$/i })).not.toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Saúde$/i }));
-    expect(screen.getByRole('heading', { name: 'Samsung Health' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Saúde' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sincronizar agora' })).toBeEnabled();
     expect(screen.getByRole('region', { name: 'Dados do relógio' })).toBeInTheDocument();
 
