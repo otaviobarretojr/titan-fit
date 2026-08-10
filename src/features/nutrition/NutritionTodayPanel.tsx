@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { loadNutritionExecutionsForDate, nutritionTotalsForDate, saveNutritionMealExecution, todayKey } from './execution';
 import { loadActiveNutritionPlan } from './storage';
 import type { NutritionMacroTotals, NutritionMeal } from './types';
@@ -7,16 +7,16 @@ import '../../styles/nutrition-v053.css';
 const DAY_NAMES = ['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
 
 export function NutritionTodayPanel() {
-  const [refreshKey,setRefreshKey]=useState(0);
+  const [,setRevision]=useState(0);
   const [activeMeal,setActiveMeal]=useState<NutritionMeal|null>(null);
   const [quantities,setQuantities]=useState<Record<string,number>>({});
-  const plan=useMemo(()=>loadActiveNutritionPlan(),[refreshKey]);
+  const plan=loadActiveNutritionPlan();
   const date=todayKey();
-  const executions=useMemo(()=>loadNutritionExecutionsForDate(date),[date,refreshKey]);
-  const totals=useMemo(()=>nutritionTotalsForDate(date),[date,refreshKey]);
+  const executions=loadNutritionExecutionsForDate(date);
+  const totals=nutritionTotalsForDate(date);
 
   useEffect(()=>{
-    const refresh=()=>setRefreshKey(v=>v+1);
+    const refresh=()=>setRevision(v=>v+1);
     window.addEventListener('titan:nutrition-changed',refresh);
     return()=>window.removeEventListener('titan:nutrition-changed',refresh);
   },[]);
@@ -48,7 +48,7 @@ export function NutritionTodayPanel() {
     },zeroMacros());
     saveNutritionMealExecution({date,mealId:activeMeal.id,status,completedAt:new Date().toISOString(),foods:activeMeal.foods.map(food=>({foodId:food.id,quantity:status==='skipped'?0:Math.max(0,Number(quantities[food.id]??food.quantity))})),macros:roundMacros(macros)});
     closeMeal();
-    setRefreshKey(v=>v+1);
+    setRevision(v=>v+1);
   }
 
   return <>
