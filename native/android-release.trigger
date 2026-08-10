@@ -1,1 +1,1 @@
-release-v0.52.0-titan-ui-2.0
+release-v0.52.1-daily-activity-rings
