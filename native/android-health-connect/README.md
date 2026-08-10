@@ -15,6 +15,16 @@ A interface React já consome o contrato `TitanHealthConnect`. No PWA, a ponte n
 - Health Connect Jetpack estável `androidx.health.connect:connect-client:1.1.0`.
 - Pacote Android: `com.otaviobarretojr.titanfit`.
 
+## Mapeamento dos dados
+
+- Sono → `SleepSessionRecord`.
+- Frequência cardíaca → `HeartRateRecord`.
+- Passos → `StepsRecord`.
+- Calorias ativas → `ActiveCaloriesBurnedRecord`.
+- Exercícios → `ExerciseSessionRecord`.
+- Distância → `DistanceRecord`.
+- Composição corporal inicial → `BodyFatRecord`.
+
 ## Passos para gerar o container Android
 
 1. Instalar `@capacitor/core`, `@capacitor/android` e `@capacitor/cli` na mesma versão estável.
