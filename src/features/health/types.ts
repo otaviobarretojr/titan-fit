@@ -11,6 +11,16 @@ export type HealthSample = {
   metadata?: Record<string, string | number | boolean | null>;
 };
 
+export type DailyActivitySummary = {
+  date: string;
+  steps: number;
+  activeCalories: number;
+  activeMinutes: number;
+  distanceMeters: number;
+  activeMinutesSource?: 'exercise-duration' | 'activity-summary';
+  source?: 'health-connect-aggregate' | 'samsung-health';
+};
+
 export type HealthMetricDiagnostic = {
   type: HealthMetricType;
   count: number;
@@ -40,5 +50,6 @@ export type TitanHealthConnectBridge = {
   isAvailable: () => Promise<boolean>;
   requestPermissions: (types: HealthMetricType[]) => Promise<boolean>;
   readSamples: (types: HealthMetricType[], since?: string) => Promise<HealthSample[]>;
+  readDailyActivitySummary?: () => Promise<DailyActivitySummary>;
   diagnoseHealthData?: (types: HealthMetricType[], since?: string) => Promise<HealthDiagnostics>;
 };
