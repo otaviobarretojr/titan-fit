@@ -1,73 +1,69 @@
 import { useMemo, useState } from 'react';
-import { effectiveCardioWeek, getCardioWeekSchedule } from '../cardio/currentCardio';
 import { ExerciseLibraryPage } from '../exercise-library/ExerciseLibraryPage';
-import type { TitanCardioSession, TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
+import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 
 type Props = { plan: TitanPlan | null };
-type SelectedItem = { type: 'strength'; workout: TitanWorkoutDay } | { type: 'cardio'; cardio: TitanCardioSession } | null;
-type ProgrammingTab = 'strength' | 'cardio' | 'library';
-
-const DAY_ORDER = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+type ProgrammingTab = 'week' | 'library';
+const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 const JS_DAY_TO_TITAN = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
 export function ProgrammingPage({ plan }: Props) {
-  const [selected, setSelected] = useState<SelectedItem>(null);
-  const [activeTab, setActiveTab] = useState<ProgrammingTab>('strength');
+  const [selected, setSelected] = useState<TitanWorkoutDay | null>(null);
+  const [activeTab, setActiveTab] = useState<ProgrammingTab>('week');
   const today = JS_DAY_TO_TITAN[new Date().getDay()];
-  const strength = useMemo(() => !plan ? [] : [...plan.workouts].filter((workout) => workout.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength')).sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
-  const cardio = useMemo(() => !plan ? [] : getCardioWeekSchedule(plan).sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
-  const cardioWeek = plan ? effectiveCardioWeek(plan) : 1;
+  const workouts = useMemo(() => !plan ? [] : [...plan.workouts].sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
 
-  if (selected?.type === 'strength') return <StrengthDetail workout={selected.workout} onBack={() => setSelected(null)} />;
-  if (selected?.type === 'cardio') return <CardioDetail cardio={selected.cardio} onBack={() => setSelected(null)} />;
+  if (selected) return <WorkoutDetail workout={selected} onBack={() => setSelected(null)} />;
 
-  const todayWorkout = strength.find((item) => normalize(item.day).includes(today));
-  const todayCardio = cardio.filter((item) => normalize(item.day).includes(today));
+  const todayWorkout = workouts.find((item) => normalize(item.day).includes(today));
   const nextDay = DAY_ORDER[(DAY_ORDER.indexOf(today) + 1) % DAY_ORDER.length];
 
   return <div className="programming-page">
-    <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO SEMANAL</span><h2>Programação</h2><p>Consulte sua semana e explore a Biblioteca TITAN.</p></section>
+    <section className="section-header programming-header"><span className="eyebrow">PROJETO ATIVO</span><h2>Treinos</h2><p>Musculação e cardio agora fazem parte da mesma programação semanal.</p></section>
 
-    <div className="programming-tabs" role="tablist" aria-label="Tipo de programação">
-      <button type="button" role="tab" aria-selected={activeTab === 'strength'} className={activeTab === 'strength' ? 'active' : ''} onClick={() => setActiveTab('strength')}>Musculação</button>
-      <button type="button" role="tab" aria-selected={activeTab === 'cardio'} className={activeTab === 'cardio' ? 'active' : ''} onClick={() => setActiveTab('cardio')}>Cardio</button>
+    <div className="programming-tabs" role="tablist" aria-label="Conteúdo de treinos">
+      <button type="button" role="tab" aria-selected={activeTab === 'week'} className={activeTab === 'week' ? 'active' : ''} onClick={() => setActiveTab('week')}>Semana</button>
       <button type="button" role="tab" aria-selected={activeTab === 'library'} className={activeTab === 'library' ? 'active' : ''} onClick={() => setActiveTab('library')}>Biblioteca</button>
     </div>
 
     {activeTab === 'library' && <ExerciseLibraryPage />}
 
-    {activeTab === 'strength' && (!plan ? <ProgrammingEmpty kind="musculação" /> : <>
-      <section className="programming-today" aria-label="Musculação de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Descanso da musculação'}</h3><p>{todayWorkout ? `${todayWorkout.focus ?? 'Treino programado'} · ${strengthExercises(todayWorkout).length} exercícios · ~${estimateWorkoutMinutes(todayWorkout)} min` : 'Recuperação · sem treino de força programado'}</p></div></section>
-      <section className="programming-section" aria-labelledby="strength-program-title"><div className="programming-section-head"><div><span className="programming-section-icon strength">⌁</span><div><span className="eyebrow">MUSCULAÇÃO</span><h3 id="strength-program-title">Treinos da semana</h3></div></div><small>{strength.length} dias</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
-        const workout = strength.find((item) => normalize(item.day).includes(day)); const isToday = day === today; const isTomorrow = day === nextDay;
-        if (!workout) return <article className={`programming-day-card rest${isToday ? ' today' : ''}`} key={`strength-${day}`}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>Descanso da musculação</strong><small>Recuperação · sem treino de força</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} fallback="DESCANSO" /></article>;
-        const exercises = strengthExercises(workout); return <button type="button" className={`programming-day-card${isToday ? ' today' : ''}`} key={workout.id} onClick={() => setSelected({ type: 'strength', workout })}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>{workout.title}</strong><small>{workout.focus ?? 'Treino programado'} · {exercises.length} exercícios · ~{estimateWorkoutMinutes(workout)} min</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} /></button>;
-      })}</div></section>
-    </>)}
-
-    {activeTab === 'cardio' && (!plan ? <ProgrammingEmpty kind="cardio" /> : <>
-      <section className="programming-today cardio-summary" aria-label="Cardio de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()} · SEMANA {cardioWeek}</span><h3>{todayCardio.length ? todayCardio.map((item) => item.title).join(' + ') : 'Cardio a definir'}</h3><p>{todayCardio.length ? todayCardio.map((item) => `${item.durationMinutes} min · ${cardioZone(item)}${item.startTime ? ` · ${item.startTime}` : ''}`).join('  •  ') : 'Sem sessão configurada para este dia'}</p></div></section>
-      <section className="programming-section" aria-labelledby="cardio-program-title"><div className="programming-section-head"><div><span className="programming-section-icon cardio">♡</span><div><span className="eyebrow">CARDIO · SEMANA {cardioWeek}</span><h3 id="cardio-program-title">Cardio da semana</h3></div></div><small>{cardio.length} sessões</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
-        const sessions = cardio.filter((item) => normalize(item.day).includes(day)); const isToday = day === today; const isTomorrow = day === nextDay;
-        if (!sessions.length) return <article className={`programming-day-card unconfigured${isToday ? ' today' : ''}`} key={`cardio-${day}`}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>Cardio a definir</strong><small>Sem sessão configurada para este dia</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} fallback="A DEFINIR" /></article>;
-        return sessions.map((session) => <button type="button" className={`programming-day-card${isToday ? ' today cardio-today' : ''}`} key={session.id} onClick={() => setSelected({ type: 'cardio', cardio: session })}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>{session.title}</strong><small>{session.durationMinutes} min · {cardioZone(session)}{session.startTime ? ` · ${session.startTime}` : ''}</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} /></button>);
+    {activeTab === 'week' && (!plan ? <ProgrammingEmpty /> : <>
+      <section className="programming-today" aria-label="Treino de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p></div></section>
+      <section className="programming-section" aria-labelledby="week-program-title"><div className="programming-section-head"><div><span className="programming-section-icon strength">⌁</span><div><span className="eyebrow">DOMINGO → SÁBADO</span><h3 id="week-program-title">Treinos da semana</h3></div></div><small>{workouts.length} dias programados</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
+        const workout = workouts.find((item) => normalize(item.day).includes(day));
+        const isToday = day === today;
+        const isTomorrow = day === nextDay;
+        if (!workout) return <article className={`programming-day-card rest${isToday ? ' today' : ''}`} key={day}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>Recuperação</strong><small>Sem sessão programada</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} fallback="DESCANSO" /></article>;
+        return <button type="button" className={`programming-day-card${isToday ? ' today' : ''}`} key={workout.id} onClick={() => setSelected(workout)}><DayLabel day={day} isToday={isToday} /><div className="programming-day-copy"><strong>{workout.title}</strong><small>{workoutSummary(workout)}</small></div><DayStatus isToday={isToday} isTomorrow={isTomorrow} /></button>;
       })}</div></section>
     </>)}
   </div>;
 }
 
-function ProgrammingEmpty({ kind }: { kind: string }) { return <section className="programming-empty"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Nenhum projeto ativo</h2><p>Crie ou importe um projeto para visualizar sua programação de {kind}. A Biblioteca TITAN continua disponível para consulta.</p></section>; }
-function StrengthDetail({ workout, onBack }: { workout: TitanWorkoutDay; onBack: () => void }) { const strength = strengthExercises(workout); return <div className="programming-detail"><button type="button" className="secondary-action programming-back" onClick={onBack}>‹ Voltar à programação</button><section className="programming-detail-hero"><span className="eyebrow">{workout.day.toUpperCase()} · MUSCULAÇÃO</span><h2>{workout.title}</h2><p>{workout.focus ?? 'Treino programado no Projeto TITAN.'}</p><div className="programming-detail-summary"><span><small>Exercícios</small><strong>{strength.length}</strong></span><span><small>Séries</small><strong>{strength.reduce((sum, exercise) => sum + (exercise.sets ?? 1), 0)}</strong></span><span><small>Duração</small><strong>~{estimateWorkoutMinutes(workout)} min</strong></span></div></section><div className="programming-exercise-list">{strength.map((exercise, index) => <ExerciseGuide key={exercise.id} exercise={exercise} index={index + 1} />)}</div></div>; }
-function ExerciseGuide({ exercise, index }: { exercise: TitanExercise; index: number }) { return <details className="programming-exercise-card"><summary><span className="programming-exercise-order">{index}</span><span><strong>{exercise.name}</strong><small>{exercise.sets ?? 1} séries · {repRange(exercise)} · RIR {exercise.targetRir ?? '—'}</small></span><span className="programming-chevron">⌄</span></summary><div className="programming-exercise-guide"><InfoRow label="Grupo muscular" value={exercise.muscleGroup} /><InfoRow label="Descanso" value={exercise.restSeconds ? `${exercise.restSeconds}s` : 'A definir'} />{exercise.technique && <GuideBlock title="Execução" text={exercise.technique} />}{exercise.commonMistakes?.length ? <GuideList title="Erros comuns" items={exercise.commonMistakes} /> : null}{exercise.alternatives?.length ? <GuideList title="Alternativas" items={exercise.alternatives} /> : null}</div></details>; }
-function CardioDetail({ cardio, onBack }: { cardio: TitanCardioSession; onBack: () => void }) { return <div className="programming-detail"><button type="button" className="secondary-action programming-back" onClick={onBack}>‹ Voltar à programação</button><section className="programming-detail-hero cardio"><span className="eyebrow">{cardio.day.toUpperCase()} · CARDIO</span><h2>{cardio.title}</h2><p>{cardio.goal ?? cardio.phase ?? 'Sessão cardiovascular programada.'}</p><div className="programming-detail-summary"><span><small>Tempo</small><strong>{cardio.durationMinutes} min</strong></span><span><small>Zona</small><strong>{cardioZone(cardio)}</strong></span></div></section>{cardio.instructions?.length ? <section className="programming-instructions"><span className="eyebrow">COMO EXECUTAR</span><h3>Orientações da sessão</h3><ol>{cardio.instructions.map((item) => <li key={item}>{item}</li>)}</ol></section> : null}</div>; }
+function ProgrammingEmpty() { return <section className="programming-empty"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Nenhum projeto ativo</h2><p>Crie ou importe um projeto para visualizar musculação e cardio na mesma semana. A Biblioteca TITAN continua disponível para consulta.</p></section>; }
+
+function WorkoutDetail({ workout, onBack }: { workout: TitanWorkoutDay; onBack: () => void }) {
+  const strength = workout.exercises.filter(isStrength);
+  const cardio = workout.exercises.filter(isCardio);
+  return <div className="programming-detail"><button type="button" className="secondary-action programming-back" onClick={onBack}>‹ Voltar à programação</button><section className="programming-detail-hero"><span className="eyebrow">{workout.day.toUpperCase()} · PROJETO TITAN</span><h2>{workout.title}</h2><p>{workout.focus ?? 'Sessão programada no projeto ativo.'}</p><div className="programming-detail-summary"><span><small>Etapas</small><strong>{workout.exercises.length}</strong></span>{strength.length > 0 && <span><small>Séries</small><strong>{strength.reduce((sum, exercise) => sum + (exercise.sets ?? 1), 0)}</strong></span>}{cardio.length > 0 && <span><small>Cardio</small><strong>{cardio.length}</strong></span>}</div></section><div className="programming-exercise-list">{workout.exercises.map((exercise, index) => <ExerciseGuide key={exercise.id} exercise={exercise} index={index + 1} />)}</div></div>;
+}
+
+function ExerciseGuide({ exercise, index }: { exercise: TitanExercise; index: number }) {
+  const cardio = isCardio(exercise);
+  return <details className="programming-exercise-card"><summary><span className="programming-exercise-order">{index}</span><span><strong>{exercise.name}</strong><small>{cardio ? cardioPrescription(exercise) : `${exercise.sets ?? 1} séries · ${repRange(exercise)} · RIR ${exercise.targetRir ?? '—'}`}</small></span><span className="programming-chevron">⌄</span></summary><div className="programming-exercise-guide"><InfoRow label="Tipo" value={exerciseTypeLabel(exercise)} /><InfoRow label="Grupo / foco" value={exercise.muscleGroup} />{!cardio && <InfoRow label="Descanso" value={exercise.restSeconds ? `${exercise.restSeconds}s` : 'A definir'} />}{exercise.cardioZone && <InfoRow label="Zona" value={exercise.cardioZone} />}{exercise.technique && <GuideBlock title="Execução" text={exercise.technique} />}{exercise.notes && <GuideBlock title="Orientação" text={exercise.notes} />}{exercise.commonMistakes?.length ? <GuideList title="Erros comuns" items={exercise.commonMistakes} /> : null}{exercise.alternativeExercises?.length ? <GuideList title="Alternativas" items={exercise.alternativeExercises.map((item) => item.name)} /> : exercise.alternatives?.length ? <GuideList title="Alternativas" items={exercise.alternatives} /> : null}</div></details>;
+}
+
 function DayLabel({ day, isToday = false }: { day: string; isToday?: boolean }) { return <span className={`programming-day-label${isToday ? ' active' : ''}`}><strong>{day.slice(0, 3).toUpperCase()}</strong></span>; }
 function DayStatus({ isToday, isTomorrow, fallback }: { isToday: boolean; isTomorrow: boolean; fallback?: string }) { if (isToday) return <span className="programming-tag today-tag">HOJE</span>; if (isTomorrow) return <span className="programming-tag tomorrow-tag">AMANHÃ</span>; if (fallback) return <span className="programming-tag">{fallback}</span>; return <span className="programming-chevron">›</span>; }
 function InfoRow({ label, value }: { label: string; value: string }) { return <div className="programming-info-row"><span>{label}</span><strong>{value}</strong></div>; }
 function GuideBlock({ title, text }: { title: string; text: string }) { return <div className="programming-guide-block"><span className="eyebrow">{title.toUpperCase()}</span><p>{text}</p></div>; }
 function GuideList({ title, items }: { title: string; items: string[] }) { return <div className="programming-guide-block"><span className="eyebrow">{title.toUpperCase()}</span><ul>{items.map((item) => <li key={item}>{item}</li>)}</ul></div>; }
-function strengthExercises(workout: TitanWorkoutDay) { return workout.exercises.filter((exercise) => (exercise.exerciseType ?? 'strength') === 'strength'); }
-function estimateWorkoutMinutes(workout: TitanWorkoutDay) { const exercises = strengthExercises(workout); const workSeconds = exercises.reduce((sum, exercise) => sum + (exercise.sets ?? 1) * ((exercise.restSeconds ?? 90) + 45), 0); return Math.max(20, Math.round(workSeconds / 300) * 5); }
+function isStrength(exercise: TitanExercise) { return (exercise.exerciseType ?? 'strength') === 'strength'; }
+function isCardio(exercise: TitanExercise) { return exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance'; }
+function workoutSummary(workout: TitanWorkoutDay) { const strength = workout.exercises.filter(isStrength).length; const cardio = workout.exercises.filter(isCardio).length; const parts = [`${workout.exercises.length} etapas`]; if (strength) parts.push(`${strength} de musculação`); if (cardio) parts.push(`${cardio} de cardio`); return `${workout.focus ?? 'Sessão programada'} · ${parts.join(' · ')}`; }
+function cardioPrescription(exercise: TitanExercise) { const parts: string[] = []; if (exercise.durationSeconds) parts.push(`${Math.round(exercise.durationSeconds / 60)} min`); if (exercise.distanceMeters) parts.push(`${(exercise.distanceMeters / 1000).toFixed(1).replace('.', ',')} km`); if (exercise.cardioZone) parts.push(exercise.cardioZone); if (exercise.targetHeartRateMin || exercise.targetHeartRateMax) parts.push(`FC ${exercise.targetHeartRateMin ?? '—'}–${exercise.targetHeartRateMax ?? '—'}`); return parts.join(' · ') || 'Cardio programado'; }
+function exerciseTypeLabel(exercise: TitanExercise) { if (exercise.exerciseType === 'distance') return 'Distância'; if (exercise.exerciseType === 'cardio') return 'Cardio'; if (exercise.exerciseType === 'mobility') return 'Mobilidade'; if (exercise.exerciseType === 'isometric') return 'Isometria'; return 'Musculação'; }
 function repRange(exercise: TitanExercise) { if (exercise.minReps && exercise.maxReps) return `${exercise.minReps}–${exercise.maxReps} reps`; if (exercise.maxReps) return `até ${exercise.maxReps} reps`; if (exercise.minReps) return `${exercise.minReps}+ reps`; return 'reps a definir'; }
-function cardioZone(session: TitanCardioSession) { if (session.type === 'zone2') return 'Zona 2'; if (session.type === 'hiit') return 'HIIT'; if (session.type === 'run') return 'Corrida'; if (session.type === 'run-walk') return 'Corrida/caminhada'; if (session.type === 'walk') return 'Caminhada'; if (session.type === 'bike') return 'Bike'; if (session.type === 'stairs') return 'Escada'; return 'Cardio'; }
 function dayIndex(value: string) { const normalized = normalize(value); const index = DAY_ORDER.findIndex((day) => normalized.includes(day)); return index === -1 ? 99 : index; }
 function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
