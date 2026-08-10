@@ -41,8 +41,6 @@ const [
 const config = JSON.parse(configText);
 const pkg = JSON.parse(packageText);
 const lock = JSON.parse(lockText);
-const [major, minor, patch] = pkg.version.split('.').map(Number);
-const expectedVersionCode = major * 1000000 + minor * 1000 + patch;
 const minSdkMatch = androidGradle.match(/minSdkVersion\s+(\d+)/);
 const minSdk = minSdkMatch ? Number(minSdkMatch[1]) : 0;
 
@@ -50,7 +48,14 @@ assert(config.appId === 'com.otaviobarretojr.titanfit', 'Capacitor deve manter o
 assert(config.appName === 'TITAN FIT', 'Capacitor deve manter o nome oficial do aplicativo');
 assert(config.webDir === 'dist', 'Capacitor deve empacotar o build Vite em dist');
 assert(lock.version === pkg.version && lock.packages?.['']?.version === pkg.version, 'package-lock deve usar a mesma versão do package.json');
-assert(androidGradle.includes(`versionName "${pkg.version}"`) && androidGradle.includes(`versionCode ${expectedVersionCode}`), 'APK Android deve usar a mesma versão oficial do TITAN FIT');
+assert(
+  androidGradle.includes("parse(file('../../package.json'))") &&
+  androidGradle.includes('versionName titanVersionName') &&
+  androidGradle.includes('versionCode titanVersionCode') &&
+  androidGradle.includes('titanVersionParts[0] * 1000000') &&
+  androidGradle.includes('titanVersionParts[1] * 1000'),
+  'APK Android deve derivar automaticamente versionName e versionCode do package.json'
+);
 assert(minSdk >= 29, 'Samsung Health Data SDK exige minSdk Android 29 ou superior');
 
 assert(pkg.scripts?.['build:android']?.includes('vite build --mode android'), 'package.json deve manter build Android dedicado');
