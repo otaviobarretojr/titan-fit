@@ -8,8 +8,8 @@ android {
         applicationId "com.otaviobarretojr.titanfit"
         minSdkVersion 26
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 51005
-        versionName "0.51.5"
+        versionCode 51006
+        versionName "0.51.6"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
