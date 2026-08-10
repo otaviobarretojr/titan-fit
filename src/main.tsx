@@ -53,6 +53,7 @@ import './styles/navigation-v05111.css';
 import './styles/health-dashboard-v05112.css';
 import './styles/titan-ui-v052.css';
 import './styles/health-clean-v0527.css';
+import './styles/health-hub-v0529.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
