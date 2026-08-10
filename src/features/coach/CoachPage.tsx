@@ -1,35 +1,9 @@
-import { useEffect, useState } from 'react';
-import { loadBodyEvolution } from '../evolution/storage';
-import { loadHealthSamples } from '../health/repository';
-import { loadWorkoutHistory } from '../history/storage';
-import { loadNutritionExecutions } from '../nutrition/execution';
-import { loadActiveNutritionPlan } from '../nutrition/storage';
-import { createUnifiedCoachReport } from './engine';
-import type { CoachReport } from './types';
+import { useUnifiedCoachReport } from './useUnifiedCoachReport';
 
 const confidenceLabels = { low: 'Baixa', medium: 'Média', high: 'Alta' } as const;
 
 export function CoachPage() {
-  const [report, setReport] = useState<CoachReport | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      const [healthSamples, bodyState] = await Promise.all([loadHealthSamples(), loadBodyEvolution()]);
-      if (!active) return;
-      setReport(createUnifiedCoachReport({
-        workouts: loadWorkoutHistory(),
-        nutritionPlan: loadActiveNutritionPlan(),
-        nutritionExecutions: loadNutritionExecutions(),
-        healthSamples,
-        bodyEntries: bodyState.entries,
-      }));
-    }
-    void load();
-    const refresh = () => void load();
-    window.addEventListener('titan:nutrition-changed', refresh);
-    return () => { active = false; window.removeEventListener('titan:nutrition-changed', refresh); };
-  }, []);
+  const report = useUnifiedCoachReport();
 
   if (!report) return <section className="hero-card compact"><span className="eyebrow">COACH TITAN</span><h2>Analisando seus dados</h2><p>Reunindo treino, nutrição, saúde e evolução.</p></section>;
 
