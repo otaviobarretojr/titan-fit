@@ -35,8 +35,8 @@ jobs:
           npm install @capacitor/core@8.4.2 @capacitor/android@8.4.2 --save
           npm install @capacitor/cli@8.4.2 --save-dev
 
-      - name: Build web app
-        run: npm run build
+      - name: Build Android web bundle
+        run: npm run build:android
 
       - name: Generate Android project
         run: |
