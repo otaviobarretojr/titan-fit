@@ -1,1 +1,1 @@
-release-v0.52.10-health-hub-freeze-fix
+release-v0.52.11-health-hub-navigation-fix
