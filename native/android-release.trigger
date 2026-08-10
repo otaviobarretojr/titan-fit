@@ -1,1 +1,1 @@
-release-v0.52.6-samsung-health-diagnostics
+release-v0.52.6-health-production-polish
