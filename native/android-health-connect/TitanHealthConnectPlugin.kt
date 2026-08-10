@@ -96,23 +96,63 @@ class TitanHealthConnectPlugin : Plugin() {
         val until = Instant.now()
 
         scope.launch {
-            try {
-                val samples = JSArray()
-                for (type in types) {
-                    when (type) {
-                        "sleep" -> readSleep(hc, since, until, samples)
-                        "heart-rate" -> readHeartRate(hc, since, until, samples)
-                        "steps" -> readSteps(hc, since, until, samples)
-                        "active-calories" -> readActiveCalories(hc, since, until, samples)
-                        "exercise" -> readExercise(hc, since, until, samples)
-                        "distance" -> readDistance(hc, since, until, samples)
-                        "body-composition" -> readBodyFat(hc, since, until, samples)
-                    }
+            val samples = JSArray()
+            for (type in types) {
+                try {
+                    readMetric(hc, type, since, until, samples)
+                } catch (_: Exception) {
+                    // A falha de uma categoria não pode apagar dados válidos das demais.
                 }
-                call.resolve(JSObject().put("samples", samples))
-            } catch (error: Exception) {
-                call.reject("Falha ao ler dados do Health Connect.", error)
             }
+            call.resolve(JSObject().put("samples", samples))
+        }
+    }
+
+    @PluginMethod
+    fun diagnoseHealthData(call: PluginCall) {
+        val hc = client ?: run {
+            call.resolve(
+                JSObject()
+                    .put("from", Instant.now().toString())
+                    .put("to", Instant.now().toString())
+                    .put("totalRecords", 0)
+                    .put("metrics", JSArray())
+            )
+            return
+        }
+        val types = stringValues(call.getArray("types") ?: JSArray())
+        val since = call.getString("since")?.let(Instant::parse) ?: Instant.now().minusSeconds(30L * 24 * 60 * 60)
+        val until = Instant.now()
+
+        scope.launch {
+            val metrics = JSArray()
+            var totalRecords = 0
+            for (type in types) {
+                val metricSamples = JSArray()
+                val diagnostic = JSObject().put("type", type)
+                try {
+                    readMetric(hc, type, since, until, metricSamples)
+                    val count = metricSamples.length()
+                    totalRecords += count
+                    diagnostic.put("count", count)
+                    diagnostic.put("sources", sourcesOf(metricSamples))
+                    val range = sampleRange(metricSamples)
+                    range.first?.let { diagnostic.put("oldestAt", it) }
+                    range.second?.let { diagnostic.put("newestAt", it) }
+                } catch (error: Exception) {
+                    diagnostic.put("count", 0)
+                    diagnostic.put("sources", JSArray())
+                    diagnostic.put("error", error.message ?: error.javaClass.simpleName)
+                }
+                metrics.put(diagnostic)
+            }
+            call.resolve(
+                JSObject()
+                    .put("from", since.toString())
+                    .put("to", until.toString())
+                    .put("totalRecords", totalRecords)
+                    .put("metrics", metrics)
+            )
         }
     }
 
@@ -137,6 +177,39 @@ class TitanHealthConnectPlugin : Plugin() {
             else -> null
         }
     }.toSet()
+
+    private suspend fun readMetric(client: HealthConnectClient, type: String, start: Instant, end: Instant, output: JSArray) {
+        when (type) {
+            "sleep" -> readSleep(client, start, end, output)
+            "heart-rate" -> readHeartRate(client, start, end, output)
+            "steps" -> readSteps(client, start, end, output)
+            "active-calories" -> readActiveCalories(client, start, end, output)
+            "exercise" -> readExercise(client, start, end, output)
+            "distance" -> readDistance(client, start, end, output)
+            "body-composition" -> readBodyFat(client, start, end, output)
+        }
+    }
+
+    private fun sourcesOf(samples: JSArray): JSArray {
+        val sources = linkedSetOf<String>()
+        for (index in 0 until samples.length()) {
+            val source = samples.optJSONObject(index)?.optString("source", "") ?: ""
+            if (source.isNotBlank()) sources.add(source)
+        }
+        return JSArray(sources.toList())
+    }
+
+    private fun sampleRange(samples: JSArray): Pair<String?, String?> {
+        var oldest: String? = null
+        var newest: String? = null
+        for (index in 0 until samples.length()) {
+            val startedAt = samples.optJSONObject(index)?.optString("startedAt", "") ?: ""
+            if (startedAt.isBlank()) continue
+            if (oldest == null || startedAt < oldest) oldest = startedAt
+            if (newest == null || startedAt > newest) newest = startedAt
+        }
+        return Pair(oldest, newest)
+    }
 
     private suspend fun readSleep(client: HealthConnectClient, start: Instant, end: Instant, output: JSArray) {
         client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(start, end))).records.forEach { record ->
