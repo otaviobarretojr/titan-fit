@@ -61,7 +61,7 @@ class TitanHealthConnectPlugin : Plugin() {
     }
 
     @PluginMethod
-    fun requestPermissions(call: PluginCall) {
+    fun requestHealthPermissions(call: PluginCall) {
         val hc = client ?: run {
             call.resolve(JSObject().put("granted", false))
             return
@@ -91,14 +91,14 @@ class TitanHealthConnectPlugin : Plugin() {
             call.resolve(JSObject().put("samples", JSArray()))
             return
         }
-        val types = call.getArray("types") ?: JSArray()
+        val types = stringValues(call.getArray("types") ?: JSArray())
         val since = call.getString("since")?.let(Instant::parse) ?: Instant.now().minusSeconds(30L * 24 * 60 * 60)
         val until = Instant.now()
 
         scope.launch {
             try {
                 val samples = JSArray()
-                for (type in types.toList().mapNotNull { it?.toString() }) {
+                for (type in types) {
                     when (type) {
                         "sleep" -> readSleep(hc, since, until, samples)
                         "heart-rate" -> readHeartRate(hc, since, until, samples)
@@ -116,7 +116,16 @@ class TitanHealthConnectPlugin : Plugin() {
         }
     }
 
-    private fun permissionsFor(types: JSArray): Set<String> = types.toList().mapNotNull { it?.toString() }.mapNotNull { type ->
+    private fun stringValues(values: JSArray): List<String> {
+        val result = mutableListOf<String>()
+        for (index in 0 until values.length()) {
+            val value = values.optString(index, "")
+            if (value.isNotBlank()) result.add(value)
+        }
+        return result
+    }
+
+    private fun permissionsFor(types: JSArray): Set<String> = stringValues(types).mapNotNull { type ->
         when (type) {
             "sleep" -> HealthPermission.getReadPermission(SleepSessionRecord::class)
             "heart-rate" -> HealthPermission.getReadPermission(HeartRateRecord::class)
@@ -159,8 +168,10 @@ class TitanHealthConnectPlugin : Plugin() {
     private suspend fun readExercise(client: HealthConnectClient, start: Instant, end: Instant, output: JSArray) {
         client.readRecords(ReadRecordsRequest(ExerciseSessionRecord::class, TimeRangeFilter.between(start, end))).records.forEach { record ->
             val minutes = (record.endTime.epochSecond - record.startTime.epochSecond) / 60.0
-            output.put(sample("exercise", record.metadata.id, record.startTime, record.endTime, minutes, "min", record.metadata.dataOrigin.packageName)
-                .put("metadata", JSObject().put("exerciseType", record.exerciseType)))
+            output.put(
+                sample("exercise", record.metadata.id, record.startTime, record.endTime, minutes, "min", record.metadata.dataOrigin.packageName)
+                    .put("metadata", JSObject().put("exerciseType", record.exerciseType))
+            )
         }
     }
 
