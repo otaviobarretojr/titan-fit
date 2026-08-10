@@ -49,6 +49,7 @@ import './styles/project-management.css';
 import './styles/settings-cleanup.css';
 import './styles/navigation-v0519.css';
 import './styles/navigation-v05110.css';
+import './styles/navigation-v05111.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
