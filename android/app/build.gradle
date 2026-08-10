@@ -1,13 +1,21 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'kotlin-parcelize'
+
+import groovy.json.JsonSlurper
+
 def titanKeystorePath = System.getenv('TITAN_ANDROID_KEYSTORE_PATH')
 def titanKeystorePassword = System.getenv('TITAN_ANDROID_KEYSTORE_PASSWORD')
+def titanPackageJson = new JsonSlurper().parse(file('../../package.json'))
+def titanVersionName = titanPackageJson.version as String
+def titanVersionParts = titanVersionName.tokenize('.').collect { it as Integer }
+def titanVersionCode = (titanVersionParts[0] * 1000000) + (titanVersionParts[1] * 1000) + titanVersionParts[2]
+
 android {
     signingConfigs { titanRelease { if (titanKeystorePath && titanKeystorePassword) { storeFile file(titanKeystorePath); storePassword titanKeystorePassword; keyAlias 'titanfit'; keyPassword titanKeystorePassword } } }
     namespace = "com.otaviobarretojr.titanfit"
     compileSdk = rootProject.ext.compileSdkVersion
-    defaultConfig { applicationId "com.otaviobarretojr.titanfit"; minSdkVersion 29; targetSdkVersion rootProject.ext.targetSdkVersion; versionCode 52008; versionName "0.52.8"; testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"; aaptOptions { ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~' } }
+    defaultConfig { applicationId "com.otaviobarretojr.titanfit"; minSdkVersion 29; targetSdkVersion rootProject.ext.targetSdkVersion; versionCode titanVersionCode; versionName titanVersionName; testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"; aaptOptions { ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~' } }
     buildTypes { release { minifyEnabled false; signingConfig signingConfigs.titanRelease; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' } }
 }
 repositories { flatDir{ dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs' } }
