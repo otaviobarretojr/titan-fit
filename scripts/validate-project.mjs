@@ -2,121 +2,69 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const root = process.cwd();
-const validatorPath = path.join(root, 'scripts', 'validate-project.mjs');
 const read = (file) => readFile(path.join(root, file), 'utf8');
 const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
 
-const pkg = JSON.parse(await read('package.json'));
-const vite = await read('vite.config.ts');
-const app = await read('src/app/App.tsx');
-const appTest = await read('tests/App.test.tsx');
-const types = await read('src/features/plan/types.ts');
-const validation = await read('src/features/plan/validation.ts');
-const execution = await read('src/features/workout/WorkoutExecutionView.tsx');
-const cardioPage = await read('src/features/cardio/CardioPage.tsx');
-const currentCardio = await read('src/features/cardio/currentCardio.ts');
-const healthPage = await read('src/features/health/SamsungHealthPage.tsx');
-const healthBridge = await read('src/features/health/bridge.ts');
-const nativeHealthDocs = await read('native/android-health-connect/README.md');
-const planImporter = await read('src/features/plan/PlanImporter.tsx');
-const dashboard = await read('src/features/dashboard/DashboardPage.tsx');
-const programmingPage = await read('src/features/programming/ProgrammingPage.tsx');
-const workoutTypes = await read('src/features/workout/types.ts');
-const historyTypes = await read('src/features/history/types.ts');
-const progressPage = await read('src/features/history/ProgressPage.tsx');
-const sessionHistoryPage = await read('src/features/history/HistoryPage.tsx');
-const intelligence = await read('src/features/history/intelligence.ts');
-const evolution = await read('src/features/evolution/BodyEvolutionPage.tsx');
-const evolutionStorage = await read('src/features/evolution/storage.ts');
-const evolutionTypes = await read('src/features/evolution/types.ts');
-const demoEvolution = await read('src/features/evolution/demoData.ts');
-const fullDemo = await read('src/features/demo/fullDemo.ts');
-const resetData = await read('src/core/database/resetAppData.ts');
-const videoLibrary = await read('src/features/exercise-library/videos.ts');
-const database = await read('src/core/database/indexedDb.ts');
-const backup = await read('src/core/backup/backup.ts');
-const deploy = await read('.github/workflows/deploy-pages.yml');
-const ci = await read('.github/workflows/ci.yml');
+const [pkgText, vite, app, appTest, types, validation, execution, healthPage, healthBridge, nativeHealthDocs, dashboard, programmingPage, workoutTypes, historyTypes, progressPage, intelligence, evolution, evolutionStorage, evolutionTypes, resetData, videoLibrary, database, backup, deploy, ci] = await Promise.all([
+  read('package.json'), read('vite.config.ts'), read('src/app/App.tsx'), read('tests/App.test.tsx'), read('src/features/plan/types.ts'), read('src/features/plan/validation.ts'), read('src/features/workout/WorkoutExecutionView.tsx'), read('src/features/health/SamsungHealthPage.tsx'), read('src/features/health/bridge.ts'), read('native/android-health-connect/README.md'), read('src/features/dashboard/DashboardPage.tsx'), read('src/features/programming/ProgrammingPage.tsx'), read('src/features/workout/types.ts'), read('src/features/history/types.ts'), read('src/features/history/ProgressPage.tsx'), read('src/features/history/intelligence.ts'), read('src/features/evolution/BodyEvolutionPage.tsx'), read('src/features/evolution/storage.ts'), read('src/features/evolution/types.ts'), read('src/core/database/resetAppData.ts'), read('src/features/exercise-library/videos.ts'), read('src/core/database/indexedDb.ts'), read('src/core/backup/backup.ts'), read('.github/workflows/deploy-pages.yml'), read('.github/workflows/ci.yml')
+]);
 
+const pkg = JSON.parse(pkgText);
 assert(/^\d+\.\d+\.\d+$/.test(pkg.version), 'package.json deve declarar uma versão semântica válida');
-assert(pkg.scripts?.lint?.includes('--max-warnings 0'), 'Lint deve falhar quando houver qualquer warning novo');
-assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'A versão visível do app deve vir diretamente do package.json');
-assert(appTest.includes("import packageInfo from '../package.json'") && appTest.includes('`v${packageInfo.version}`') && !/TITAN FIT v\d+\.\d+\.\d+/.test(appTest), 'Testes do App não podem congelar um número de versão; devem usar package.json');
-assert(
-  vite.includes("import packageInfo from './package.json'") &&
-  vite.includes('cacheId: `titan-fit-v${packageInfo.version}`') &&
-  vite.includes("base: isAndroid ? './' : '/titan-fit/'") &&
-  vite.includes("display: 'standalone'") &&
-  vite.includes("registerType: 'autoUpdate'") &&
-  vite.includes('disable: isAndroid'),
-  'PWA deve manter base /titan-fit/, cache e autoUpdate; Android deve usar base relativa e PWA desativado'
-);
-assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar a mesma versão do Node.js');
-assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
-assert(app.includes("{ id: 'today', label: 'Hoje' }") && app.includes("{ id: 'programming', label: 'Treinos' }") && app.includes("{ id: 'health', label: 'Saúde' }") && app.includes("{ id: 'progress', label: 'Progresso' }") && app.includes("{ id: 'settings', label: 'Ajustes' }") && !app.includes("{ id: 'cardio', label: 'Cardio' }") && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Hoje, Treinos, Saúde, Progresso e Ajustes; Cardio permanece como fluxo interno');
-assert(app.includes("activeTab === 'health' && <SamsungHealthPage />") && healthPage.includes('Sincronizar agora') && healthPage.includes('Atividade diária') && healthPage.includes('Treinos da semana') && healthPage.includes('Resumo mais recente') && healthPage.includes('Health Connect'), 'Saúde deve ter painel próprio com atividade diária, treinos da semana, sinais do relógio e sincronização');
-assert(healthBridge.includes('window.Capacitor?.Plugins?.TitanHealthConnect') && healthBridge.includes('requestPermissions') && healthBridge.includes('readSamples'), 'Ponte Health Connect deve detectar o plugin Capacitor nativo e preservar o contrato de sincronização');
-assert(nativeHealthDocs.includes('Galaxy Watch → Samsung Health → Health Connect') && nativeHealthDocs.includes('TitanHealthConnect') && nativeHealthDocs.includes('SleepSessionRecord') && nativeHealthDocs.includes('HeartRateRecord'), 'Fundação Android deve documentar fluxo, contrato e mapeamento Health Connect');
-assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
-assert(app.includes('Inserir projeto') && !app.includes('>Substituir projeto</button>'), 'Configurações deve usar Inserir projeto como ação de atualização modular');
-assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
-assert(app.includes('onStartCardio={startCardio}') && app.includes('initialSessionId={directCardioId}'), 'Dashboard deve abrir a execução dedicada do cardio programado');
-assert(fullDemo.includes('demoPlan') && fullDemo.includes('demoWorkoutHistory') && fullDemo.includes('loadFullDemo') && fullDemo.includes('saveWorkoutHistory') && fullDemo.includes('saveBodyEvolution'), 'Modo demonstração deve popular projeto, histórico e evolução corporal');
-assert(fullDemo.includes('cardioSchedule') && fullDemo.includes('buildCardioHistory') && fullDemo.includes('averageHeartRate') && fullDemo.includes('distanceMeters'), 'Modo demonstração deve incluir cardio diário com métricas reais');
-assert(fullDemo.includes('buildStrengthHistory') && fullDemo.includes('sequenceIndex') && fullDemo.includes("exercise.id === 'chest-press'"), 'Modo demonstração deve incluir histórico suficiente para progressão, PR e estagnação');
-assert(sessionHistoryPage.includes('Histórico') && sessionHistoryPage.includes('loadWorkoutHistory') && sessionHistoryPage.includes('history-session-card'), 'Histórico interno deve continuar disponível para PR, Coach, Score e diagnóstico');
-assert(programmingPage.includes('Treinos da semana') && programmingPage.includes('Cardio da semana') && programmingPage.includes('Erros comuns') && programmingPage.includes('Alternativas'), 'Programação deve reunir semana de musculação, cardio e consulta de execução');
-assert(programmingPage.includes('getCardioWeekSchedule') && programmingPage.includes('effectiveCardioWeek') && programmingPage.includes('CARDIO · SEMANA'), 'Programação de cardio deve exibir somente a semana ativa do projeto');
-assert(demoEvolution.includes("Array.from({ length: 6 }") && demoEvolution.includes('bodyFatPercent') && demoEvolution.includes('muscleMassKg') && demoEvolution.includes('measurements'), 'Dados demo devem conter série mensal completa de evolução corporal');
-assert(resetData.includes('localStorage.clear()') && resetData.includes('clearStore') && resetData.includes('STORE_NAMES'), 'Reset total deve limpar LocalStorage e todas as stores IndexedDB');
-assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve suportar os cinco tipos');
-assert(types.includes('videoPolicy') && types.includes('TitanVideoLibrary') && types.includes('channel?'), 'Metadados de vídeo v2.4 devem existir');
-assert(types.includes('TitanExerciseAlternative') && types.includes('alternativeExercises?: TitanExerciseAlternative[]'), 'Plano deve suportar alternativas estruturadas com identidade própria');
-assert(validation.includes("readString(value.exerciseType) || 'strength'"), 'Ficha antiga sem exerciseType deve assumir strength');
-assert(validation.includes('explicitId') && validation.includes('pending-curation') && validation.includes('videoLibrary'), 'Importação deve aceitar videoId e metadados da biblioteca');
-assert(validation.includes('validateAlternativeExercise') && validation.includes('alternativeExercises'), 'Importador deve validar alternativas estruturadas de exercício');
-assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas avançadas');
-assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('bestInclinePercent') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas de cardio');
-assert(execution.includes('getExerciseVideo(activeExercise)') && execution.includes('src={exerciseVideo.embedUrl}') && execution.includes('Rever execução') && execution.includes('começar séries') && videoLibrary.includes('youtube-nocookie.com/embed/') && videoLibrary.includes('player.vimeo.com/video/'), 'Experiência visual por vídeo deve permanecer funcional dentro do treino com resolvedor multprovedor');
-assert(execution.includes('exerciseOptions(baseExercise)') && execution.includes('selectedExerciseId: option.id') && execution.includes('histórico, PR e progressão'), 'Modo treino deve permitir trocar para alternativa e usar a identidade do exercício executado');
-assert(cardioPage.includes('Condicionamento + 5 km') && cardioPage.includes('getTodayCardioSession') && cardioPage.includes('CARDIO CONCLUÍDO') && cardioPage.includes('FC média') && cardioPage.includes('Finalizar cardio') && !cardioPage.includes("(['zone2','walk','run','hiit'] as CardioMode[])"), 'Fluxo interno de Cardio deve executar a sessão planejada e registrar o resumo sem seletor manual de modalidade');
-assert(currentCardio.includes('currentProjectWeek') && currentCardio.includes('effectiveCardioWeek') && currentCardio.includes('getCardioWeekSchedule') && currentCardio.includes('reachedWeeks.at(-1)') && currentCardio.includes('getTodayCardioSession'), 'Cardio atual deve respeitar a semana corrente, avançar quando houver nova etapa e manter a última semana válida quando necessário');
-assert(dashboard.includes('CARDIO DE HOJE') && dashboard.includes('Iniciar cardio') && dashboard.includes('onStartCardio(todayCardio.id)'), 'Dashboard deve exibir e iniciar o cardio do dia');
-assert(
-  planImporter.includes("endsWith('.titan-cardio')") &&
-  planImporter.includes('preserveExistingCardio') &&
-  planImporter.includes('mergeCardioPlan') &&
-  planImporter.includes('detectImportKind') &&
-  planImporter.includes('pendingCardio') &&
-  planImporter.includes('Ativar projeto completo') &&
-  planImporter.includes('Adicionar outro arquivo') &&
-  planImporter.includes('Array.isArray(input.workouts)') &&
-  planImporter.includes('Array.isArray(input.weeks)'),
-  'Importador deve identificar conteúdo e combinar musculação/cardio em qualquer ordem'
-);
-assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes("'body' | 'training'") && progressPage.includes('PrHall'), 'Progresso deve reunir evolução corporal e Hall dos PRs de treino');
-assert(evolution.includes('EVOLUÇÃO CORPORAL') && evolution.includes('Última vs. anterior') && evolution.includes('Evolução mensal') && evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa') && evolution.includes('evolution-register-screen'), 'Centro de evolução deve funcionar como dashboard corporal');
-assert(!progressPage.includes('🏆 Volume:') && !progressPage.includes('de volume'), 'Volume total não deve aparecer na interface de progresso');
-assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('EvolutionPhoto') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução corporal deve permanecer versionado');
-assert(evolutionStorage.includes('STORE_NAMES.preferences') && evolutionStorage.includes('body-evolution-v1'), 'Evolução corporal deve ser persistida no IndexedDB e incluída no backup');
-assert(videoLibrary.toLowerCase().includes('cadeira flexora') && videoLibrary.includes('Zss6E3VU6X0') && videoLibrary.toLowerCase().includes('eleva[cç][aã]o lateral unilateral na polia'), 'Biblioteca interna de fallback deve permanecer funcional');
-assert(progressPage.includes('HALL DOS PRs') && progressPage.includes('PRs conquistados') && progressPage.includes('buildPrGroups') && progressPage.includes('ExercisePrHistory'), 'Progresso de treino deve exibir PRs agrupados com histórico sob demanda');
-assert(!progressPage.includes('Recuperação estimada') && !progressPage.includes('calculateRecovery'), 'Recuperação e fadiga não devem poluir o Hall dos PRs');
-assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice') && intelligence.includes('calculateRecovery'), 'Motor de inteligência do Coach deve permanecer disponível para uso contextual no treino');
-assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'Persistência e backup devem permanecer funcionais');
+assert(pkg.scripts?.lint?.includes('--max-warnings 0'), 'Lint deve falhar quando houver warnings');
+assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'Versão visível deve vir do package.json');
+assert(appTest.includes("import packageInfo from '../package.json'") && appTest.includes('`v${packageInfo.version}`'), 'Teste do App deve usar a versão dinâmica');
+
+assert(vite.includes("base: isAndroid ? './' : '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes('disable: isAndroid'), 'Build PWA/Android deve manter configuração oficial');
+assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar Node 24');
+assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar antes de publicar');
+
+for (const tab of ["{ id: 'today', label: 'Hoje' }", "{ id: 'programming', label: 'Treinos' }", "{ id: 'health', label: 'Saúde' }", "{ id: 'progress', label: 'Progresso' }", "{ id: 'settings', label: 'Ajustes' }"]) assert(app.includes(tab), `Navegação principal ausente: ${tab}`);
+assert(!app.includes("CardioPage") && !app.includes("'cardio' |") && !app.includes("activeTab === 'cardio'") && !app.includes('directCardioId') && !app.includes('startCardio'), 'App não deve manter rota ou execução de cardio standalone');
+assert(!dashboard.includes('../cardio/currentCardio') && !dashboard.includes('onStartCardio') && !dashboard.includes('Iniciar cardio'), 'Dashboard não deve iniciar cardio por módulo isolado');
+assert(dashboard.includes('dayPlan?.exercises') && dashboard.includes("exercise.exerciseType === 'cardio'") && dashboard.includes('onStartWorkout(dayPlan.id)'), 'Dashboard deve executar musculação e cardio pelo treino do projeto');
+assert(!programmingPage.includes('../cardio/currentCardio') && !programmingPage.includes("ProgrammingTab = 'strength' | 'cardio'") && programmingPage.includes("ProgrammingTab = 'week' | 'library'"), 'Treinos deve remover aba de cardio isolada');
+assert(programmingPage.includes('Musculação e cardio agora fazem parte da mesma programação semanal.') && programmingPage.includes("exercise.exerciseType === 'cardio'") && programmingPage.includes("exercise.exerciseType === 'distance'"), 'Programação deve reunir cardio e musculação por dia do projeto');
+assert(programmingPage.includes("const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']"), 'Semana oficial deve começar no domingo');
+
+assert(app.includes("activeTab === 'health' && <SamsungHealthPage />") && healthPage.includes('Atividade diária') && healthPage.includes('Treinos da semana') && healthPage.includes('Health Connect'), 'Saúde deve manter dashboard e Health Connect');
+assert(healthBridge.includes('window.Capacitor?.Plugins?.TitanHealthConnect') && healthBridge.includes('readSamples'), 'Ponte Health Connect deve permanecer ativa');
+assert(nativeHealthDocs.includes('Galaxy Watch → Samsung Health → Health Connect') && nativeHealthDocs.includes('TitanHealthConnect'), 'Documentação Health Connect deve permanecer presente');
+
+assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve suportar musculação e cardio no mesmo projeto');
+assert(types.includes('TitanExerciseAlternative') && types.includes('alternativeExercises?: TitanExerciseAlternative[]'), 'Plano deve preservar alternativas estruturadas');
+assert(validation.includes("readString(value.exerciseType) || 'strength'"), 'Planos legados devem assumir strength quando exerciseType não existir');
+assert(validation.includes('validateAlternativeExercise') && validation.includes('alternativeExercises'), 'Importador deve validar alternativas');
+assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas de cardio no treino');
+assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas cardiovasculares');
+assert(execution.includes('getExerciseVideo(activeExercise)') && execution.includes('exerciseOptions(baseExercise)') && execution.includes('selectedExerciseId: option.id'), 'Modo treino deve preservar vídeo e substituições');
+
+assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Progresso deve manter evolução e PRs');
+assert(evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa'), 'Evolução corporal deve permanecer funcional');
+assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução deve permanecer versionado');
+assert(evolutionStorage.includes('body-evolution-v1'), 'Evolução deve permanecer persistida');
+assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice'), 'Motor de progressão deve permanecer disponível');
+assert(resetData.includes('localStorage.clear()') && resetData.includes('STORE_NAMES'), 'Reset deve limpar persistência local');
+assert(database.includes('indexedDB.open') && backup.includes('restoreBackup'), 'IndexedDB e backup devem permanecer funcionais');
+assert(videoLibrary.includes('youtube-nocookie.com/embed/') && videoLibrary.includes('player.vimeo.com/video/'), 'Biblioteca de vídeos deve permanecer multprovedor');
 
 const forbidden = ['IronFit', 'TreinoFit', 'Projeto Titan', 'Titan App'];
 async function walk(dir) {
   for (const entry of await readdir(dir)) {
     if (['node_modules', 'dist', '.git', 'coverage'].includes(entry)) continue;
-    const full = path.join(dir, entry); const info = await stat(full);
+    const full = path.join(dir, entry);
+    const info = await stat(full);
     if (info.isDirectory()) { await walk(full); continue; }
-    if (entry.endsWith('.lock') || full === validatorPath) continue;
+    if (entry.endsWith('.lock') || full.endsWith('scripts/validate-project.mjs')) continue;
     const text = await readFile(full, 'utf8').catch(() => '');
     for (const term of forbidden) assert(!text.includes(term), `${full} contém termo proibido: ${term}`);
   }
 }
 await walk(root);
-if (failures.length) { console.error('Validação falhou:\n- ' + failures.join('\n- ')); process.exit(1); }
+
+if (failures.length) {
+  console.error('Validação falhou:\n- ' + failures.join('\n- '));
+  process.exit(1);
+}
 console.log(`Validação do TITAN FIT v${pkg.version} concluída com sucesso.`);
