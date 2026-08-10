@@ -1,45 +1,35 @@
-# TITAN FIT — Android Health Connect bridge
+# TITAN FIT · Android + Health Connect
 
-Esta pasta documenta a camada Android nativa que alimentará a aba Samsung Health sem alterar o funcionamento do PWA.
+Esta pasta contém a implementação nativa planejada para a integração do TITAN FIT com o Health Connect.
 
-## Fluxo
+## Arquitetura
 
-Galaxy Watch → Samsung Health → Health Connect → plugin nativo `TitanHealthConnect` → React/TITAN FIT.
+Galaxy Watch → Samsung Health → Health Connect → `TitanHealthConnectPlugin` → aba Samsung Health do TITAN FIT.
 
-## Contrato esperado pelo frontend
+A interface React já consome o contrato `TitanHealthConnect`. No PWA, a ponte nativa não existe e a tela permanece em modo de espera. No Android híbrido, o plugin Capacitor expõe as mesmas operações: disponibilidade, permissões e leitura de amostras.
 
-O plugin Capacitor deve registrar o nome `TitanHealthConnect` e expor:
+## Base recomendada
 
-- `isAvailable()` → `{ available: boolean }`
-- `requestPermissions({ types })` → `{ granted: boolean }`
-- `readSamples({ types, since? })` → `{ samples: HealthSample[] }`
+- Capacitor 8.4.x.
+- Android nativo gerado com `npx cap add android`.
+- Health Connect Jetpack estável `androidx.health.connect:connect-client:1.1.0`.
+- Pacote Android: `com.otaviobarretojr.titanfit`.
 
-Os tipos aceitos pelo frontend são: `sleep`, `heart-rate`, `steps`, `active-calories`, `exercise`, `distance` e `body-composition`.
+## Passos para gerar o container Android
 
-## Mapeamento Health Connect
+1. Instalar `@capacitor/core`, `@capacitor/android` e `@capacitor/cli` na mesma versão estável.
+2. Executar `npm run build`.
+3. Executar `npx cap add android` na primeira vez e `npx cap sync android` nas seguintes.
+4. Copiar `TitanHealthConnectPlugin.kt` para o pacote Android do app.
+5. Usar `MainActivity.kt` como referência de registro do plugin local.
+6. Adicionar a dependência indicada em `health-connect.gradle.kts`.
+7. Mesclar as permissões de `AndroidManifest.health-connect.xml` no manifesto real.
+8. Abrir com `npx cap open android`, compilar e instalar no aparelho para validar permissões e sincronização real.
 
-- `sleep` → `SleepSessionRecord`
-- `heart-rate` → `HeartRateRecord`
-- `steps` → `StepsRecord`
-- `active-calories` → `ActiveCaloriesBurnedRecord`
-- `exercise` → `ExerciseSessionRecord`
-- `distance` → `DistanceRecord`
-- `body-composition` → `WeightRecord`, `BodyFatRecord` e, quando disponível, outros registros corporais suportados
+## Privacidade
 
-## Regras de privacidade
-
-Solicitar somente permissões de leitura necessárias para as métricas habilitadas no TITAN. A sincronização deve acontecer sob ação explícita do usuário na primeira versão nativa. O app deve respeitar revogação de permissões e nunca tratar ausência de dados como zero.
+O TITAN solicita apenas leitura dos tipos usados pela interface: sono, frequência cardíaca, passos, calorias ativas, sessões de exercício, distância e gordura corporal. A sincronização é iniciada pelo usuário e o app deve explicar claramente por que cada dado é usado.
 
 ## Histórico
 
-Sem permissão adicional de histórico, Health Connect aplica limites de leitura para dados anteriores à concessão. A primeira versão do TITAN deve trabalhar com a janela padrão e solicitar acesso histórico somente se houver necessidade clara para relatórios de longo prazo.
-
-## Próxima implementação nativa
-
-1. Adicionar Capacitor ao projeto React/Vite.
-2. Gerar a plataforma Android.
-3. Adicionar `androidx.health.connect:connect-client`.
-4. Declarar permissões de leitura no `AndroidManifest.xml`.
-5. Implementar o plugin Kotlin `TitanHealthConnect`.
-6. Testar no aparelho Android real com Samsung Health e Health Connect habilitados.
-7. Só então habilitar o estado “Conectado” na aba Samsung Health.
+Sem a permissão adicional de histórico, a leitura de dados originados por outros aplicativos pode ficar limitada ao período permitido pelo Health Connect. O TITAN começa com sincronização recente e só deve pedir histórico ampliado quando houver uma necessidade explícita de produto.
