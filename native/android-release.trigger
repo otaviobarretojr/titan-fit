@@ -1,1 +1,1 @@
-release-v0.52.9-unified-health-hub-auto-versioning
+release-v0.52.10-health-hub-freeze-fix
