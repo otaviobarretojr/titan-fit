@@ -8,6 +8,9 @@ const [
   configText,
   packageText,
   lockText,
+  viteConfig,
+  bootstrapWorkflow,
+  releaseWorkflow,
   plugin,
   manifest,
   gradle,
@@ -19,6 +22,9 @@ const [
   read('capacitor.config.json'),
   read('package.json'),
   read('package-lock.json'),
+  read('vite.config.ts'),
+  read('.github/workflows/android-bootstrap.yml'),
+  read('.github/workflows/android-release.yml'),
   read('native/android-health-connect/TitanHealthConnectPlugin.kt'),
   read('native/android-health-connect/AndroidManifest.health-connect.xml'),
   read('native/android-health-connect/health-connect.gradle.kts'),
@@ -40,6 +46,14 @@ assert(config.webDir === 'dist', 'Capacitor deve empacotar o build Vite em dist'
 assert(lock.version === pkg.version && lock.packages?.['']?.version === pkg.version, 'package-lock deve usar a mesma versão do package.json');
 assert(androidGradle.includes(`versionName "${pkg.version}"`) && androidGradle.includes(`versionCode ${expectedVersionCode}`), 'APK Android deve usar a mesma versão oficial do TITAN FIT');
 assert(androidGradle.includes('minSdkVersion 26'), 'Health Connect exige minSdk Android compatível');
+
+assert(pkg.scripts?.['build:android']?.includes('vite build --mode android'), 'package.json deve manter build Android dedicado');
+assert(viteConfig.includes("mode === 'android'"), 'Vite deve distinguir o alvo Android');
+assert(viteConfig.includes("base: isAndroid ? './' : '/titan-fit/'"), 'Build Android deve usar assets relativos e Pages deve manter /titan-fit/');
+assert(viteConfig.includes("isAndroid\n          ? []"), 'Build Android não deve registrar o Service Worker PWA');
+assert(bootstrapWorkflow.includes('npm run build:android'), 'Bootstrap Android deve usar o build nativo');
+assert(releaseWorkflow.includes('npm run build:android'), 'Release Android deve usar o build nativo');
+assert(releaseWorkflow.includes('Guard Android bundle paths'), 'Release Android deve validar caminhos antes de gerar APK');
 
 assert(plugin.includes('@CapacitorPlugin(name = "TitanHealthConnect")'), 'Plugin nativo TitanHealthConnect deve existir');
 for (const record of ['SleepSessionRecord', 'HeartRateRecord', 'StepsRecord', 'ActiveCaloriesBurnedRecord', 'ExerciseSessionRecord', 'DistanceRecord', 'BodyFatRecord']) {
