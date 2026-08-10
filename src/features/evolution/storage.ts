@@ -13,4 +13,5 @@ export async function loadBodyEvolution(): Promise<BodyEvolutionState> {
 
 export async function saveBodyEvolution(state: BodyEvolutionState): Promise<void> {
   await putRecord(STORE_NAMES.preferences, RECORD_ID, state);
+  window.dispatchEvent(new CustomEvent('titan:evolution-changed', { detail: { entries: state.entries.length } }));
 }
