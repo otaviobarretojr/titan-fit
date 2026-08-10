@@ -71,7 +71,14 @@ assert(plugin.includes('requestHealthPermissions') && plugin.includes('readSampl
 assert(plugin.includes('diagnoseHealthData') && plugin.includes('readMetric') && plugin.includes('sourcesOf'), 'Plugin nativo deve diagnosticar cada categoria e origem independentemente');
 assert(plugin.includes('A falha de uma categoria não pode apagar dados válidos das demais'), 'Leitura Health Connect deve isolar falhas por categoria');
 assert(plugin.includes('CoroutineScope') && plugin.includes('Dispatchers.IO'), 'Leituras Health Connect devem executar em coroutine de IO');
-assert(healthBridge.includes('diagnoseHealthData') && healthPage.includes('DIAGNÓSTICO HEALTH CONNECT'), 'Interface deve expor diagnóstico Health Connect');
+assert(
+  healthBridge.includes('diagnoseHealthData') &&
+  healthPage.includes('Diagnóstico avançado') &&
+  healthPage.includes('HEALTH CONNECT') &&
+  healthPage.includes('Treinos da semana') &&
+  healthPage.includes('Atividade diária'),
+  'Interface deve expor painel de saúde e diagnóstico Health Connect'
+);
 assert(healthPage.includes('samples.length === 0') && healthPage.includes('needsBackfill ? undefined : status.lastSyncAt'), 'Primeira sincronização vazia deve fazer backfill de 30 dias em vez de ficar presa ao lastSyncAt');
 assert(healthPage.includes('incoming.length > 0 ? now : status.lastSyncAt'), 'Sincronização vazia não deve avançar o cursor de dados');
 
