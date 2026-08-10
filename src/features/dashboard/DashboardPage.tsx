@@ -1,3 +1,4 @@
+import { useUnifiedCoachReport } from '../coach/useUnifiedCoachReport';
 import { getExerciseSessions, getProgressionAdvice } from '../history/intelligence';
 import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
@@ -24,6 +25,8 @@ function getGreeting() { const hour = new Date().getHours(); if (hour < 12) retu
 function formatToday() { return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date()); }
 
 export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPageProps) {
+  const unifiedCoach = useUnifiedCoachReport();
+
   if (!plan) return <div className="dashboard-page"><section className="dashboard-welcome"><span className="eyebrow">SEU PROJETO COMEÇA AQUI</span><h2>Nenhum projeto ativo</h2><p>Importe seu Projeto TITAN para liberar treino, cardio e progressão.</p><button type="button" className="primary-action" onClick={onOpenPlan}>Inserir projeto</button></section><NutritionTodayPanel /></div>;
 
   const dayPlan = getTodayWorkout(plan);
@@ -34,11 +37,16 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const setCount = strengthExercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0);
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
   const history = loadWorkoutHistory();
-  const coach = getTodayCoachPriority(dayPlan);
+  const workoutCoach = getTodayCoachPriority(dayPlan);
   const weeklyCoach = buildWeeklyCoachSummary(plan, history);
   const titanScore = buildTitanScore(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
   const compositionLabel = workoutComposition(strengthExercises.length, cardioExercises.length);
+  const coachPriority = unifiedCoach?.priority;
+  const coachStatus = coachPriority ? severityStatus(coachPriority.severity) : workoutCoach.status;
+  const coachBadge = unifiedCoach ? `${pillarName(coachPriority?.pillar)} · ${unifiedCoach.score.total}/100` : workoutCoach.badge;
+  const coachTitle = coachPriority?.title ?? workoutCoach.title;
+  const coachMessage = coachPriority?.message ?? workoutCoach.message;
 
   return <div className="dashboard-page dashboard-page-clean">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
@@ -56,11 +64,14 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
 
     <section className={`titan-score-card status-${titanScore.status}`} aria-label="Score TITAN"><div className="titan-score-main"><div><span className="eyebrow">SCORE TITAN</span><strong>{titanScore.label}</strong><p>{titanScore.message}</p></div><div className="titan-score-value">{titanScore.score ?? '—'}<small>{titanScore.score === null ? 'BASE' : '/100'}</small></div></div>{titanScore.score !== null && <div className="titan-score-pillars"><span><small>Musculação</small><strong>{titanScore.strengthScore}/35</strong></span><span><small>Cardio</small><strong>{titanScore.cardioScore}/30</strong></span><span><small>Progressão</small><strong>{titanScore.performanceScore}/20</strong></span><span><small>Consistência</small><strong>{titanScore.consistencyScore}/15</strong></span></div>}</section>
 
-    <section className={`dashboard-coach-card status-${coach.status}`} aria-label="Prioridade do Coach TITAN"><div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN</span><span>{coach.badge}</span></div><strong>{coach.title}</strong><p>{coach.message}</p>{coach.context && <small className="coach-context">{coach.context}</small>}<div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}><div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div><div className="coach-weekly-metrics"><span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span><span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span><span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span><span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span></div><p>{weeklyCoach.message}</p></div>{coach.detail && <details><summary>Ver orientação do dia</summary><p>{coach.detail}</p></details>}</section>
+    <section className={`dashboard-coach-card status-${coachStatus}`} aria-label="Prioridade do Coach TITAN"><div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN 1.0</span><span>{coachBadge}</span></div><strong>{coachTitle}</strong><p>{coachMessage}</p>{unifiedCoach ? <small className="coach-context">{unifiedCoach.availablePillars}/4 pilares · confiança {confidenceName(unifiedCoach.score.dataConfidence)}</small> : workoutCoach.context && <small className="coach-context">{workoutCoach.context}</small>}<div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}><div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div><div className="coach-weekly-metrics"><span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span><span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span><span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span><span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span></div><p>{weeklyCoach.message}</p></div>{workoutCoach.detail && <details><summary>Ver orientação do treino de hoje</summary><p>{workoutCoach.detail}</p></details>}</section>
   </div>;
 }
 
 function workoutComposition(strength: number, cardio: number) { if (strength && cardio) return 'Força + cardio'; if (cardio) return 'Cardio'; if (strength) return 'Musculação'; return 'Sessão'; }
+function severityStatus(severity: 'positive' | 'attention' | 'neutral'): CoachStatus { if (severity === 'attention') return 'review'; if (severity === 'positive') return 'progress'; return 'maintain'; }
+function pillarName(pillar?: 'training' | 'nutrition' | 'recovery' | 'evolution') { if (pillar === 'nutrition') return 'NUTRIÇÃO'; if (pillar === 'recovery') return 'RECUPERAÇÃO'; if (pillar === 'evolution') return 'EVOLUÇÃO'; return 'TREINO'; }
+function confidenceName(confidence: 'low' | 'medium' | 'high') { if (confidence === 'high') return 'alta'; if (confidence === 'medium') return 'média'; return 'baixa'; }
 function getTodayCoachPriority(workout: TitanWorkoutDay | null): CoachPriority {
   if (!workout) return { status:'maintain', badge:'RECUPERAÇÃO', title:'Dia sem treino programado', message:'Hoje não há sessão prevista no projeto.', detail:'Use o dia para recuperação e mantenha os registros do projeto em dia.' };
   const strengthExercises = workout.exercises.filter(isStrength);
