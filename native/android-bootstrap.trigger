@@ -1,1 +1,1 @@
-bootstrap-v0.51.6-r1
+bootstrap-v0.51.7-signing-r1
