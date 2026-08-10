@@ -65,9 +65,19 @@ jobs:
           text = app.read_text()
           if "org.jetbrains.kotlin.android" not in text:
               text = text.replace("apply plugin: 'com.android.application'", "apply plugin: 'com.android.application'\napply plugin: 'org.jetbrains.kotlin.android'")
+
+          signing_vars = """\ndef titanKeystorePath = System.getenv('TITAN_ANDROID_KEYSTORE_PATH')\ndef titanKeystorePassword = System.getenv('TITAN_ANDROID_KEYSTORE_PASSWORD')\n"""
+          if 'def titanKeystorePath' not in text:
+              text = text.replace("apply plugin: 'org.jetbrains.kotlin.android'", "apply plugin: 'org.jetbrains.kotlin.android'" + signing_vars)
+
+          signing_block = """\n    signingConfigs {\n        titanRelease {\n            if (titanKeystorePath && titanKeystorePassword) {\n                storeFile file(titanKeystorePath)\n                storePassword titanKeystorePassword\n                keyAlias 'titanfit'\n                keyPassword titanKeystorePassword\n            }\n        }\n    }\n"""
+          if 'signingConfigs {' not in text:
+              text = text.replace('android {', 'android {' + signing_block, 1)
+
           text = text.replace('minSdkVersion rootProject.ext.minSdkVersion', 'minSdkVersion 26')
           text = text.replace('versionCode 1', f'versionCode {version_code}')
           text = text.replace('versionName "1.0"', f'versionName "{version_name}"')
+          text = text.replace("release {\n            minifyEnabled false", "release {\n            minifyEnabled false\n            signingConfig signingConfigs.titanRelease")
           if 'androidx.health.connect:connect-client:1.1.0' not in text:
               text = text.replace('dependencies {', "dependencies {\n    implementation 'androidx.health.connect:connect-client:1.1.0'\n    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'")
           app.write_text(text)
