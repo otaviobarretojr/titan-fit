@@ -11,7 +11,7 @@ function getNavButtons() {
 
 function syncHealthHub() {
   const refs = getNavButtons();
-  if (!refs) return;
+  if (!refs) return false;
   const { health, progress } = refs;
   const progressActive = progress.getAttribute('aria-current') === 'page';
   const healthActive = health.getAttribute('aria-current') === 'page';
@@ -21,11 +21,11 @@ function syncHealthHub() {
   const existing = document.getElementById(HUB_ID);
   if (!healthActive && !progressActive) {
     existing?.remove();
-    return;
+    return true;
   }
 
   const main = document.querySelector<HTMLElement>('.app-main');
-  if (!main) return;
+  if (!main) return false;
 
   let switcher = existing;
   if (!switcher) {
@@ -44,6 +44,8 @@ function syncHealthHub() {
       else current.health.click();
     });
     main.prepend(switcher);
+  } else if (switcher.parentElement !== main) {
+    main.prepend(switcher);
   }
 
   const today = switcher.querySelector<HTMLButtonElement>('[data-health-view="today"]');
@@ -52,36 +54,57 @@ function syncHealthHub() {
   evolution?.classList.toggle('active', progressActive);
   today?.setAttribute('aria-selected', String(healthActive));
   evolution?.setAttribute('aria-selected', String(progressActive));
+  return true;
 }
 
 export function enableHealthHubNavigation() {
   let frame = 0;
   let observedNav: HTMLElement | null = null;
   let navObserver: MutationObserver | null = null;
+  let mountFrames = 0;
 
   const scheduleSync = () => {
     if (frame) return;
     frame = window.requestAnimationFrame(() => {
       frame = 0;
-      syncHealthHub();
+      const mounted = syncHealthHub();
       attachNavObserver();
+      if (!mounted && mountFrames < 180) {
+        mountFrames += 1;
+        scheduleSync();
+      } else if (mounted) {
+        mountFrames = 0;
+      }
     });
   };
 
   const attachNavObserver = () => {
     const refs = getNavButtons();
     const nav = refs?.nav ?? null;
-    if (!nav || nav === observedNav) return;
+    if (!nav) {
+      observedNav = null;
+      navObserver?.disconnect();
+      navObserver = null;
+      return;
+    }
+    if (nav === observedNav && nav.isConnected) return;
+
     navObserver?.disconnect();
     observedNav = nav;
     navObserver = new MutationObserver(scheduleSync);
     navObserver.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] });
-    nav.addEventListener('click', scheduleSync);
+  };
+
+  const restart = () => {
+    mountFrames = 0;
+    scheduleSync();
   };
 
   const start = () => {
-    attachNavObserver();
-    syncHealthHub();
+    restart();
+    document.addEventListener('click', scheduleSync, { passive: true });
+    window.addEventListener('popstate', restart);
+    window.addEventListener('pageshow', restart);
   };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
