@@ -50,7 +50,7 @@ assert(androidGradle.includes('minSdkVersion 26'), 'Health Connect exige minSdk 
 assert(pkg.scripts?.['build:android']?.includes('vite build --mode android'), 'package.json deve manter build Android dedicado');
 assert(viteConfig.includes("mode === 'android'"), 'Vite deve distinguir o alvo Android');
 assert(viteConfig.includes("base: isAndroid ? './' : '/titan-fit/'"), 'Build Android deve usar assets relativos e Pages deve manter /titan-fit/');
-assert(viteConfig.includes("isAndroid\n          ? []"), 'Build Android não deve registrar o Service Worker PWA');
+assert(viteConfig.includes('disable: isAndroid'), 'Plugin PWA deve permanecer disponível para resolver o helper virtual, mas ficar desativado no APK');
 assert(bootstrapWorkflow.includes('npm run build:android'), 'Bootstrap Android deve usar o build nativo');
 assert(releaseWorkflow.includes('npm run build:android'), 'Release Android deve usar o build nativo');
 assert(releaseWorkflow.includes('Guard Android bundle paths'), 'Release Android deve validar caminhos antes de gerar APK');
