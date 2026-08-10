@@ -1,9 +1,10 @@
-import type { HealthMetricType, HealthSample, TitanHealthConnectBridge } from './types';
+import type { HealthDiagnostics, HealthMetricType, HealthSample, TitanHealthConnectBridge } from './types';
 
 type NativeHealthConnectPlugin = {
   isAvailable: () => Promise<{ available?: boolean } | boolean>;
   requestHealthPermissions: (options: { types: HealthMetricType[] }) => Promise<{ granted?: boolean } | boolean>;
   readSamples: (options: { types: HealthMetricType[]; since?: string }) => Promise<{ samples?: HealthSample[] } | HealthSample[]>;
+  diagnoseHealthData?: (options: { types: HealthMetricType[]; since?: string }) => Promise<HealthDiagnostics>;
 };
 
 declare global {
@@ -37,6 +38,9 @@ function capacitorBridge(): TitanHealthConnectBridge | null {
       const result = await plugin.readSamples({ types, since });
       return Array.isArray(result) ? result : result.samples ?? [];
     },
+    diagnoseHealthData: plugin.diagnoseHealthData
+      ? (types, since) => plugin.diagnoseHealthData!({ types, since })
+      : undefined,
   };
 }
 
@@ -61,4 +65,30 @@ export async function readHealthSamples(types = DEFAULT_HEALTH_METRICS, since?: 
   const bridge = getHealthConnectBridge();
   if (!bridge) return [];
   return bridge.readSamples(types, since);
+}
+
+export async function diagnoseHealthData(types = DEFAULT_HEALTH_METRICS, since?: string): Promise<HealthDiagnostics | null> {
+  const bridge = getHealthConnectBridge();
+  if (!bridge) return null;
+  if (bridge.diagnoseHealthData) return bridge.diagnoseHealthData(types, since);
+
+  const samples = await bridge.readSamples(types, since);
+  const from = since ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const to = new Date().toISOString();
+  return {
+    from,
+    to,
+    totalRecords: samples.length,
+    metrics: types.map((type) => {
+      const metricSamples = samples.filter((sample) => sample.type === type);
+      const dates = metricSamples.map((sample) => sample.startedAt).sort();
+      return {
+        type,
+        count: metricSamples.length,
+        sources: [...new Set(metricSamples.map((sample) => sample.source).filter((source): source is string => Boolean(source)))],
+        oldestAt: dates[0],
+        newestAt: dates.at(-1),
+      };
+    }),
+  };
 }
