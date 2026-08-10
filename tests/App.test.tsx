@@ -36,7 +36,7 @@ describe('TITAN FIT', () => {
     expect(screen.getByRole('region', { name: 'Resumo do relógio' })).toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Treinos$/i }));
-    expect(screen.getByRole('heading', { name: 'Nenhum projeto ativo' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Nenhum projeto de treino ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
