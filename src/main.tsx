@@ -51,6 +51,7 @@ import './styles/navigation-v0519.css';
 import './styles/navigation-v05110.css';
 import './styles/navigation-v05111.css';
 import './styles/health-dashboard-v05112.css';
+import './styles/titan-ui-v052.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
