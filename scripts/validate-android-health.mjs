@@ -43,13 +43,15 @@ const pkg = JSON.parse(packageText);
 const lock = JSON.parse(lockText);
 const [major, minor, patch] = pkg.version.split('.').map(Number);
 const expectedVersionCode = major * 1000000 + minor * 1000 + patch;
+const minSdkMatch = androidGradle.match(/minSdkVersion\s+(\d+)/);
+const minSdk = minSdkMatch ? Number(minSdkMatch[1]) : 0;
 
 assert(config.appId === 'com.otaviobarretojr.titanfit', 'Capacitor deve manter o appId oficial do TITAN FIT');
 assert(config.appName === 'TITAN FIT', 'Capacitor deve manter o nome oficial do aplicativo');
 assert(config.webDir === 'dist', 'Capacitor deve empacotar o build Vite em dist');
 assert(lock.version === pkg.version && lock.packages?.['']?.version === pkg.version, 'package-lock deve usar a mesma versão do package.json');
 assert(androidGradle.includes(`versionName "${pkg.version}"`) && androidGradle.includes(`versionCode ${expectedVersionCode}`), 'APK Android deve usar a mesma versão oficial do TITAN FIT');
-assert(androidGradle.includes('minSdkVersion 26'), 'Health Connect exige minSdk Android compatível');
+assert(minSdk >= 29, 'Samsung Health Data SDK exige minSdk Android 29 ou superior');
 
 assert(pkg.scripts?.['build:android']?.includes('vite build --mode android'), 'package.json deve manter build Android dedicado');
 assert(viteConfig.includes("mode === 'android'"), 'Vite deve distinguir o alvo Android');
@@ -92,6 +94,9 @@ assert(androidManifest.includes('android.intent.action.VIEW_PERMISSION_USAGE') &
 assert(rationaleActivity.includes('Dados de saúde') && rationaleActivity.includes('não são vendidos nem usados para publicidade'), 'TITAN deve explicar de forma clara o uso local dos dados de saúde');
 assert(gradle.includes('androidx.health.connect:connect-client:1.1.0') && androidGradle.includes('androidx.health.connect:connect-client:1.1.0'), 'Android deve usar Health Connect estável 1.1.0');
 assert(mainActivity.includes('registerPlugin(TitanHealthConnectPlugin::class.java)'), 'MainActivity deve registrar o plugin TitanHealthConnect');
+assert(androidGradle.includes("samsung-health-data-api-1.1.0.aar"), 'Android deve incluir o Samsung Health Data SDK 1.1.0');
+assert(mainActivity.includes('registerPlugin(TitanSamsungHealthPlugin::class.java)'), 'MainActivity deve registrar o plugin TitanSamsungHealth');
+assert(healthBridge.includes('TitanSamsungHealth'), 'Bridge web deve suportar Samsung Health direto');
 
 if (failures.length) {
   console.error('Validação Android/Health Connect falhou:\n- ' + failures.join('\n- '));
