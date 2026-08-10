@@ -1,1 +1,1 @@
-release-v0.52.1-daily-activity-rings
+release-v0.52.1-daily-activity-rings-validation-2
