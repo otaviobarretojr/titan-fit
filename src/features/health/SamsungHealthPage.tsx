@@ -3,310 +3,56 @@ import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, rea
 import { loadHealthSamples, loadHealthSyncStatus, mergeHealthSamples, saveHealthSyncStatus } from './repository';
 import type { HealthDiagnostics, HealthMetricType, HealthSample, HealthSyncStatus } from './types';
 
-const INITIAL_STATUS: HealthSyncStatus = {
-  provider: 'health-connect',
-  bridgeAvailable: false,
-  permissionGranted: false,
-};
-
+const INITIAL_STATUS: HealthSyncStatus = { provider: 'health-connect', bridgeAvailable: false, permissionGranted: false };
 const METRICS: Array<{ type: HealthMetricType; label: string }> = [
-  { type: 'sleep', label: 'Sono' },
-  { type: 'heart-rate', label: 'Frequência cardíaca' },
-  { type: 'steps', label: 'Passos' },
-  { type: 'active-calories', label: 'Calorias ativas' },
-  { type: 'exercise', label: 'Exercícios' },
-  { type: 'distance', label: 'Distância' },
-  { type: 'body-composition', label: 'Composição corporal' },
+  { type: 'sleep', label: 'Sono' }, { type: 'heart-rate', label: 'Frequência cardíaca' }, { type: 'steps', label: 'Passos' },
+  { type: 'active-calories', label: 'Calorias ativas' }, { type: 'exercise', label: 'Exercícios' }, { type: 'distance', label: 'Distância' }, { type: 'body-composition', label: 'Composição corporal' },
 ];
-
 const DIAGNOSTIC_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
-
-const EXERCISE_LABELS: Record<number, string> = {
-  0: 'Treino',
-  8: 'Ciclismo',
-  9: 'Bike ergométrica',
-  37: 'Trilha',
-  53: 'Remo',
-  54: 'Remo ergométrico',
-  56: 'Corrida',
-  57: 'Corrida na esteira',
-  68: 'Subida de escadas',
-  69: 'Escada ergométrica',
-  70: 'Musculação',
-  71: 'Alongamento',
-  73: 'Natação em águas abertas',
-  74: 'Natação em piscina',
-  79: 'Caminhada',
-  81: 'Levantamento de peso',
-  83: 'Yoga',
-};
+const DAILY_GOALS = { steps: 8000, activeMinutes: 60, calories: 400 };
+const EXERCISE_LABELS: Record<number, string> = { 0:'Treino',8:'Ciclismo',9:'Bike ergométrica',37:'Trilha',53:'Remo',54:'Remo ergométrico',56:'Corrida',57:'Corrida na esteira',68:'Subida de escadas',69:'Escada ergométrica',70:'Musculação',71:'Alongamento',73:'Natação em águas abertas',74:'Natação em piscina',79:'Caminhada',81:'Levantamento de peso',83:'Yoga' };
 
 export function SamsungHealthPage() {
-  const [status, setStatus] = useState<HealthSyncStatus>(INITIAL_STATUS);
-  const [samples, setSamples] = useState<HealthSample[]>([]);
-  const [diagnostics, setDiagnostics] = useState<HealthDiagnostics | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [showWeeklyWorkouts, setShowWeeklyWorkouts] = useState(false);
-
-  async function refreshLocalState() {
-    const [available, savedStatus, savedSamples] = await Promise.all([
-      healthConnectAvailable(),
-      loadHealthSyncStatus().catch(() => null),
-      loadHealthSamples().catch(() => []),
-    ]);
-    setStatus({ ...(savedStatus ?? INITIAL_STATUS), bridgeAvailable: available });
-    setSamples(savedSamples);
-  }
-
-  useEffect(() => {
-    void refreshLocalState();
-  }, []);
-
-  const latestByType = useMemo(() => {
-    const latest = new Map<HealthMetricType, HealthSample>();
-    for (const sample of samples) {
-      const previous = latest.get(sample.type);
-      if (!previous || previous.startedAt < sample.startedAt) latest.set(sample.type, sample);
-    }
-    return latest;
-  }, [samples]);
-
-  const healthSummary = useMemo(() => buildHealthSummary(samples), [samples]);
-
-  async function connect() {
-    setBusy(true);
-    try {
-      const available = await healthConnectAvailable();
-      if (!available) {
-        const next: HealthSyncStatus = {
-          ...status,
-          bridgeAvailable: false,
-          message: 'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.',
-        };
-        setStatus(next);
-        await saveHealthSyncStatus(next).catch(() => undefined);
-        return;
-      }
-      const granted = await requestHealthPermissions();
-      const next: HealthSyncStatus = {
-        ...status,
-        bridgeAvailable: true,
-        permissionGranted: granted,
-        message: granted ? 'Health Connect conectado ao TITAN.' : 'Permissões de saúde não foram concedidas.',
-      };
-      setStatus(next);
-      await saveHealthSyncStatus(next);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function syncNow() {
-    setBusy(true);
-    try {
-      if (!status.bridgeAvailable || !status.permissionGranted) {
-        await connect();
-        return;
-      }
-
-      const needsBackfill = samples.length === 0;
-      const incrementalSince = needsBackfill ? undefined : status.lastSyncAt;
-      const diagnosticSince = new Date(Date.now() - DIAGNOSTIC_WINDOW_MS).toISOString();
-      const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, incrementalSince);
-      const merged = await mergeHealthSamples(incoming);
-      const diagnosticResult = await diagnoseHealthData(DEFAULT_HEALTH_METRICS, diagnosticSince).catch(() => null);
-      const now = new Date().toISOString();
-      const next: HealthSyncStatus = {
-        ...status,
-        lastSyncAt: incoming.length > 0 ? now : status.lastSyncAt,
-        lastSyncCount: incoming.length,
-        message: incoming.length > 0
-          ? `${incoming.length} registros recebidos do Health Connect.`
-          : needsBackfill
-            ? 'Nenhum registro encontrado no backfill de 30 dias. Consulte o diagnóstico abaixo.'
-            : 'Nenhum dado novo encontrado desde a última sincronização.',
-      };
-      setSamples(merged);
-      setDiagnostics(diagnosticResult);
-      setStatus(next);
-      await saveHealthSyncStatus(next);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const [status,setStatus]=useState<HealthSyncStatus>(INITIAL_STATUS); const [samples,setSamples]=useState<HealthSample[]>([]); const [diagnostics,setDiagnostics]=useState<HealthDiagnostics|null>(null); const [busy,setBusy]=useState(false); const [showWeeklyWorkouts,setShowWeeklyWorkouts]=useState(false);
+  async function refreshLocalState(){const [available,savedStatus,savedSamples]=await Promise.all([healthConnectAvailable(),loadHealthSyncStatus().catch(()=>null),loadHealthSamples().catch(()=>[])]);setStatus({...(savedStatus??INITIAL_STATUS),bridgeAvailable:available});setSamples(savedSamples)}
+  useEffect(()=>{void refreshLocalState()},[]);
+  const latestByType=useMemo(()=>{const latest=new Map<HealthMetricType,HealthSample>();for(const sample of samples){const previous=latest.get(sample.type);if(!previous||previous.startedAt<sample.startedAt)latest.set(sample.type,sample)}return latest},[samples]);
+  const healthSummary=useMemo(()=>buildHealthSummary(samples),[samples]);
+  async function connect(){setBusy(true);try{const available=await healthConnectAvailable();if(!available){const next={...status,bridgeAvailable:false,message:'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.'};setStatus(next);await saveHealthSyncStatus(next).catch(()=>undefined);return}const granted=await requestHealthPermissions();const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões de saúde não foram concedidas.'};setStatus(next);await saveHealthSyncStatus(next)}finally{setBusy(false)}}
+  async function syncNow(){setBusy(true);try{if(!status.bridgeAvailable||!status.permissionGranted){await connect();return}const needsBackfill=samples.length===0;const incrementalSince=needsBackfill?undefined:status.lastSyncAt;const diagnosticSince=new Date(Date.now()-DIAGNOSTIC_WINDOW_MS).toISOString();const incoming=await readHealthSamples(DEFAULT_HEALTH_METRICS,incrementalSince);const merged=await mergeHealthSamples(incoming);const diagnosticResult=await diagnoseHealthData(DEFAULT_HEALTH_METRICS,diagnosticSince).catch(()=>null);const now=new Date().toISOString();const next={...status,lastSyncAt:incoming.length>0?now:status.lastSyncAt,lastSyncCount:incoming.length,message:incoming.length>0?`${incoming.length} registros recebidos do Health Connect.`:needsBackfill?'Nenhum registro encontrado no backfill de 30 dias. Consulte o diagnóstico abaixo.':'Nenhum dado novo encontrado desde a última sincronização.'};setSamples(merged);setDiagnostics(diagnosticResult);setStatus(next);await saveHealthSyncStatus(next)}finally{setBusy(false)}}
 
   return <div className="page-stack samsung-health-page health-dashboard-page">
-    <section className="health-hero" aria-labelledby="samsung-health-title">
-      <div>
-        <span className="eyebrow">GALAXY WATCH + HEALTH CONNECT</span>
-        <h2 id="samsung-health-title">Saúde</h2>
-        <p>Atividade, treinos e sinais recebidos do seu relógio.</p>
+    <section className="health-hero" aria-labelledby="samsung-health-title"><div><span className="eyebrow">GALAXY WATCH + HEALTH CONNECT</span><h2 id="samsung-health-title">Saúde</h2><p>Atividade, treinos e sinais recebidos do seu relógio.</p></div><span className={`health-connection-badge ${status.permissionGranted?'connected':''}`}>{status.permissionGranted?'Conectado':'Desconectado'}</span></section>
+
+    <section className="health-daily-card health-daily-card-v2" aria-label="Atividade diária">
+      <div className="health-daily-title"><h3>Atividade diária</h3><span>{new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','')}</span></div>
+      <div className="health-daily-content">
+        <div className="health-daily-primary-metrics">
+          <HealthMetric icon="steps" value={formatInteger(healthSummary.todaySteps)} label="passos" />
+          <HealthMetric icon="time" value={`${Math.round(healthSummary.todayExerciseMinutes)}`} label="min" />
+          <HealthMetric icon="calories" value={formatInteger(healthSummary.todayCalories)} label="kcal" />
+        </div>
+        <ActivityRings steps={healthSummary.todaySteps} minutes={healthSummary.todayExerciseMinutes} calories={healthSummary.todayCalories} />
       </div>
-      <span className={`health-connection-badge ${status.permissionGranted ? 'connected' : ''}`}>
-        {status.permissionGranted ? 'Conectado' : 'Desconectado'}
-      </span>
+      <div className="health-daily-footer"><span>{formatDistance(healthSummary.todayDistanceMeters)} hoje</span><strong>{dailyProgress(healthSummary.todaySteps,healthSummary.todayExerciseMinutes,healthSummary.todayCalories)}% da meta diária</strong></div>
     </section>
 
-    <section className="health-daily-card" aria-label="Atividade diária">
-      <div className="health-card-heading">
-        <div><span className="info-label">HOJE</span><h3>Atividade diária</h3></div>
-        <span className="health-date-chip">{new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}</span>
-      </div>
-      <div className="health-daily-metrics">
-        <HealthMetric icon="steps" value={formatInteger(healthSummary.todaySteps)} label="passos" />
-        <HealthMetric icon="time" value={`${Math.round(healthSummary.todayExerciseMinutes)}`} label="min ativos" />
-        <HealthMetric icon="calories" value={formatInteger(healthSummary.todayCalories)} label="kcal ativas" />
-        <HealthMetric icon="distance" value={formatDistance(healthSummary.todayDistanceMeters)} label="distância" />
-      </div>
-    </section>
-
-    <button type="button" className={`health-week-card ${showWeeklyWorkouts ? 'open' : ''}`} onClick={() => setShowWeeklyWorkouts((value) => !value)} aria-expanded={showWeeklyWorkouts}>
-      <div className="health-card-heading">
-        <div><span className="info-label">ESTA SEMANA</span><h3>Treinos da semana</h3></div>
-        <span className="health-chevron" aria-hidden="true">›</span>
-      </div>
-      <div className="health-week-summary">
-        <div><strong>{formatDuration(healthSummary.weekExerciseMinutes)}</strong><span>{healthSummary.weekExercises.length} {healthSummary.weekExercises.length === 1 ? 'sessão' : 'sessões'}</span></div>
-        <div className="health-week-bars" aria-hidden="true">{healthSummary.weekDays.map((day) => <span key={day.key} className={day.hasExercise ? 'active' : ''}><i style={{ height: `${Math.max(8, Math.min(48, day.minutes * 1.7))}px` }} /><small>{day.label}</small></span>)}</div>
-      </div>
-    </button>
-
-    {showWeeklyWorkouts && <section className="health-workout-list" aria-label="Detalhes dos treinos da semana">
-      <div className="health-card-heading"><div><span className="info-label">SESSÕES REGISTRADAS</span><h3>Atividades</h3></div></div>
-      {healthSummary.weekExercises.length ? healthSummary.weekExercises.map((exercise) => {
-        const detail = enrichExercise(exercise, samples);
-        return <article key={exercise.id} className="health-workout-row">
-          <span className="health-workout-icon" aria-hidden="true">{exerciseIcon(detail.label)}</span>
-          <div className="health-workout-copy">
-            <strong>{detail.label}</strong>
-            <span>{new Date(exercise.startedAt).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })} · {formatDuration(exercise.value)}</span>
-            <small>{[detail.distanceMeters > 0 ? formatDistance(detail.distanceMeters) : '', detail.calories > 0 ? `${Math.round(detail.calories)} kcal` : ''].filter(Boolean).join(' · ') || 'Sessão registrada pelo Health Connect'}</small>
-          </div>
-          <span className="health-source-badge">{friendlySource(exercise.source)}</span>
-        </article>;
-      }) : <div className="health-empty-state">Nenhum treino registrado nesta semana.</div>}
-    </section>}
-
-    <section className="health-sync-card" aria-label="Sincronização Samsung Health">
-      <div className="health-sync-copy">
-        <span className="info-label">SINCRONIZAÇÃO</span>
-        <strong>{status.bridgeAvailable ? (status.permissionGranted ? 'Health Connect conectado' : 'Health Connect disponível') : 'Aguardando ponte Android'}</strong>
-        {status.lastSyncAt && <small>Últimos dados: {new Date(status.lastSyncAt).toLocaleString('pt-BR')}</small>}
-        {status.message && <small role="status">{status.message}</small>}
-      </div>
-      <button type="button" className="primary-action" disabled={busy} onClick={() => void syncNow()}>{busy ? 'Sincronizando…' : 'Sincronizar agora'}</button>
-      {!status.permissionGranted && <button type="button" className="secondary-action" disabled={busy} onClick={() => void connect()}>Conectar Health Connect</button>}
-    </section>
-
-    <section className="health-signals-card" aria-label="Resumo do relógio">
-      <div className="health-card-heading"><div><span className="info-label">SINAIS DO RELÓGIO</span><h3>Resumo mais recente</h3></div></div>
-      <div className="health-signal-grid">
-        {(['sleep', 'heart-rate', 'body-composition'] as HealthMetricType[]).map((type) => {
-          const sample = latestByType.get(type);
-          const label = METRICS.find((item) => item.type === type)?.label ?? type;
-          return <div key={type}><span>{label}</span><strong>{sample ? formatSample(sample) : 'Sem dados'}</strong>{sample && <small>{new Date(sample.startedAt).toLocaleDateString('pt-BR')}</small>}</div>;
-        })}
-      </div>
-    </section>
-
-    <details className="health-diagnostics-panel">
-      <summary>Diagnóstico avançado</summary>
-      <div className="health-diagnostics-body">
-        {diagnostics ? <>
-          <div><span className="info-label">HEALTH CONNECT</span><strong>{diagnostics.totalRecords} registros disponíveis em 30 dias</strong><small>Período: {new Date(diagnostics.from).toLocaleDateString('pt-BR')} até {new Date(diagnostics.to).toLocaleDateString('pt-BR')}.</small></div>
-          {METRICS.map(({ type, label }) => {
-            const metric = diagnostics.metrics.find((item) => item.type === type);
-            return <div key={type} className="health-metric-row"><span>{label}</span><strong>{metric?.error ? 'Erro na leitura' : `${metric?.count ?? 0} registros`}</strong>{metric?.sources.length ? <small>Origem: {metric.sources.join(', ')}</small> : <small>{metric?.error ?? 'Nenhuma origem encontrada.'}</small>}{metric?.newestAt && <small>Mais recente: {new Date(metric.newestAt).toLocaleString('pt-BR')}</small>}</div>;
-          })}
-        </> : <small>Sincronize para gerar o diagnóstico detalhado.</small>}
-      </div>
-    </details>
+    <button type="button" className={`health-week-card ${showWeeklyWorkouts?'open':''}`} onClick={()=>setShowWeeklyWorkouts(v=>!v)} aria-expanded={showWeeklyWorkouts}><div className="health-card-heading"><div><span className="info-label">ESTA SEMANA</span><h3>Treinos da semana</h3></div><span className="health-chevron" aria-hidden="true">›</span></div><div className="health-week-summary"><div><strong>{formatDuration(healthSummary.weekExerciseMinutes)}</strong><span>{healthSummary.weekExercises.length} {healthSummary.weekExercises.length===1?'sessão':'sessões'}</span></div><div className="health-week-bars" aria-hidden="true">{healthSummary.weekDays.map(day=><span key={day.key} className={day.hasExercise?'active':''}><i style={{height:`${Math.max(8,Math.min(48,day.minutes*1.7))}px`}}/><small>{day.label}</small></span>)}</div></div></button>
+    {showWeeklyWorkouts&&<section className="health-workout-list" aria-label="Detalhes dos treinos da semana"><div className="health-card-heading"><div><span className="info-label">SESSÕES REGISTRADAS</span><h3>Atividades</h3></div></div>{healthSummary.weekExercises.length?healthSummary.weekExercises.map(exercise=>{const detail=enrichExercise(exercise,samples);return <article key={exercise.id} className="health-workout-row"><span className="health-workout-icon" aria-hidden="true">{exerciseIcon(detail.label)}</span><div className="health-workout-copy"><strong>{detail.label}</strong><span>{new Date(exercise.startedAt).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · {formatDuration(exercise.value)}</span><small>{[detail.distanceMeters>0?formatDistance(detail.distanceMeters):'',detail.calories>0?`${Math.round(detail.calories)} kcal`:''].filter(Boolean).join(' · ')||'Sessão registrada pelo Health Connect'}</small></div><span className="health-source-badge">{friendlySource(exercise.source)}</span></article>}):<div className="health-empty-state">Nenhum treino registrado nesta semana.</div>}</section>}
+    <section className="health-sync-card" aria-label="Sincronização Samsung Health"><div className="health-sync-copy"><span className="info-label">SINCRONIZAÇÃO</span><strong>{status.bridgeAvailable?(status.permissionGranted?'Health Connect conectado':'Health Connect disponível'):'Aguardando ponte Android'}</strong>{status.lastSyncAt&&<small>Últimos dados: {new Date(status.lastSyncAt).toLocaleString('pt-BR')}</small>}{status.message&&<small role="status">{status.message}</small>}</div><button type="button" className="primary-action" disabled={busy} onClick={()=>void syncNow()}>{busy?'Sincronizando…':'Sincronizar agora'}</button>{!status.permissionGranted&&<button type="button" className="secondary-action" disabled={busy} onClick={()=>void connect()}>Conectar Health Connect</button>}</section>
+    <section className="health-signals-card" aria-label="Resumo do relógio"><div className="health-card-heading"><div><span className="info-label">SINAIS DO RELÓGIO</span><h3>Resumo mais recente</h3></div></div><div className="health-signal-grid">{(['sleep','heart-rate','body-composition'] as HealthMetricType[]).map(type=>{const sample=latestByType.get(type);const label=METRICS.find(item=>item.type===type)?.label??type;return <div key={type}><span>{label}</span><strong>{sample?formatSample(sample):'Sem dados'}</strong>{sample&&<small>{new Date(sample.startedAt).toLocaleDateString('pt-BR')}</small>}</div>})}</div></section>
+    <details className="health-diagnostics-panel"><summary>Diagnóstico avançado</summary><div className="health-diagnostics-body">{diagnostics?<><div><span className="info-label">HEALTH CONNECT</span><strong>{diagnostics.totalRecords} registros disponíveis em 30 dias</strong><small>Período: {new Date(diagnostics.from).toLocaleDateString('pt-BR')} até {new Date(diagnostics.to).toLocaleDateString('pt-BR')}.</small></div>{METRICS.map(({type,label})=>{const metric=diagnostics.metrics.find(item=>item.type===type);return <div key={type} className="health-metric-row"><span>{label}</span><strong>{metric?.error?'Erro na leitura':`${metric?.count??0} registros`}</strong>{metric?.sources.length?<small>Origem: {metric.sources.join(', ')}</small>:<small>{metric?.error??'Nenhuma origem encontrada.'}</small>}{metric?.newestAt&&<small>Mais recente: {new Date(metric.newestAt).toLocaleString('pt-BR')}</small>}</div>})}</>:<small>Sincronize para gerar o diagnóstico detalhado.</small>}</div></details>
   </div>;
 }
 
-function HealthMetric({ icon, value, label }: { icon: 'steps' | 'time' | 'calories' | 'distance'; value: string; label: string }) {
-  const symbols = { steps: '↗', time: '◷', calories: '◉', distance: '⌁' };
-  return <div className={`health-daily-metric ${icon}`}><span aria-hidden="true">{symbols[icon]}</span><div><strong>{value}</strong><small>{label}</small></div></div>;
-}
-
-function buildHealthSummary(samples: HealthSample[]) {
-  const now = new Date();
-  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const nextDay = dayStart + 24 * 60 * 60 * 1000;
-  const currentDay = now.getDay();
-  const weekStart = dayStart - currentDay * 24 * 60 * 60 * 1000;
-  const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
-  const inRange = (sample: HealthSample, start: number, end: number) => {
-    const time = new Date(sample.startedAt).getTime();
-    return time >= start && time < end;
-  };
-  const sum = (type: HealthMetricType, start: number, end: number) => samples.filter((sample) => sample.type === type && inRange(sample, start, end)).reduce((total, sample) => total + sample.value, 0);
-  const weekExercises = samples.filter((sample) => sample.type === 'exercise' && inRange(sample, weekStart, weekEnd)).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
-  const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((label, index) => {
-    const start = weekStart + index * 24 * 60 * 60 * 1000;
-    const end = start + 24 * 60 * 60 * 1000;
-    const minutes = weekExercises.filter((sample) => inRange(sample, start, end)).reduce((total, sample) => total + sample.value, 0);
-    return { key: `${start}`, label, minutes, hasExercise: minutes > 0 };
-  });
-  return {
-    todaySteps: sum('steps', dayStart, nextDay),
-    todayCalories: sum('active-calories', dayStart, nextDay),
-    todayDistanceMeters: sum('distance', dayStart, nextDay),
-    todayExerciseMinutes: sum('exercise', dayStart, nextDay),
-    weekExerciseMinutes: weekExercises.reduce((total, sample) => total + sample.value, 0),
-    weekExercises,
-    weekDays,
-  };
-}
-
-function enrichExercise(exercise: HealthSample, samples: HealthSample[]) {
-  const start = new Date(exercise.startedAt).getTime();
-  const end = new Date(exercise.endedAt ?? exercise.startedAt).getTime();
-  const overlaps = (sample: HealthSample) => {
-    const sampleStart = new Date(sample.startedAt).getTime();
-    const sampleEnd = new Date(sample.endedAt ?? sample.startedAt).getTime();
-    return sampleStart <= end && sampleEnd >= start;
-  };
-  const distanceMeters = samples.filter((sample) => sample.type === 'distance' && overlaps(sample)).reduce((sum, sample) => sum + sample.value, 0);
-  const calories = samples.filter((sample) => sample.type === 'active-calories' && overlaps(sample)).reduce((sum, sample) => sum + sample.value, 0);
-  const exerciseType = Number(exercise.metadata?.exerciseType ?? 0);
-  return { label: EXERCISE_LABELS[exerciseType] ?? 'Treino', distanceMeters, calories };
-}
-
-function friendlySource(source?: string) {
-  if (!source) return 'Health Connect';
-  if (source.includes('shealth')) return 'Samsung Health';
-  if (source.includes('healthconnect')) return 'Health Connect';
-  return 'Relógio';
-}
-
-function exerciseIcon(label: string) {
-  if (label.includes('Caminhada') || label.includes('Trilha')) return '◒';
-  if (label.includes('Corrida')) return '↗';
-  if (label.includes('Musculação') || label.includes('peso')) return '◆';
-  if (label.includes('Bike') || label.includes('Ciclismo')) return '○';
-  return '•';
-}
-
-function formatInteger(value: number) {
-  return Math.round(value).toLocaleString('pt-BR');
-}
-
-function formatDistance(meters: number) {
-  if (!meters) return '0 km';
-  if (meters < 1000) return `${Math.round(meters)} m`;
-  return `${(meters / 1000).toFixed(2).replace('.', ',')} km`;
-}
-
-function formatDuration(minutes: number) {
-  const total = Math.round(minutes);
-  if (total < 60) return `${total} min`;
-  const hours = Math.floor(total / 60);
-  const mins = total % 60;
-  return `${hours}h${mins ? ` ${String(mins).padStart(2, '0')}min` : ''}`;
-}
-
-function formatSample(sample: HealthSample) {
-  const value = Number.isInteger(sample.value) ? String(sample.value) : sample.value.toFixed(1).replace('.', ',');
-  return `${value} ${sample.unit}`.trim();
-}
+function HealthMetric({icon,value,label}:{icon:'steps'|'time'|'calories';value:string;label:string}){const symbols={steps:'➜',time:'◷',calories:'♦'};return <div className={`health-daily-metric ${icon}`}><span aria-hidden="true">{symbols[icon]}</span><div><strong>{value}</strong><small>{label}</small></div></div>}
+function ActivityRings({steps,minutes,calories}:{steps:number;minutes:number;calories:number}){const rings=[{r:47,value:steps,goal:DAILY_GOALS.steps,cls:'steps'},{r:37,value:minutes,goal:DAILY_GOALS.activeMinutes,cls:'time'},{r:27,value:calories,goal:DAILY_GOALS.calories,cls:'calories'}];return <div className="titan-activity-rings" aria-label={`Progresso diário: ${dailyProgress(steps,minutes,calories)}%`}><svg viewBox="0 0 112 112" role="img"><g transform="rotate(-90 56 56)">{rings.map(ring=>{const circumference=2*Math.PI*ring.r;const progress=Math.min(1,Math.max(0,ring.value/ring.goal));return <g key={ring.cls} className={`activity-ring ${ring.cls}`}><circle className="track" cx="56" cy="56" r={ring.r}/><circle className="progress" cx="56" cy="56" r={ring.r} strokeDasharray={circumference} strokeDashoffset={circumference*(1-progress)}/></g>})}</g></svg><span className="activity-rings-mark">T</span></div>}
+function dailyProgress(steps:number,minutes:number,calories:number){const ratios=[steps/DAILY_GOALS.steps,minutes/DAILY_GOALS.activeMinutes,calories/DAILY_GOALS.calories].map(v=>Math.min(1,Math.max(0,v)));return Math.round((ratios.reduce((a,b)=>a+b,0)/ratios.length)*100)}
+function buildHealthSummary(samples:HealthSample[]){const now=new Date();const dayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();const nextDay=dayStart+86400000;const currentDay=now.getDay();const weekStart=dayStart-currentDay*86400000;const weekEnd=weekStart+7*86400000;const inRange=(sample:HealthSample,start:number,end:number)=>{const time=new Date(sample.startedAt).getTime();return time>=start&&time<end};const sum=(type:HealthMetricType,start:number,end:number)=>samples.filter(sample=>sample.type===type&&inRange(sample,start,end)).reduce((total,sample)=>total+sample.value,0);const weekExercises=samples.filter(sample=>sample.type==='exercise'&&inRange(sample,weekStart,weekEnd)).sort((a,b)=>b.startedAt.localeCompare(a.startedAt));const weekDays=['D','S','T','Q','Q','S','S'].map((label,index)=>{const start=weekStart+index*86400000;const end=start+86400000;const minutes=weekExercises.filter(sample=>inRange(sample,start,end)).reduce((total,sample)=>total+sample.value,0);return{key:`${start}`,label,minutes,hasExercise:minutes>0}});return{todaySteps:sum('steps',dayStart,nextDay),todayCalories:sum('active-calories',dayStart,nextDay),todayDistanceMeters:sum('distance',dayStart,nextDay),todayExerciseMinutes:sum('exercise',dayStart,nextDay),weekExerciseMinutes:weekExercises.reduce((total,sample)=>total+sample.value,0),weekExercises,weekDays}}
+function enrichExercise(exercise:HealthSample,samples:HealthSample[]){const start=new Date(exercise.startedAt).getTime();const end=new Date(exercise.endedAt??exercise.startedAt).getTime();const overlaps=(sample:HealthSample)=>{const sampleStart=new Date(sample.startedAt).getTime();const sampleEnd=new Date(sample.endedAt??sample.startedAt).getTime();return sampleStart<=end&&sampleEnd>=start};const distanceMeters=samples.filter(sample=>sample.type==='distance'&&overlaps(sample)).reduce((sum,sample)=>sum+sample.value,0);const calories=samples.filter(sample=>sample.type==='active-calories'&&overlaps(sample)).reduce((sum,sample)=>sum+sample.value,0);const exerciseType=Number(exercise.metadata?.exerciseType??0);return{label:EXERCISE_LABELS[exerciseType]??'Treino',distanceMeters,calories}}
+function friendlySource(source?:string){if(!source)return'Health Connect';if(source.includes('shealth'))return'Samsung Health';if(source.includes('healthconnect'))return'Health Connect';return'Relógio'}
+function exerciseIcon(label:string){if(label.includes('Caminhada')||label.includes('Trilha'))return'◒';if(label.includes('Corrida'))return'↗';if(label.includes('Musculação')||label.includes('peso'))return'◆';if(label.includes('Bike')||label.includes('Ciclismo'))return'○';return'•'}
+function formatInteger(value:number){return Math.round(value).toLocaleString('pt-BR')}
+function formatDistance(meters:number){if(!meters)return'0 km';if(meters<1000)return`${Math.round(meters)} m`;return`${(meters/1000).toFixed(2).replace('.',',')} km`}
+function formatDuration(minutes:number){const total=Math.round(minutes);if(total<60)return`${total} min`;const hours=Math.floor(total/60);const mins=total%60;return`${hours}h${mins?` ${String(mins).padStart(2,'0')}min`:''}`}
+function formatSample(sample:HealthSample){const value=Number.isInteger(sample.value)?String(sample.value):sample.value.toFixed(1).replace('.',',');return`${value} ${sample.unit}`.trim()}
