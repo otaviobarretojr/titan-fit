@@ -83,7 +83,18 @@ assert(execution.includes('exerciseOptions(baseExercise)') && execution.includes
 assert(cardioPage.includes('Condicionamento + 5 km') && cardioPage.includes('getTodayCardioSession') && cardioPage.includes('CARDIO CONCLUÍDO') && cardioPage.includes('FC média') && cardioPage.includes('Finalizar cardio') && !cardioPage.includes("(['zone2','walk','run','hiit'] as CardioMode[])"), 'Fluxo interno de Cardio deve executar a sessão planejada e registrar o resumo sem seletor manual de modalidade');
 assert(currentCardio.includes('currentProjectWeek') && currentCardio.includes('effectiveCardioWeek') && currentCardio.includes('getCardioWeekSchedule') && currentCardio.includes('reachedWeeks.at(-1)') && currentCardio.includes('getTodayCardioSession'), 'Cardio atual deve respeitar a semana corrente, avançar quando houver nova etapa e manter a última semana válida quando necessário');
 assert(dashboard.includes('CARDIO DE HOJE') && dashboard.includes('Iniciar cardio') && dashboard.includes('onStartCardio(todayCardio.id)'), 'Dashboard deve exibir e iniciar o cardio do dia');
-assert(planImporter.includes("endsWith('.titan-cardio')") && planImporter.includes('preserveExistingCardio') && planImporter.includes('mergeCardioPlan') && planImporter.includes('Atualizar cardio') && planImporter.includes('Atualizar musculação'), 'Importador deve atualizar musculação e cardio de forma independente');
+assert(
+  planImporter.includes("endsWith('.titan-cardio')") &&
+  planImporter.includes('preserveExistingCardio') &&
+  planImporter.includes('mergeCardioPlan') &&
+  planImporter.includes('detectImportKind') &&
+  planImporter.includes('pendingCardio') &&
+  planImporter.includes('Ativar projeto completo') &&
+  planImporter.includes('Adicionar outro arquivo') &&
+  planImporter.includes('Array.isArray(input.workouts)') &&
+  planImporter.includes('Array.isArray(input.weeks)'),
+  'Importador deve identificar conteúdo e combinar musculação/cardio em qualquer ordem'
+);
 assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes("'body' | 'training'") && progressPage.includes('PrHall'), 'Progresso deve reunir evolução corporal e Hall dos PRs de treino');
 assert(evolution.includes('EVOLUÇÃO CORPORAL') && evolution.includes('Última vs. anterior') && evolution.includes('Evolução mensal') && evolution.includes('Nova avaliação corporal') && evolution.includes('Avaliação corporal completa') && evolution.includes('evolution-register-screen'), 'Centro de evolução deve funcionar como dashboard corporal');
 assert(!progressPage.includes('🏆 Volume:') && !progressPage.includes('de volume'), 'Volume total não deve aparecer na interface de progresso');
