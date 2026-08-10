@@ -14,10 +14,10 @@ describe('Coach TITAN 1.0', () => {
     expect(report.score.training).toBe(0);
     expect(report.score.nutrition).toBeNull();
     expect(report.score.recovery).toBeNull();
-    expect(report.availablePillars).toBe(1);
+    expect(report.availablePillars).toBe(0);
   });
 
-  it('cruza nutrição, recuperação e evolução sem penalizar pilares ausentes', () => {
+  it('cruza nutrição, recuperação e evolução sem penalizar o treino ausente', () => {
     const report = createUnifiedCoachReport({
       workouts: [],
       nutritionPlan: plan,
@@ -32,7 +32,8 @@ describe('Coach TITAN 1.0', () => {
     expect(report.score.nutrition).toBe(100);
     expect(report.score.recovery).toBe(100);
     expect(report.score.evolution).toBe(25);
-    expect(report.availablePillars).toBe(4);
+    expect(report.score.total).toBe(75);
+    expect(report.availablePillars).toBe(3);
     expect(report.insights.some((item) => item.id === 'nutrition-on-track')).toBe(true);
     expect(report.insights.some((item) => item.id === 'sleep-on-track')).toBe(true);
   });

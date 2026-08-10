@@ -42,14 +42,17 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
 
   const nutrition = analyzeNutrition(nutritionPlan ?? null, nutritionExecutions, now);
   if (nutrition.insight) insights.push(nutrition.insight);
-
   const recovery = analyzeRecovery(healthSamples, now);
   if (recovery.insight) insights.push(recovery.insight);
-
   const evolution = analyzeEvolution(bodyEntries, now);
   if (evolution.insight) insights.push(evolution.insight);
 
-  const availableScores = [trainingScore, nutrition.score, recovery.score, evolution.score].filter((value): value is number => value !== null);
+  const availableScores = [
+    ...(workouts.length ? [trainingScore] : []),
+    nutrition.score,
+    recovery.score,
+    evolution.score,
+  ].filter((value): value is number => value !== null);
   const availablePillars = availableScores.length;
   const total = clamp(average(availableScores));
   const confidencePoints = Math.min(2, workouts.length / 4) + (nutrition.score !== null ? 1 : 0) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
