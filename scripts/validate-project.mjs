@@ -18,6 +18,7 @@ const cardioPage = await read('src/features/cardio/CardioPage.tsx');
 const currentCardio = await read('src/features/cardio/currentCardio.ts');
 const healthPage = await read('src/features/health/SamsungHealthPage.tsx');
 const healthBridge = await read('src/features/health/bridge.ts');
+const nativeHealthDocs = await read('native/android-health-connect/README.md');
 const planImporter = await read('src/features/plan/PlanImporter.tsx');
 const dashboard = await read('src/features/dashboard/DashboardPage.tsx');
 const programmingPage = await read('src/features/programming/ProgrammingPage.tsx');
@@ -47,7 +48,8 @@ assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), '
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
 assert(app.includes("{ id: 'today', label: 'Hoje' }") && app.includes("{ id: 'programming', label: 'Programação' }") && app.includes("{ id: 'health', label: 'Samsung Health' }") && app.includes("{ id: 'progress', label: 'Progresso' }") && app.includes("{ id: 'settings', label: 'Configurações' }") && !app.includes("{ id: 'cardio', label: 'Cardio' }") && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Samsung Health e manter Cardio somente como fluxo interno');
 assert(app.includes("activeTab === 'health' && <SamsungHealthPage />") && healthPage.includes('Sincronizar agora') && healthPage.includes('Dados do relógio') && healthPage.includes('Health Connect'), 'Samsung Health deve ter painel próprio com dados do relógio e sincronização');
-assert(healthBridge.includes('requestPermissions') && healthBridge.includes('readSamples'), 'Ponte Health Connect deve permanecer preparada para a camada Android nativa');
+assert(healthBridge.includes('window.Capacitor?.Plugins?.TitanHealthConnect') && healthBridge.includes('requestPermissions') && healthBridge.includes('readSamples'), 'Ponte Health Connect deve detectar o plugin Capacitor nativo e preservar o contrato de sincronização');
+assert(nativeHealthDocs.includes('Galaxy Watch → Samsung Health → Health Connect') && nativeHealthDocs.includes('TitanHealthConnect') && nativeHealthDocs.includes('SleepSessionRecord') && nativeHealthDocs.includes('HeartRateRecord'), 'Fundação Android deve documentar fluxo, contrato e mapeamento Health Connect');
 assert(!app.includes("{ id: 'plan', label: 'Projeto' }"), 'Projeto não deve ocupar uma aba principal');
 assert(app.includes('Inserir projeto') && !app.includes('>Substituir projeto</button>'), 'Configurações deve usar Inserir projeto como ação de atualização modular');
 assert(app.includes('Histórico, cardio e evolução corporal são preservados') && app.includes('Remover apenas o projeto ativo?'), 'Remover projeto deve declarar que preserva os dados históricos');
