@@ -5,6 +5,7 @@ import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
 import { enablePostWorkoutCoach } from './ui/post-workout-coach';
 import { enableHealthHubNavigation } from './ui/health-hub-navigation';
+import { enableNutritionToday } from './ui/nutrition-today';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/dashboard.css';
@@ -55,11 +56,13 @@ import './styles/health-dashboard-v05112.css';
 import './styles/titan-ui-v052.css';
 import './styles/health-clean-v0527.css';
 import './styles/health-hub-v0529.css';
+import './styles/nutrition-today-v053.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
 enablePostWorkoutCoach();
 enableHealthHubNavigation();
+enableNutritionToday();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
