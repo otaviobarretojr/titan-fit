@@ -55,6 +55,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync package metadata
+        run: npm version "$(node -p "require('./package.json').version")" --no-git-tag-version --allow-same-version
+
       - name: Validate project
         run: npm run validate
 
@@ -90,6 +93,16 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           cp android/app/build/outputs/apk/release/app-release.apk "TITAN-FIT-v${VERSION}-android-test.apk"
           sha256sum "TITAN-FIT-v${VERSION}-android-test.apk" > "TITAN-FIT-v${VERSION}-android-test.apk.sha256"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TITAN-FIT-v${{ env.VERSION }}-android
+          path: |
+            TITAN-FIT-v${{ env.VERSION }}-android-test.apk
+            TITAN-FIT-v${{ env.VERSION }}-android-test.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Publish GitHub Release
         env:
