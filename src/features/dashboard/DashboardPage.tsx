@@ -1,6 +1,7 @@
 import { getExerciseSessions, getProgressionAdvice } from '../history/intelligence';
 import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
+import { NutritionTodayPanel } from '../nutrition/NutritionTodayPanel';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
 import { buildWeeklyCoachSummary } from './weeklyCoach';
@@ -23,7 +24,7 @@ function getGreeting() { const hour = new Date().getHours(); if (hour < 12) retu
 function formatToday() { return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date()); }
 
 export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPageProps) {
-  if (!plan) return <div className="dashboard-page"><section className="dashboard-welcome"><span className="eyebrow">SEU PROJETO COMEÇA AQUI</span><h2>Nenhum projeto ativo</h2><p>Importe seu Projeto TITAN para liberar treino, cardio e progressão.</p><button type="button" className="primary-action" onClick={onOpenPlan}>Inserir projeto</button></section></div>;
+  if (!plan) return <div className="dashboard-page"><section className="dashboard-welcome"><span className="eyebrow">SEU PROJETO COMEÇA AQUI</span><h2>Nenhum projeto ativo</h2><p>Importe seu Projeto TITAN para liberar treino, cardio e progressão.</p><button type="button" className="primary-action" onClick={onOpenPlan}>Inserir projeto</button></section><NutritionTodayPanel /></div>;
 
   const dayPlan = getTodayWorkout(plan);
   const exercises = dayPlan?.exercises ?? [];
@@ -41,6 +42,8 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
 
   return <div className="dashboard-page dashboard-page-clean">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
+
+    <NutritionTodayPanel />
 
     {hasWorkoutToday && dayPlan ? <section className="today-workout" aria-labelledby="today-workout-title">
       <WorkoutMuscleArt visual={visual} />
