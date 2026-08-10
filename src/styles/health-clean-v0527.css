@@ -1,0 +1,55 @@
+/* TITAN FIT v0.52.7 — Health dashboard production polish.
+   Technical provider details remain available in Diagnóstico avançado. */
+.health-dashboard-page .health-daily-source {
+  display: none;
+}
+
+.health-dashboard-page .health-sync-card {
+  padding: 14px 16px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.92);
+}
+
+.health-dashboard-page .health-sync-copy {
+  display: none;
+}
+
+.health-dashboard-page .health-sync-card .primary-action {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  border-radius: 16px;
+}
+
+.health-dashboard-page .health-sync-card .secondary-action {
+  display: none;
+}
+
+.health-dashboard-page .health-daily-card-v2 {
+  margin-top: 0;
+}
+
+.health-dashboard-page .health-daily-footer {
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.health-dashboard-page .health-diagnostics-panel {
+  margin-top: 2px;
+}
+
+.health-dashboard-page .health-diagnostics-panel > summary {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+@media (max-width: 390px) {
+  .health-dashboard-page .health-sync-card {
+    padding: 12px 14px;
+  }
+}
