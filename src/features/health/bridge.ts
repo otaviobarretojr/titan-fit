@@ -77,7 +77,14 @@ export async function requestSamsungHealthPermissions(): Promise<boolean> {
 export async function requestHealthPermissions(types = DEFAULT_HEALTH_METRICS): Promise<boolean> {
   const bridge = getHealthConnectBridge();
   if (!bridge) return false;
-  return bridge.requestPermissions(types);
+  const healthConnectGranted = await bridge.requestPermissions(types);
+  if (healthConnectGranted) {
+    // Samsung Health direct access is optional: request it here so the daily card can
+    // use the same consolidated totals shown by Samsung Health. If denied/unavailable,
+    // Health Connect remains the fallback and the connection still succeeds.
+    await requestSamsungHealthPermissions();
+  }
+  return healthConnectGranted;
 }
 
 export async function readHealthSamples(types = DEFAULT_HEALTH_METRICS, since?: string): Promise<HealthSample[]> {
