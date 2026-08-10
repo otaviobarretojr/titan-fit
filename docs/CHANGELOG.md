@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.54 — Coach TITAN 1.0 (em desenvolvimento)
+
+- Coach passa a cruzar dados de treino, nutrição, recuperação e evolução corporal sem criar uma nova fonte de persistência.
+- Mantida compatibilidade com o relatório legado baseado apenas em histórico de treinos.
+- Score integrado calcula a média somente dos pilares com dados disponíveis, evitando penalizar o usuário por informações ainda não registradas.
+- Confiança da análise passa a refletir a quantidade de pilares e histórico realmente disponíveis.
+- Nutrição considera aderência combinada de calorias e proteína nos dias registrados.
+- Recuperação passa a utilizar registros de sono do Health Connect quando disponíveis e declara explicitamente quando faltarem dados.
+- Evolução considera a presença de registros corporais recentes sem inferir diagnóstico ou composição corporal inexistente.
+- Saúde ganha uma terceira seção interna, `Coach`, sem alterar as quatro abas principais do aplicativo.
+- Corrigida regra CSS legada que podia ocultar visualmente o quarto item da navegação inferior.
+- Adicionados testes específicos para compatibilidade, score multipilar e ausência de dados.
+
+## v0.53.3 — Nutrição em Evolução
+
+- Nutrição integrada definitivamente em `Saúde → Evolução`, com as abas `Corpo`, `Treino` e `Nutrição`.
+- Painel nutricional oferece períodos de 7, 30 e 90 dias.
+- Adicionados consumo calórico diário, aderência calórica, média de calorias, aderência de proteína, dias registrados e médias de proteína, carboidratos e gorduras.
+- Navegação principal consolidada em `Hoje · Programação · Saúde · Ajustes`.
+- Estados legados de navegação `progress` passam a migrar para `Saúde`, preservando compatibilidade.
+- Hall de PRs estável preservado enquanto a terceira aba de evolução foi adicionada.
+- Validador estrutural atualizado para impedir regressão à navegação antiga.
+- Lint, TypeScript, testes, build e `npm run validate` concluídos com sucesso.
+- APK Android assinado publicado na Release `v0.53.3`.
+
 ## v0.50 — TITAN Engine
 
 - Criado `src/core/titan-engine` como núcleo independente de React, IndexedDB e componentes de interface.
