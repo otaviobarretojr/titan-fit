@@ -4,6 +4,7 @@ import type { NutritionMacroTotals, TitanNutritionPlan } from '../features/nutri
 
 const CARD_ID = 'titan-nutrition-health-card';
 const EMPTY: NutritionMacroTotals = { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 };
+let selectedPeriod: 7 | 30 | 90 = 7;
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -26,19 +27,44 @@ function bar(label: string, value: number, target: number, unit: string) {
   return `<div class="nutrition-health-progress ${state}"><div><span>${label}</span><strong>${Math.round(value)} / ${Math.round(target)} ${unit}</strong></div><div class="nutrition-health-track"><i style="width:${Math.min(percent, 100)}%"></i></div><small>${percent}% da meta</small></div>`;
 }
 
-function lastSevenDays(plan: TitanNutritionPlan) {
+function periodRows(plan: TitanNutritionPlan, days: number) {
   const executions = loadNutritionExecutions();
-  const rows: Array<{ key: string; label: string; calories: number; target: number; percent: number }> = [];
-  for (let offset = 6; offset >= 0; offset -= 1) {
+  const rows: Array<{ key: string; label: string; calories: number; target: number; percent: number; hasData: boolean }> = [];
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
     const date = new Date();
     date.setHours(12, 0, 0, 0);
     date.setDate(date.getDate() - offset);
     const key = todayKey(date);
     const target = targetForDate(plan, date).caloriesKcal;
-    const calories = executions.filter((item) => item.date === key).reduce((sum, item) => sum + item.macros.caloriesKcal, 0);
-    rows.push({ key, label: new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(date).replace('.', '').slice(0, 3), calories, target, percent: clampPercent(calories, target) });
+    const dayExecutions = executions.filter((item) => item.date === key);
+    const calories = dayExecutions.reduce((sum, item) => sum + item.macros.caloriesKcal, 0);
+    const compact = days <= 7
+      ? new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(date).replace('.', '').slice(0, 3)
+      : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
+    rows.push({ key, label: compact, calories, target, percent: clampPercent(calories, target), hasData: dayExecutions.length > 0 });
   }
   return rows;
+}
+
+function periodStats(plan: TitanNutritionPlan, days: number) {
+  const rows = periodRows(plan, days);
+  const tracked = rows.filter((row) => row.hasData);
+  if (!tracked.length) return { rows, trackedDays: 0, adherenceDays: 0, adherencePercent: 0, averageCalories: 0, averageTarget: 0 };
+  const adherenceDays = tracked.filter((row) => row.percent >= 90 && row.percent <= 105).length;
+  const averageCalories = tracked.reduce((sum, row) => sum + row.calories, 0) / tracked.length;
+  const averageTarget = tracked.reduce((sum, row) => sum + row.target, 0) / tracked.length;
+  return {
+    rows,
+    trackedDays: tracked.length,
+    adherenceDays,
+    adherencePercent: Math.round((adherenceDays / tracked.length) * 100),
+    averageCalories,
+    averageTarget,
+  };
+}
+
+function periodButton(days: 7 | 30 | 90) {
+  return `<button type="button" data-nutrition-period="${days}" class="${selectedPeriod === days ? 'active' : ''}">${days} dias</button>`;
 }
 
 function renderCard() {
@@ -57,7 +83,7 @@ function renderCard() {
 
   const totals = nutritionTotalsForDate();
   const target = targetForDate(plan, new Date()) ?? EMPTY;
-  const week = lastSevenDays(plan);
+  const history = periodStats(plan, selectedPeriod);
   const todayExecutions = loadNutritionExecutions().filter((item) => item.date === todayKey());
   const completed = todayExecutions.filter((item) => item.status === 'consumed' || item.status === 'partial').length;
 
@@ -78,8 +104,21 @@ function renderCard() {
       ${bar('Carboidratos', totals.carbohydrateG, target.carbohydrateG, 'g')}
       ${bar('Gorduras', totals.fatG, target.fatG, 'g')}
     </div>
-    <div class="nutrition-health-week"><div class="nutrition-health-week-head"><span>ÚLTIMOS 7 DIAS</span><small>Calorias consumidas × meta</small></div><div class="nutrition-health-week-bars">${week.map((day) => `<span title="${Math.round(day.calories)} / ${Math.round(day.target)} kcal"><i style="height:${Math.max(6, Math.min(56, day.percent * 0.5))}px" class="${day.percent > 105 ? 'over' : day.percent >= 90 ? 'goal' : ''}"></i><small>${day.label}</small></span>`).join('')}</div></div>
+    <div class="nutrition-health-history">
+      <div class="nutrition-health-history-head"><div><span>HISTÓRICO NUTRICIONAL</span><small>Calorias consumidas × meta planejada</small></div><div class="nutrition-period-tabs" role="tablist" aria-label="Período do histórico nutricional">${periodButton(7)}${periodButton(30)}${periodButton(90)}</div></div>
+      <div class="nutrition-history-summary"><span><small>Dias registrados</small><strong>${history.trackedDays}</strong></span><span><small>Na faixa da meta</small><strong>${history.adherencePercent}%</strong></span><span><small>Média</small><strong>${Math.round(history.averageCalories)} kcal</strong></span></div>
+      <div class="nutrition-health-chart-scroll"><div class="nutrition-health-period-bars period-${selectedPeriod}">${history.rows.map((day) => `<span title="${day.hasData ? `${Math.round(day.calories)} / ${Math.round(day.target)} kcal` : 'Sem registro'}"><i style="height:${day.hasData ? Math.max(6, Math.min(68, day.percent * 0.56)) : 4}px" class="${!day.hasData ? 'empty' : day.percent > 105 ? 'over' : day.percent >= 90 ? 'goal' : ''}"></i><small>${day.label}</small></span>`).join('')}</div></div>
+      <p class="nutrition-history-note">${history.trackedDays ? `${history.adherenceDays} de ${history.trackedDays} dias registrados ficaram entre 90% e 105% da meta calórica.` : 'O histórico será preenchido conforme as refeições forem registradas.'}</p>
+    </div>
   `;
+
+  card.querySelectorAll<HTMLButtonElement>('[data-nutrition-period]').forEach((button) => button.addEventListener('click', () => {
+    const value = Number(button.dataset.nutritionPeriod);
+    if (value === 7 || value === 30 || value === 90) {
+      selectedPeriod = value;
+      renderCard();
+    }
+  }));
   return true;
 }
 
