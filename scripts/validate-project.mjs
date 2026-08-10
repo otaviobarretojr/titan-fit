@@ -43,7 +43,15 @@ assert(/^\d+\.\d+\.\d+$/.test(pkg.version), 'package.json deve declarar uma vers
 assert(pkg.scripts?.lint?.includes('--max-warnings 0'), 'Lint deve falhar quando houver qualquer warning novo');
 assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'A versão visível do app deve vir diretamente do package.json');
 assert(appTest.includes("import packageInfo from '../package.json'") && appTest.includes('`v${packageInfo.version}`') && !/TITAN FIT v\d+\.\d+\.\d+/.test(appTest), 'Testes do App não podem congelar um número de versão; devem usar package.json');
-assert(vite.includes("import packageInfo from './package.json'") && vite.includes('cacheId: `titan-fit-v${packageInfo.version}`') && vite.includes("base: '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes("registerType: 'autoUpdate'"), 'PWA, versão de cache, base do GitHub Pages e atualização automática devem permanecer ligados ao package.json');
+assert(
+  vite.includes("import packageInfo from './package.json'") &&
+  vite.includes('cacheId: `titan-fit-v${packageInfo.version}`') &&
+  vite.includes("base: isAndroid ? './' : '/titan-fit/'") &&
+  vite.includes("display: 'standalone'") &&
+  vite.includes("registerType: 'autoUpdate'") &&
+  vite.includes('disable: isAndroid'),
+  'PWA deve manter base /titan-fit/, cache e autoUpdate; Android deve usar base relativa e PWA desativado'
+);
 assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar a mesma versão do Node.js');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar e publicar no GitHub Pages');
 assert(app.includes("{ id: 'today', label: 'Hoje' }") && app.includes("{ id: 'programming', label: 'Programação' }") && app.includes("{ id: 'health', label: 'Samsung Health' }") && app.includes("{ id: 'progress', label: 'Progresso' }") && app.includes("{ id: 'settings', label: 'Configurações' }") && !app.includes("{ id: 'cardio', label: 'Cardio' }") && !app.includes("{ id: 'history', label: 'Histórico' }") && !app.includes("{ id: 'week', label: 'Semana' }"), 'Navegação principal deve usar Samsung Health e manter Cardio somente como fluxo interno');
