@@ -33,8 +33,19 @@ jobs:
       - name: Validate project
         run: npm run validate
 
-      - name: Build web app
-        run: npm run build
+      - name: Build Android web bundle
+        run: npm run build:android
+
+      - name: Guard Android bundle paths
+        run: |
+          if grep -R "src=\"/titan-fit/\|href=\"/titan-fit/" dist/index.html; then
+            echo 'ERRO: bundle Android ainda aponta para /titan-fit/'
+            exit 1
+          fi
+          if [ -f dist/sw.js ]; then
+            echo 'ERRO: bundle Android não deve conter Service Worker do PWA.'
+            exit 1
+          fi
 
       - name: Sync Android
         run: npx cap sync android
@@ -62,5 +73,5 @@ jobs:
           else
             gh release create "$TAG" "$APK" "$CHECKSUM" \
               --title "TITAN FIT v${VERSION} — Android Test" \
-              --notes "Primeira entrega Android instalável do TITAN FIT.\n\nInclui Capacitor, ponte nativa Kotlin para Health Connect, leitura de sono, frequência cardíaca, passos, calorias ativas, exercícios, distância e composição corporal, além da tela de justificativa de permissões de saúde.\n\nEste APK é uma versão de teste (debug) destinada à validação no dispositivo Android antes da preparação da assinatura de produção."
+              --notes "Build Android corrigido para execução nativa via Capacitor, separado do caminho do GitHub Pages. Inclui ponte Kotlin para Health Connect e leitura dos dados Samsung Health autorizados pelo usuário."
           fi
