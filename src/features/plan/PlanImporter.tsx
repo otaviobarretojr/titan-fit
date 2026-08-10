@@ -88,7 +88,7 @@ export function PlanImporter({ onImport }: Props) {
       let normalized = normalizeImportedPlan(result.plan, file.name);
       let combinedWithPendingCardio = false;
 
-      if (pendingCardio) {
+      if (pendingCardio !== null) {
         const cardioResult = mergeCardioPlan(normalized, pendingCardio);
         if (!cardioResult.ok) {
           setErrors(cardioResult.errors);
@@ -133,6 +133,7 @@ export function PlanImporter({ onImport }: Props) {
 
   const previewTitle = importKind === 'cardio' ? 'Projeto Cardio' : importKind === 'combined' ? 'Projeto completo' : 'Projeto Musculação';
   const confirmLabel = importKind === 'cardio' ? 'Atualizar cardio' : importKind === 'combined' ? 'Ativar projeto completo' : 'Ativar musculação';
+  const hasPendingCardio = pendingCardio !== null;
 
   return <section className="import-card" aria-labelledby="import-title">
     <div>
@@ -163,11 +164,11 @@ export function PlanImporter({ onImport }: Props) {
       }}
     />
     <button type="button" className="primary-action" onClick={() => inputRef.current?.click()}>
-      {preview ? 'Adicionar outro arquivo' : pendingCardio ? 'Selecionar musculação' : 'Selecionar projeto'}
+      {preview ? 'Adicionar outro arquivo' : hasPendingCardio ? 'Selecionar musculação' : 'Selecionar projeto'}
     </button>
 
     {fileName && <p className="selected-file">Arquivo: <strong>{fileName}</strong></p>}
-    {pendingCardio && <div className="validation-message warning"><strong>Cardio pronto</strong><p>{pendingCardioName || 'Projeto Cardio'} foi validado. Selecione agora o arquivo de musculação.</p></div>}
+    {hasPendingCardio && <div className="validation-message warning"><strong>Cardio pronto</strong><p>{pendingCardioName || 'Projeto Cardio'} foi validado. Selecione agora o arquivo de musculação.</p></div>}
 
     {errors.length > 0 && <div className="validation-message error" role="alert">
       <strong>Não foi possível importar</strong>
