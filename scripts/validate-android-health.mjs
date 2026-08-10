@@ -18,6 +18,8 @@ const [
   rationaleActivity,
   androidManifest,
   androidGradle,
+  healthPage,
+  healthBridge,
 ] = await Promise.all([
   read('capacitor.config.json'),
   read('package.json'),
@@ -32,6 +34,8 @@ const [
   read('native/android-health-connect/PermissionsRationaleActivity.kt'),
   read('android/app/src/main/AndroidManifest.xml'),
   read('android/app/build.gradle'),
+  read('src/features/health/SamsungHealthPage.tsx'),
+  read('src/features/health/bridge.ts'),
 ]);
 
 const config = JSON.parse(configText);
@@ -60,7 +64,12 @@ for (const record of ['SleepSessionRecord', 'HeartRateRecord', 'StepsRecord', 'A
   assert(plugin.includes(record), `Plugin Health Connect deve mapear ${record}`);
 }
 assert(plugin.includes('requestHealthPermissions') && plugin.includes('readSamples'), 'Plugin nativo deve expor permissões e leitura de amostras');
+assert(plugin.includes('diagnoseHealthData') && plugin.includes('readMetric') && plugin.includes('sourcesOf'), 'Plugin nativo deve diagnosticar cada categoria e origem independentemente');
+assert(plugin.includes('A falha de uma categoria não pode apagar dados válidos das demais'), 'Leitura Health Connect deve isolar falhas por categoria');
 assert(plugin.includes('CoroutineScope') && plugin.includes('Dispatchers.IO'), 'Leituras Health Connect devem executar em coroutine de IO');
+assert(healthBridge.includes('diagnoseHealthData') && healthPage.includes('DIAGNÓSTICO HEALTH CONNECT'), 'Interface deve expor diagnóstico Health Connect');
+assert(healthPage.includes('samples.length === 0') && healthPage.includes('needsBackfill ? undefined : status.lastSyncAt'), 'Primeira sincronização vazia deve fazer backfill de 30 dias em vez de ficar presa ao lastSyncAt');
+assert(healthPage.includes('incoming.length > 0 ? now : status.lastSyncAt'), 'Sincronização vazia não deve avançar o cursor de dados');
 
 for (const permission of ['READ_SLEEP', 'READ_HEART_RATE', 'READ_STEPS', 'READ_ACTIVE_CALORIES_BURNED', 'READ_EXERCISE', 'READ_DISTANCE', 'READ_BODY_FAT']) {
   assert(manifest.includes(`android.permission.health.${permission}`), `Manifesto-base Health Connect deve declarar ${permission}`);
