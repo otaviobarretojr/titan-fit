@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, readHealthSamples, requestHealthPermissions } from './bridge';
+import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, readDailyActivitySummary, readHealthSamples, requestHealthPermissions } from './bridge';
 import { loadHealthSamples, loadHealthSyncStatus, mergeHealthSamples, saveHealthSyncStatus } from './repository';
-import type { HealthDiagnostics, HealthMetricType, HealthSample, HealthSyncStatus } from './types';
+import type { DailyActivitySummary, HealthDiagnostics, HealthMetricType, HealthSample, HealthSyncStatus } from './types';
 
 const INITIAL_STATUS: HealthSyncStatus = { provider: 'health-connect', bridgeAvailable: false, permissionGranted: false };
 const METRICS: Array<{ type: HealthMetricType; label: string }> = [
@@ -15,16 +15,60 @@ const EXERCISE_LABELS: Record<number, string> = { 0:'Treino',8:'Ciclismo',9:'Bik
 export function SamsungHealthPage() {
   const [status,setStatus]=useState<HealthSyncStatus>(INITIAL_STATUS);
   const [samples,setSamples]=useState<HealthSample[]>([]);
+  const [dailySummary,setDailySummary]=useState<DailyActivitySummary|null>(null);
   const [diagnostics,setDiagnostics]=useState<HealthDiagnostics|null>(null);
   const [busy,setBusy]=useState(false);
   const [showWeeklyWorkouts,setShowWeeklyWorkouts]=useState(false);
 
-  async function refreshLocalState(){const [available,savedStatus,savedSamples]=await Promise.all([healthConnectAvailable(),loadHealthSyncStatus().catch(()=>null),loadHealthSamples().catch(()=>[])]);setStatus({...(savedStatus??INITIAL_STATUS),bridgeAvailable:available});setSamples(savedSamples)}
+  async function refreshLocalState(){
+    const [available,savedStatus,savedSamples]=await Promise.all([
+      healthConnectAvailable(),
+      loadHealthSyncStatus().catch(()=>null),
+      loadHealthSamples().catch(()=>[]),
+    ]);
+    setStatus({...(savedStatus??INITIAL_STATUS),bridgeAvailable:available});
+    setSamples(savedSamples);
+    if(available){
+      const summary=await readDailyActivitySummary();
+      if(summary)setDailySummary(summary);
+    }
+  }
+
   useEffect(()=>{void refreshLocalState()},[]);
   const latestByType=useMemo(()=>{const latest=new Map<HealthMetricType,HealthSample>();for(const sample of samples){const previous=latest.get(sample.type);if(!previous||previous.startedAt<sample.startedAt)latest.set(sample.type,sample)}return latest},[samples]);
   const healthSummary=useMemo(()=>buildHealthSummary(samples),[samples]);
+  const dailyActivity=useMemo<DailyActivitySummary>(()=>dailySummary??{
+    date:new Date().toISOString().slice(0,10),
+    steps:healthSummary.todaySteps,
+    activeCalories:healthSummary.todayCalories,
+    activeMinutes:healthSummary.todayExerciseMinutes,
+    distanceMeters:healthSummary.todayDistanceMeters,
+    activeMinutesSource:'exercise-duration',
+    source:'health-connect-aggregate',
+  },[dailySummary,healthSummary]);
 
-  async function connect(){setBusy(true);try{const available=await healthConnectAvailable();if(!available){const next={...status,bridgeAvailable:false,message:'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.'};setStatus(next);await saveHealthSyncStatus(next).catch(()=>undefined);return}const granted=await requestHealthPermissions();const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões de saúde não foram concedidas.'};setStatus(next);await saveHealthSyncStatus(next)}finally{setBusy(false)}}
+  async function refreshDailyActivity(){
+    const summary=await readDailyActivitySummary();
+    if(summary)setDailySummary(summary);
+  }
+
+  async function connect(){
+    setBusy(true);
+    try{
+      const available=await healthConnectAvailable();
+      if(!available){
+        const next={...status,bridgeAvailable:false,message:'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.'};
+        setStatus(next);
+        await saveHealthSyncStatus(next).catch(()=>undefined);
+        return;
+      }
+      const granted=await requestHealthPermissions();
+      const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões de saúde não foram concedidas.'};
+      setStatus(next);
+      await saveHealthSyncStatus(next);
+      if(granted)await refreshDailyActivity();
+    }finally{setBusy(false)}
+  }
 
   async function syncNow() {
     setBusy(true);
@@ -42,6 +86,7 @@ export function SamsungHealthPage() {
       const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, incrementalSince);
       const merged = await mergeHealthSamples(incoming);
       const diagnosticResult = await diagnoseHealthData(DEFAULT_HEALTH_METRICS, diagnosticSince).catch(() => null);
+      const aggregatedToday = await readDailyActivitySummary();
       const now = new Date().toISOString();
 
       // Só avance o cursor quando realmente houver dados novos recebidos.
@@ -57,6 +102,7 @@ export function SamsungHealthPage() {
       };
 
       setSamples(merged);
+      if(aggregatedToday)setDailySummary(aggregatedToday);
       setDiagnostics(diagnosticResult);
       setStatus(next);
       await saveHealthSyncStatus(next);
@@ -72,13 +118,14 @@ export function SamsungHealthPage() {
       <div className="health-daily-title"><h3>Atividade diária</h3><span>{new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','')}</span></div>
       <div className="health-daily-content">
         <div className="health-daily-primary-metrics">
-          <HealthMetric icon="steps" value={formatInteger(healthSummary.todaySteps)} label="passos" />
-          <HealthMetric icon="time" value={`${Math.round(healthSummary.todayExerciseMinutes)}`} label="min" />
-          <HealthMetric icon="calories" value={formatInteger(healthSummary.todayCalories)} label="kcal" />
+          <HealthMetric icon="steps" value={formatInteger(dailyActivity.steps)} label="Passos" />
+          <HealthMetric icon="time" value={`${Math.round(dailyActivity.activeMinutes)} min`} label="Tempo ativo" />
+          <HealthMetric icon="calories" value={`${formatInteger(dailyActivity.activeCalories)} kcal`} label="Calorias ativas" />
         </div>
-        <ActivityRings steps={healthSummary.todaySteps} minutes={healthSummary.todayExerciseMinutes} calories={healthSummary.todayCalories} />
+        <ActivityRings steps={dailyActivity.steps} minutes={dailyActivity.activeMinutes} calories={dailyActivity.activeCalories} />
       </div>
-      <div className="health-daily-footer"><span>{formatDistance(healthSummary.todayDistanceMeters)} hoje</span><strong>{dailyProgress(healthSummary.todaySteps,healthSummary.todayExerciseMinutes,healthSummary.todayCalories)}% da meta diária</strong></div>
+      <div className="health-daily-footer"><span>{formatDistance(dailyActivity.distanceMeters)} hoje</span><strong>{dailyProgress(dailyActivity.steps,dailyActivity.activeMinutes,dailyActivity.activeCalories)}% da meta diária</strong></div>
+      {dailySummary&&<small className="health-daily-source">Passos e totais consolidados pelo Health Connect. Tempo ativo corresponde ao tempo de exercícios disponível no Health Connect.</small>}
     </section>
 
     <button type="button" className={`health-week-card ${showWeeklyWorkouts?'open':''}`} onClick={()=>setShowWeeklyWorkouts(v=>!v)} aria-expanded={showWeeklyWorkouts}><div className="health-card-heading"><div><span className="info-label">ESTA SEMANA</span><h3>Treinos da semana</h3></div><span className="health-chevron" aria-hidden="true">›</span></div><div className="health-week-summary"><div><strong>{formatDuration(healthSummary.weekExerciseMinutes)}</strong><span>{healthSummary.weekExercises.length} {healthSummary.weekExercises.length===1?'sessão':'sessões'}</span></div><div className="health-week-bars" aria-hidden="true">{healthSummary.weekDays.map(day=><span key={day.key} className={day.hasExercise?'active':''}><i style={{height:`${Math.max(8,Math.min(48,day.minutes*1.7))}px`}}/><small>{day.label}</small></span>)}</div></div></button>
