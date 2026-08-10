@@ -13,13 +13,57 @@ const DAILY_GOALS = { steps: 8000, activeMinutes: 60, calories: 400 };
 const EXERCISE_LABELS: Record<number, string> = { 0:'Treino',8:'Ciclismo',9:'Bike ergométrica',37:'Trilha',53:'Remo',54:'Remo ergométrico',56:'Corrida',57:'Corrida na esteira',68:'Subida de escadas',69:'Escada ergométrica',70:'Musculação',71:'Alongamento',73:'Natação em águas abertas',74:'Natação em piscina',79:'Caminhada',81:'Levantamento de peso',83:'Yoga' };
 
 export function SamsungHealthPage() {
-  const [status,setStatus]=useState<HealthSyncStatus>(INITIAL_STATUS); const [samples,setSamples]=useState<HealthSample[]>([]); const [diagnostics,setDiagnostics]=useState<HealthDiagnostics|null>(null); const [busy,setBusy]=useState(false); const [showWeeklyWorkouts,setShowWeeklyWorkouts]=useState(false);
+  const [status,setStatus]=useState<HealthSyncStatus>(INITIAL_STATUS);
+  const [samples,setSamples]=useState<HealthSample[]>([]);
+  const [diagnostics,setDiagnostics]=useState<HealthDiagnostics|null>(null);
+  const [busy,setBusy]=useState(false);
+  const [showWeeklyWorkouts,setShowWeeklyWorkouts]=useState(false);
+
   async function refreshLocalState(){const [available,savedStatus,savedSamples]=await Promise.all([healthConnectAvailable(),loadHealthSyncStatus().catch(()=>null),loadHealthSamples().catch(()=>[])]);setStatus({...(savedStatus??INITIAL_STATUS),bridgeAvailable:available});setSamples(savedSamples)}
   useEffect(()=>{void refreshLocalState()},[]);
   const latestByType=useMemo(()=>{const latest=new Map<HealthMetricType,HealthSample>();for(const sample of samples){const previous=latest.get(sample.type);if(!previous||previous.startedAt<sample.startedAt)latest.set(sample.type,sample)}return latest},[samples]);
   const healthSummary=useMemo(()=>buildHealthSummary(samples),[samples]);
+
   async function connect(){setBusy(true);try{const available=await healthConnectAvailable();if(!available){const next={...status,bridgeAvailable:false,message:'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.'};setStatus(next);await saveHealthSyncStatus(next).catch(()=>undefined);return}const granted=await requestHealthPermissions();const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões de saúde não foram concedidas.'};setStatus(next);await saveHealthSyncStatus(next)}finally{setBusy(false)}}
-  async function syncNow(){setBusy(true);try{if(!status.bridgeAvailable||!status.permissionGranted){await connect();return}const needsBackfill=samples.length===0;const incrementalSince=needsBackfill?undefined:status.lastSyncAt;const diagnosticSince=new Date(Date.now()-DIAGNOSTIC_WINDOW_MS).toISOString();const incoming=await readHealthSamples(DEFAULT_HEALTH_METRICS,incrementalSince);const merged=await mergeHealthSamples(incoming);const diagnosticResult=await diagnoseHealthData(DEFAULT_HEALTH_METRICS,diagnosticSince).catch(()=>null);const now=new Date().toISOString();const next={...status,lastSyncAt:incoming.length>0?now:status.lastSyncAt,lastSyncCount:incoming.length,message:incoming.length>0?`${incoming.length} registros recebidos do Health Connect.`:needsBackfill?'Nenhum registro encontrado no backfill de 30 dias. Consulte o diagnóstico abaixo.':'Nenhum dado novo encontrado desde a última sincronização.'};setSamples(merged);setDiagnostics(diagnosticResult);setStatus(next);await saveHealthSyncStatus(next)}finally{setBusy(false)}}
+
+  async function syncNow() {
+    setBusy(true);
+    try {
+      if (!status.bridgeAvailable || !status.permissionGranted) {
+        await connect();
+        return;
+      }
+
+      // Primeira leitura sem amostras locais: não use cursor antigo; peça o backfill completo.
+      const needsBackfill = samples.length === 0;
+      const incrementalSince = needsBackfill ? undefined : status.lastSyncAt;
+      const diagnosticSince = new Date(Date.now() - DIAGNOSTIC_WINDOW_MS).toISOString();
+
+      const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, incrementalSince);
+      const merged = await mergeHealthSamples(incoming);
+      const diagnosticResult = await diagnoseHealthData(DEFAULT_HEALTH_METRICS, diagnosticSince).catch(() => null);
+      const now = new Date().toISOString();
+
+      // Só avance o cursor quando realmente houver dados novos recebidos.
+      const next: HealthSyncStatus = {
+        ...status,
+        lastSyncAt: incoming.length > 0 ? now : status.lastSyncAt,
+        lastSyncCount: incoming.length,
+        message: incoming.length > 0
+          ? `${incoming.length} registros recebidos do Health Connect.`
+          : needsBackfill
+            ? 'Nenhum registro encontrado no backfill de 30 dias. Consulte o diagnóstico abaixo.'
+            : 'Nenhum dado novo encontrado desde a última sincronização.',
+      };
+
+      setSamples(merged);
+      setDiagnostics(diagnosticResult);
+      setStatus(next);
+      await saveHealthSyncStatus(next);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return <div className="page-stack samsung-health-page health-dashboard-page">
     <section className="health-hero" aria-labelledby="samsung-health-title"><div><span className="eyebrow">GALAXY WATCH + HEALTH CONNECT</span><h2 id="samsung-health-title">Saúde</h2><p>Atividade, treinos e sinais recebidos do seu relógio.</p></div><span className={`health-connection-badge ${status.permissionGranted?'connected':''}`}>{status.permissionGranted?'Conectado':'Desconectado'}</span></section>
