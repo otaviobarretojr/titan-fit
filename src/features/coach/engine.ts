@@ -58,8 +58,18 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
   const confidencePoints = Math.min(2, workouts.length / 4) + (nutrition.score !== null ? 1 : 0) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
   const dataConfidence = confidencePoints >= 4 ? 'high' : confidencePoints >= 2 ? 'medium' : 'low';
 
+  const pillarScores = {
+    training: workouts.length ? trainingScore : null,
+    nutrition: nutrition.score,
+    recovery: recovery.score,
+    evolution: evolution.score,
+  };
+  const attentionByLowestScore = insights
+    .filter((item) => item.severity === 'attention')
+    .sort((a, b) => (pillarScores[a.pillar ?? 'training'] ?? 101) - (pillarScores[b.pillar ?? 'training'] ?? 101))[0];
+
   const priority = insights.find((item) => item.id.startsWith('muscle-fatigue:'))
-    ?? insights.find((item) => item.severity === 'attention')
+    ?? attentionByLowestScore
     ?? insights.find((item) => item.severity === 'positive')
     ?? { id: 'priority-start', severity: 'neutral' as const, title: 'Continue registrando', message: 'O Coach melhora conforme treino, nutrição, saúde e evolução acumulam dados.' };
 
