@@ -10,7 +10,7 @@ type NativeHealthConnectPlugin = {
 
 type NativeSamsungHealthPlugin = {
   isAvailable: () => Promise<{ available?: boolean; granted?: boolean }>;
-  requestPermissions: () => Promise<{ granted?: boolean }>;
+  requestSamsungHealthPermissions: () => Promise<{ granted?: boolean }>;
   readDailyActivitySummary: () => Promise<DailyActivitySummary>;
 };
 
@@ -71,7 +71,7 @@ export async function samsungHealthStatus(): Promise<{ available: boolean; grant
 export async function requestSamsungHealthPermissions(): Promise<boolean> {
   const plugin = samsungPlugin();
   if (!plugin) return false;
-  try { const result = await plugin.requestPermissions(); return Boolean(result.granted); } catch { return false; }
+  try { const result = await plugin.requestSamsungHealthPermissions(); return Boolean(result.granted); } catch { return false; }
 }
 
 export async function requestHealthPermissions(types = DEFAULT_HEALTH_METRICS): Promise<boolean> {
@@ -79,9 +79,6 @@ export async function requestHealthPermissions(types = DEFAULT_HEALTH_METRICS): 
   if (!bridge) return false;
   const healthConnectGranted = await bridge.requestPermissions(types);
   if (healthConnectGranted) {
-    // Samsung Health direct access is optional: request it here so the daily card can
-    // use the same consolidated totals shown by Samsung Health. If denied/unavailable,
-    // Health Connect remains the fallback and the connection still succeeds.
     await requestSamsungHealthPermissions();
   }
   return healthConnectGranted;
