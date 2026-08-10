@@ -20,7 +20,8 @@ assert(plugin.includes('@CapacitorPlugin(name = "TitanHealthConnect")'), 'Plugin
 for (const record of ['SleepSessionRecord', 'HeartRateRecord', 'StepsRecord', 'ActiveCaloriesBurnedRecord', 'ExerciseSessionRecord', 'DistanceRecord', 'BodyFatRecord']) {
   assert(plugin.includes(record), `Plugin Health Connect deve mapear ${record}`);
 }
-assert(plugin.includes('requestPermissions') && plugin.includes('readSamples'), 'Plugin nativo deve expor permissões e leitura de amostras');
+assert(plugin.includes('requestHealthPermissions') && plugin.includes('readSamples'), 'Plugin nativo deve expor permissões e leitura de amostras');
+assert(plugin.includes('CoroutineScope') && plugin.includes('Dispatchers.IO'), 'Leituras Health Connect devem executar em coroutine de IO');
 for (const permission of ['READ_SLEEP', 'READ_HEART_RATE', 'READ_STEPS', 'READ_ACTIVE_CALORIES_BURNED', 'READ_EXERCISE', 'READ_DISTANCE', 'READ_BODY_FAT']) {
   assert(manifest.includes(`android.permission.health.${permission}`), `Manifesto Health Connect deve declarar ${permission}`);
 }
