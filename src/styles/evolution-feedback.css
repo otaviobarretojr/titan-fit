@@ -1,24 +1,29 @@
 .comparison-item[data-trend-tone]{position:relative;overflow:hidden;transition:border-color .2s ease,background .2s ease,transform .2s ease}
 .comparison-item[data-trend-tone]::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 999px 999px 0;opacity:.95}
 .comparison-item[data-trend-tone] strong::before{display:inline-block;margin-right:5px;font-size:.78em;vertical-align:.08em}
-
 .comparison-item[data-trend-tone="favorable"]{background:linear-gradient(180deg,rgba(62,207,142,.08),rgba(255,255,255,.03));border-color:rgba(62,207,142,.16)}
 .comparison-item[data-trend-tone="favorable"]::before{background:#4fd39a;box-shadow:0 0 14px rgba(79,211,154,.35)}
 .comparison-item[data-trend-tone="favorable"] strong{color:#79e6b6}
 .comparison-item[data-trend-tone="favorable"][data-trend-direction="up"] strong::before{content:"▲"}
 .comparison-item[data-trend-tone="favorable"][data-trend-direction="down"] strong::before{content:"▼"}
-
 .comparison-item[data-trend-tone="unfavorable"]{background:linear-gradient(180deg,rgba(244,100,110,.075),rgba(255,255,255,.03));border-color:rgba(244,100,110,.16)}
 .comparison-item[data-trend-tone="unfavorable"]::before{background:#ef6a73;box-shadow:0 0 14px rgba(239,106,115,.3)}
 .comparison-item[data-trend-tone="unfavorable"] strong{color:#ff969d}
 .comparison-item[data-trend-tone="unfavorable"][data-trend-direction="up"] strong::before{content:"▲"}
 .comparison-item[data-trend-tone="unfavorable"][data-trend-direction="down"] strong::before{content:"▼"}
-
 .comparison-item[data-trend-tone="neutral"]{background:linear-gradient(180deg,rgba(93,151,255,.055),rgba(255,255,255,.03));border-color:rgba(113,158,231,.11)}
 .comparison-item[data-trend-tone="neutral"]::before{background:#7089ad;opacity:.55}
 .comparison-item[data-trend-tone="neutral"] strong{color:#e9f1ff}
 .comparison-item[data-trend-tone="neutral"][data-trend-direction="up"] strong::before{content:"↑";color:#91a7c4}
 .comparison-item[data-trend-tone="neutral"][data-trend-direction="down"] strong::before{content:"↓";color:#91a7c4}
 .comparison-item[data-trend-tone="neutral"][data-trend-direction="flat"] strong::before{content:"—";color:#91a7c4}
-
+.health-bio-progress{display:grid;gap:14px;margin:18px 0;padding:20px;border:1px solid rgba(118,145,178,.12);border-radius:28px;background:rgba(255,255,255,.78);box-shadow:0 10px 30px rgba(34,56,82,.06)}
+.health-bio-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.health-bio-heading h3{margin:5px 0 0;font-size:1.35rem}.health-bio-heading small{color:#7b8796;font-weight:700}
+.health-bio-periods{display:flex;gap:8px;overflow:auto;padding-bottom:2px}.health-bio-periods button{border:0;border-radius:999px;padding:9px 13px;background:#edf2f7;color:#64748b;font-weight:800;white-space:nowrap}.health-bio-periods button.active{background:#e4efff;color:#2563eb}
+.health-bio-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.health-bio-metrics>div{padding:14px;border-radius:20px;background:#f7f9fc;min-width:0}.health-bio-metrics span,.health-bio-metrics small{display:block;color:#7b8796}.health-bio-metrics span{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}.health-bio-metrics strong{display:block;margin:6px 0 4px;color:#172033;font-size:1.2rem}.health-bio-metrics small{font-size:.74rem;line-height:1.35}
+.health-bio-chart-card{padding:16px;border-radius:22px;background:#f8fafc}.health-bio-chart-card header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.health-bio-chart-card header span,.health-bio-chart-card header small{color:#7b8796}.health-bio-chart-card header strong{display:block;margin-top:3px;font-size:1.35rem;color:#172033}
+.health-bio-chart-wrap{display:grid;grid-template-columns:42px 1fr;gap:8px;height:190px}.health-bio-y{display:flex;flex-direction:column;justify-content:space-between;padding:8px 0 24px;color:#94a3b8;font-size:.68rem}.health-bio-plot{position:relative;min-width:0;height:100%}.health-bio-plot>i{position:absolute;left:0;right:0;height:1px;background:#e2e8f0}.health-bio-plot>i:nth-child(1){top:10%}.health-bio-plot>i:nth-child(2){top:47%}.health-bio-plot>i:nth-child(3){top:84%}.health-bio-plot svg{position:absolute;inset:0 0 24px;width:100%;height:calc(100% - 24px);overflow:visible}.health-bio-plot polyline{stroke:#3b82f6;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.health-bio-plot circle{fill:#fff;stroke:#3b82f6;stroke-width:2}.health-bio-x{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;color:#94a3b8;font-size:.68rem}
+.health-bio-note{margin:0;color:#7b8796;font-size:.78rem;line-height:1.5}.health-bio-empty{padding:18px;border-radius:20px;background:#f7f9fc;color:#64748b}.health-bio-empty strong{display:block;color:#26364d;margin-bottom:4px}.health-bio-empty p{margin:0}.health-bio-empty.compact{padding:28px 16px;text-align:center}
+@media(max-width:560px){.health-bio-progress{padding:16px;border-radius:24px}.health-bio-metrics{grid-template-columns:1fr 1fr}.health-bio-metrics>div:last-child{grid-column:1/-1}.health-bio-chart-wrap{height:170px}.health-bio-heading{align-items:center}.health-bio-heading h3{font-size:1.2rem}}
+@media (prefers-color-scheme:dark){.health-bio-progress{background:rgba(17,25,39,.9);border-color:rgba(148,163,184,.12)}.health-bio-metrics>div,.health-bio-chart-card,.health-bio-empty{background:rgba(255,255,255,.045)}.health-bio-metrics strong,.health-bio-chart-card header strong,.health-bio-empty strong{color:#f1f5f9}.health-bio-periods button{background:rgba(255,255,255,.06);color:#94a3b8}.health-bio-periods button.active{background:rgba(59,130,246,.16);color:#8ab7ff}.health-bio-plot>i{background:rgba(148,163,184,.14)}}
 @media (prefers-reduced-motion:reduce){.comparison-item[data-trend-tone]{transition:none}}
