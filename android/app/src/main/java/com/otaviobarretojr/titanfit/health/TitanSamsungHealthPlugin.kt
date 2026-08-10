@@ -35,19 +35,37 @@ class TitanSamsungHealthPlugin : Plugin() {
         super.handleOnDestroy()
     }
 
+    private fun errorMessage(error: Throwable): String =
+        error.message?.takeIf { it.isNotBlank() } ?: error.javaClass.simpleName
+
     @PluginMethod
     fun isAvailable(call: PluginCall) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            call.resolve(JSObject().put("available", false).put("granted", false))
+            call.resolve(
+                JSObject()
+                    .put("available", false)
+                    .put("granted", false)
+                    .put("message", "Samsung Health Data SDK requer Android 10 ou superior.")
+            )
             return
         }
         scope.launch {
             try {
                 val store = HealthDataService.getStore(context.applicationContext)
                 val granted = store.getGrantedPermissions(requiredPermissions).containsAll(requiredPermissions)
-                call.resolve(JSObject().put("available", true).put("granted", granted))
-            } catch (_: Exception) {
-                call.resolve(JSObject().put("available", false).put("granted", false))
+                call.resolve(
+                    JSObject()
+                        .put("available", true)
+                        .put("granted", granted)
+                        .put("message", if (granted) "Samsung Health autorizado." else "Samsung Health disponível, aguardando autorização.")
+                )
+            } catch (error: Exception) {
+                call.resolve(
+                    JSObject()
+                        .put("available", false)
+                        .put("granted", false)
+                        .put("message", "SDK Samsung Health indisponível: ${errorMessage(error)}")
+                )
             }
         }
     }
@@ -55,7 +73,11 @@ class TitanSamsungHealthPlugin : Plugin() {
     @PluginMethod
     fun requestSamsungHealthPermissions(call: PluginCall) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            call.resolve(JSObject().put("granted", false))
+            call.resolve(
+                JSObject()
+                    .put("granted", false)
+                    .put("message", "Samsung Health Data SDK requer Android 10 ou superior.")
+            )
             return
         }
         scope.launch {
@@ -67,9 +89,18 @@ class TitanSamsungHealthPlugin : Plugin() {
                 } else {
                     store.requestPermissions(requiredPermissions, activity)
                 }
-                call.resolve(JSObject().put("granted", granted.containsAll(requiredPermissions)))
+                val allGranted = granted.containsAll(requiredPermissions)
+                call.resolve(
+                    JSObject()
+                        .put("granted", allGranted)
+                        .put("message", if (allGranted) "Samsung Health autorizado." else "A autorização do Samsung Health não foi concedida.")
+                )
             } catch (error: Exception) {
-                call.reject("Não foi possível solicitar acesso ao Samsung Health.", error)
+                call.resolve(
+                    JSObject()
+                        .put("granted", false)
+                        .put("message", "Falha ao abrir autorização Samsung Health: ${errorMessage(error)}")
+                )
             }
         }
     }
@@ -129,7 +160,7 @@ class TitanSamsungHealthPlugin : Plugin() {
                         .put("source", "samsung-health")
                 )
             } catch (error: Exception) {
-                call.reject("Falha ao ler o resumo diário do Samsung Health.", error)
+                call.reject("Falha ao ler o resumo diário do Samsung Health: ${errorMessage(error)}", error)
             }
         }
     }
