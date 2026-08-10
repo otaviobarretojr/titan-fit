@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, readDailyActivitySummary, readHealthSamples, requestHealthPermissions } from './bridge';
+import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, readDailyActivitySummary, readHealthSamples, requestHealthPermissions, requestSamsungHealthPermissions, samsungHealthStatus, type SamsungHealthConnectionStatus } from './bridge';
 import { loadHealthSamples, loadHealthSyncStatus, mergeHealthSamples, saveHealthSyncStatus } from './repository';
 import type { DailyActivitySummary, HealthDiagnostics, HealthMetricType, HealthSample, HealthSyncStatus } from './types';
 
 const INITIAL_STATUS: HealthSyncStatus = { provider: 'health-connect', bridgeAvailable: false, permissionGranted: false };
+const INITIAL_SAMSUNG_STATUS: SamsungHealthConnectionStatus = { available: false, granted: false, message: 'Verificando Samsung Health…' };
 const METRICS: Array<{ type: HealthMetricType; label: string }> = [
   { type: 'sleep', label: 'Sono' }, { type: 'heart-rate', label: 'Frequência cardíaca' }, { type: 'steps', label: 'Passos' },
   { type: 'active-calories', label: 'Calorias ativas' }, { type: 'exercise', label: 'Exercícios' }, { type: 'distance', label: 'Distância' }, { type: 'body-composition', label: 'Composição corporal' },
@@ -14,6 +15,7 @@ const EXERCISE_LABELS: Record<number, string> = { 0:'Treino',8:'Ciclismo',9:'Bik
 
 export function SamsungHealthPage() {
   const [status,setStatus]=useState<HealthSyncStatus>(INITIAL_STATUS);
+  const [samsungStatus,setSamsungStatus]=useState<SamsungHealthConnectionStatus>(INITIAL_SAMSUNG_STATUS);
   const [samples,setSamples]=useState<HealthSample[]>([]);
   const [dailySummary,setDailySummary]=useState<DailyActivitySummary|null>(null);
   const [diagnostics,setDiagnostics]=useState<HealthDiagnostics|null>(null);
@@ -21,12 +23,14 @@ export function SamsungHealthPage() {
   const [showWeeklyWorkouts,setShowWeeklyWorkouts]=useState(false);
 
   async function refreshLocalState(){
-    const [available,savedStatus,savedSamples]=await Promise.all([
+    const [available,savedStatus,savedSamples,directSamsungStatus]=await Promise.all([
       healthConnectAvailable(),
       loadHealthSyncStatus().catch(()=>null),
       loadHealthSamples().catch(()=>[]),
+      samsungHealthStatus(),
     ]);
     setStatus({...(savedStatus??INITIAL_STATUS),bridgeAvailable:available});
+    setSamsungStatus(directSamsungStatus);
     setSamples(savedSamples);
     if(available){
       const summary=await readDailyActivitySummary();
@@ -52,21 +56,30 @@ export function SamsungHealthPage() {
     if(summary)setDailySummary(summary);
   }
 
-  async function connect(){
+  async function connectHealthConnect(){
     setBusy(true);
     try{
       const available=await healthConnectAvailable();
       if(!available){
-        const next={...status,bridgeAvailable:false,message:'O TITAN está preparado. A leitura real será liberada pela camada Android com Health Connect.'};
+        const next={...status,bridgeAvailable:false,message:'Health Connect não está disponível neste aparelho.'};
         setStatus(next);
         await saveHealthSyncStatus(next).catch(()=>undefined);
         return;
       }
       const granted=await requestHealthPermissions();
-      const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões de saúde não foram concedidas.'};
+      const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões do Health Connect não foram concedidas.'};
       setStatus(next);
       await saveHealthSyncStatus(next);
       if(granted)await refreshDailyActivity();
+    }finally{setBusy(false)}
+  }
+
+  async function connectSamsungHealth(){
+    setBusy(true);
+    try{
+      const result=await requestSamsungHealthPermissions();
+      setSamsungStatus(result);
+      if(result.granted)await refreshDailyActivity();
     }finally{setBusy(false)}
   }
 
@@ -74,11 +87,18 @@ export function SamsungHealthPage() {
     setBusy(true);
     try {
       if (!status.bridgeAvailable || !status.permissionGranted) {
-        await connect();
-        return;
+        const available=await healthConnectAvailable();
+        if(!available){
+          setStatus({...status,bridgeAvailable:false,message:'Health Connect não está disponível neste aparelho.'});
+          return;
+        }
+        const granted=await requestHealthPermissions();
+        const next={...status,bridgeAvailable:true,permissionGranted:granted,message:granted?'Health Connect conectado ao TITAN.':'Permissões do Health Connect não foram concedidas.'};
+        setStatus(next);
+        await saveHealthSyncStatus(next);
+        if(!granted)return;
       }
 
-      // Primeira leitura sem amostras locais: não use cursor antigo; peça o backfill completo.
       const needsBackfill = samples.length === 0;
       const incrementalSince = needsBackfill ? undefined : status.lastSyncAt;
       const diagnosticSince = new Date(Date.now() - DIAGNOSTIC_WINDOW_MS).toISOString();
@@ -86,12 +106,14 @@ export function SamsungHealthPage() {
       const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, incrementalSince);
       const merged = await mergeHealthSamples(incoming);
       const diagnosticResult = await diagnoseHealthData(DEFAULT_HEALTH_METRICS, diagnosticSince).catch(() => null);
+      const directStatus = await samsungHealthStatus();
       const aggregatedToday = await readDailyActivitySummary();
       const now = new Date().toISOString();
 
-      // Só avance o cursor quando realmente houver dados novos recebidos.
       const next: HealthSyncStatus = {
         ...status,
+        bridgeAvailable:true,
+        permissionGranted:true,
         lastSyncAt: incoming.length > 0 ? now : status.lastSyncAt,
         lastSyncCount: incoming.length,
         message: incoming.length > 0
@@ -102,6 +124,7 @@ export function SamsungHealthPage() {
       };
 
       setSamples(merged);
+      setSamsungStatus(directStatus);
       if(aggregatedToday)setDailySummary(aggregatedToday);
       setDiagnostics(diagnosticResult);
       setStatus(next);
@@ -111,8 +134,11 @@ export function SamsungHealthPage() {
     }
   }
 
+  const sourceLabel=dailyActivity.source==='samsung-health'?'Samsung Health direto':'Health Connect';
+  const overallConnected=status.permissionGranted||samsungStatus.granted;
+
   return <div className="page-stack samsung-health-page health-dashboard-page">
-    <section className="health-hero" aria-labelledby="samsung-health-title"><div><span className="eyebrow">GALAXY WATCH + HEALTH CONNECT</span><h2 id="samsung-health-title">Saúde</h2><p>Atividade, treinos e sinais recebidos do seu relógio.</p></div><span className={`health-connection-badge ${status.permissionGranted?'connected':''}`}>{status.permissionGranted?'Conectado':'Desconectado'}</span></section>
+    <section className="health-hero" aria-labelledby="samsung-health-title"><div><span className="eyebrow">GALAXY WATCH + SAMSUNG HEALTH</span><h2 id="samsung-health-title">Saúde</h2><p>Atividade, treinos e sinais recebidos do seu relógio.</p></div><span className={`health-connection-badge ${overallConnected?'connected':''}`}>{overallConnected?'Conectado':'Desconectado'}</span></section>
 
     <section className="health-daily-card health-daily-card-v2" aria-label="Atividade diária">
       <div className="health-daily-title"><h3>Atividade diária</h3><span>{new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}).replace('.','')}</span></div>
@@ -125,14 +151,16 @@ export function SamsungHealthPage() {
         <ActivityRings steps={dailyActivity.steps} minutes={dailyActivity.activeMinutes} calories={dailyActivity.activeCalories} />
       </div>
       <div className="health-daily-footer"><span>{formatDistance(dailyActivity.distanceMeters)} hoje</span><strong>{dailyProgress(dailyActivity.steps,dailyActivity.activeMinutes,dailyActivity.activeCalories)}% da meta diária</strong></div>
-      {dailySummary&&<small className="health-daily-source">Passos e totais consolidados pelo Health Connect. Tempo ativo corresponde ao tempo de exercícios disponível no Health Connect.</small>}
+      <small className="health-daily-source">Fonte atual: {sourceLabel}.{dailyActivity.source==='samsung-health'?' Passos, tempo ativo, calorias e distância vêm do resumo diário do Samsung Health.':' O TITAN está usando o fallback do Health Connect.'}</small>
     </section>
 
     <button type="button" className={`health-week-card ${showWeeklyWorkouts?'open':''}`} onClick={()=>setShowWeeklyWorkouts(v=>!v)} aria-expanded={showWeeklyWorkouts}><div className="health-card-heading"><div><span className="info-label">ESTA SEMANA</span><h3>Treinos da semana</h3></div><span className="health-chevron" aria-hidden="true">›</span></div><div className="health-week-summary"><div><strong>{formatDuration(healthSummary.weekExerciseMinutes)}</strong><span>{healthSummary.weekExercises.length} {healthSummary.weekExercises.length===1?'sessão':'sessões'}</span></div><div className="health-week-bars" aria-hidden="true">{healthSummary.weekDays.map(day=><span key={day.key} className={day.hasExercise?'active':''}><i style={{height:`${Math.max(8,Math.min(48,day.minutes*1.7))}px`}}/><small>{day.label}</small></span>)}</div></div></button>
     {showWeeklyWorkouts&&<section className="health-workout-list" aria-label="Detalhes dos treinos da semana"><div className="health-card-heading"><div><span className="info-label">SESSÕES REGISTRADAS</span><h3>Atividades</h3></div></div>{healthSummary.weekExercises.length?healthSummary.weekExercises.map(exercise=>{const detail=enrichExercise(exercise,samples);return <article key={exercise.id} className="health-workout-row"><span className="health-workout-icon" aria-hidden="true">{exerciseIcon(detail.label)}</span><div className="health-workout-copy"><strong>{detail.label}</strong><span>{new Date(exercise.startedAt).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'})} · {formatDuration(exercise.value)}</span><small>{[detail.distanceMeters>0?formatDistance(detail.distanceMeters):'',detail.calories>0?`${Math.round(detail.calories)} kcal`:''].filter(Boolean).join(' · ')||'Sessão registrada pelo Health Connect'}</small></div><span className="health-source-badge">{friendlySource(exercise.source)}</span></article>}):<div className="health-empty-state">Nenhum treino registrado nesta semana.</div>}</section>}
-    <section className="health-sync-card" aria-label="Sincronização Samsung Health"><div className="health-sync-copy"><span className="info-label">SINCRONIZAÇÃO</span><strong>{status.bridgeAvailable?(status.permissionGranted?'Health Connect conectado':'Health Connect disponível'):'Aguardando ponte Android'}</strong>{status.lastSyncAt&&<small>Últimos dados: {new Date(status.lastSyncAt).toLocaleString('pt-BR')}</small>}{status.message&&<small role="status">{status.message}</small>}</div><button type="button" className="primary-action" disabled={busy} onClick={()=>void syncNow()}>{busy?'Sincronizando…':'Sincronizar agora'}</button>{!status.permissionGranted&&<button type="button" className="secondary-action" disabled={busy} onClick={()=>void connect()}>Conectar Health Connect</button>}</section>
+
+    <section className="health-sync-card" aria-label="Sincronização Samsung Health"><div className="health-sync-copy"><span className="info-label">SINCRONIZAÇÃO</span><strong>Samsung Health: {samsungStatus.granted?'autorizado':samsungStatus.available?'aguardando autorização':'indisponível'}</strong><small>{samsungStatus.message??'Sem diagnóstico do Samsung Health.'}</small><strong>Health Connect: {status.permissionGranted?'conectado':status.bridgeAvailable?'disponível':'indisponível'}</strong>{status.lastSyncAt&&<small>Últimos dados: {new Date(status.lastSyncAt).toLocaleString('pt-BR')}</small>}{status.message&&<small role="status">{status.message}</small>}<small>Fonte do card diário: {sourceLabel}.</small></div><button type="button" className="primary-action" disabled={busy} onClick={()=>void syncNow()}>{busy?'Sincronizando…':'Sincronizar agora'}</button>{!samsungStatus.granted&&<button type="button" className="secondary-action" disabled={busy} onClick={()=>void connectSamsungHealth()}>Autorizar Samsung Health</button>}{!status.permissionGranted&&<button type="button" className="secondary-action" disabled={busy} onClick={()=>void connectHealthConnect()}>Conectar Health Connect</button>}</section>
+
     <section className="health-signals-card" aria-label="Resumo do relógio"><div className="health-card-heading"><div><span className="info-label">SINAIS DO RELÓGIO</span><h3>Resumo mais recente</h3></div></div><div className="health-signal-grid">{(['sleep','heart-rate','body-composition'] as HealthMetricType[]).map(type=>{const sample=latestByType.get(type);const label=METRICS.find(item=>item.type===type)?.label??type;return <div key={type}><span>{label}</span><strong>{sample?formatSample(sample):'Sem dados'}</strong>{sample&&<small>{new Date(sample.startedAt).toLocaleDateString('pt-BR')}</small>}</div>})}</div></section>
-    <details className="health-diagnostics-panel"><summary>Diagnóstico avançado</summary><div className="health-diagnostics-body">{diagnostics?<><div><span className="info-label">HEALTH CONNECT</span><strong>{diagnostics.totalRecords} registros disponíveis em 30 dias</strong><small>Período: {new Date(diagnostics.from).toLocaleDateString('pt-BR')} até {new Date(diagnostics.to).toLocaleDateString('pt-BR')}.</small></div>{METRICS.map(({type,label})=>{const metric=diagnostics.metrics.find(item=>item.type===type);return <div key={type} className="health-metric-row"><span>{label}</span><strong>{metric?.error?'Erro na leitura':`${metric?.count??0} registros`}</strong>{metric?.sources.length?<small>Origem: {metric.sources.join(', ')}</small>:<small>{metric?.error??'Nenhuma origem encontrada.'}</small>}{metric?.newestAt&&<small>Mais recente: {new Date(metric.newestAt).toLocaleString('pt-BR')}</small>}</div>})}</>:<small>Sincronize para gerar o diagnóstico detalhado.</small>}</div></details>
+    <details className="health-diagnostics-panel"><summary>Diagnóstico avançado</summary><div className="health-diagnostics-body"><div><span className="info-label">SAMSUNG HEALTH DIRETO</span><strong>{samsungStatus.granted?'Autorizado':samsungStatus.available?'Disponível sem autorização':'Indisponível'}</strong><small>{samsungStatus.message??'Sem mensagem.'}</small><small>Fonte do resumo diário: {sourceLabel}.</small></div>{diagnostics?<><div><span className="info-label">HEALTH CONNECT</span><strong>{diagnostics.totalRecords} registros disponíveis em 30 dias</strong><small>Período: {new Date(diagnostics.from).toLocaleDateString('pt-BR')} até {new Date(diagnostics.to).toLocaleDateString('pt-BR')}.</small></div>{METRICS.map(({type,label})=>{const metric=diagnostics.metrics.find(item=>item.type===type);return <div key={type} className="health-metric-row"><span>{label}</span><strong>{metric?.error?'Erro na leitura':`${metric?.count??0} registros`}</strong>{metric?.sources.length?<small>Origem: {metric.sources.join(', ')}</small>:<small>{metric?.error??'Nenhuma origem encontrada.'}</small>}{metric?.newestAt&&<small>Mais recente: {new Date(metric.newestAt).toLocaleString('pt-BR')}</small>}</div>})}</>:<small>Sincronize para gerar o diagnóstico detalhado do Health Connect.</small>}</div></details>
   </div>;
 }
 
