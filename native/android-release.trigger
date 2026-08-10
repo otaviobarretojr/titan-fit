@@ -1,1 +1,1 @@
-release-v0.52.4-samsung-health-direct
+release-v0.52.5-samsung-health-minsdk29
