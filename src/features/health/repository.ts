@@ -23,5 +23,6 @@ export async function mergeHealthSamples(samples: HealthSample[]): Promise<Healt
   samples.forEach((sample) => byId.set(sample.id, sample));
   const merged = [...byId.values()].sort((a, b) => a.startedAt.localeCompare(b.startedAt));
   await putRecord(STORE_NAMES.preferences, SAMPLES_ID, merged);
+  window.dispatchEvent(new CustomEvent('titan:health-changed', { detail: { count: merged.length } }));
   return merged;
 }
