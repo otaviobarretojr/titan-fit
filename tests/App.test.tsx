@@ -17,14 +17,14 @@ describe('TITAN FIT', () => {
     expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
   });
 
-  it('usa Saúde na navegação e mantém cardio fora da barra principal', () => {
+  it('usa a navegação principal consolidada e integra evolução em Saúde', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     expect(nav.getByRole('button', { name: /^Hoje$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Treinos$/i })).toBeInTheDocument();
+    expect(nav.getByRole('button', { name: /^Programação$/i })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Saúde$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Progresso$/i })).toBeInTheDocument();
     expect(nav.getByRole('button', { name: /^Ajustes$/i })).toBeInTheDocument();
+    expect(nav.queryByRole('button', { name: /^Progresso$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Histórico$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Projeto$/i })).not.toBeInTheDocument();
@@ -34,8 +34,14 @@ describe('TITAN FIT', () => {
     expect(screen.getByRole('heading', { name: 'Saúde' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sincronizar agora' })).toBeEnabled();
     expect(screen.getByRole('region', { name: 'Resumo do relógio' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Visão geral' })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getByRole('tab', { name: 'Evolução' }));
+    expect(screen.getByRole('tab', { name: 'Corpo' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Treino' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Nutrição' }));
+    expect(screen.getByText('Sem plano nutricional ativo')).toBeInTheDocument();
 
-    fireEvent.click(nav.getByRole('button', { name: /^Treinos$/i }));
+    fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
     expect(screen.getByRole('heading', { name: 'Nenhum projeto de treino ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();

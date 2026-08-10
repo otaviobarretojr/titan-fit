@@ -6,8 +6,7 @@ import { migrateLegacyStorage } from '../core/database/migrateLegacyStorage';
 import { resetAllAppData } from '../core/database/resetAppData';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { demoPlan, isDemoMode, loadFullDemo } from '../features/demo/fullDemo';
-import { SamsungHealthPage } from '../features/health/SamsungHealthPage';
-import { ProgressPage } from '../features/history/ProgressPage';
+import { HealthHubPage } from '../features/health/HealthHubPage';
 import { NutritionProgramPanel } from '../features/nutrition/NutritionProgramPanel';
 import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
@@ -20,22 +19,22 @@ import type { TitanProfile, TitanTrainingAssessment } from '../features/profile/
 import { ProgrammingPage } from '../features/programming/ProgrammingPage';
 import { ProjectManagementPanel } from '../features/project/ProjectManagementPanel';
 
-type TabId = 'today' | 'programming' | 'health' | 'progress' | 'settings' | 'workout';
+type TabId = 'today' | 'programming' | 'health' | 'settings' | 'workout';
 type NavigationTab = Exclude<TabId, 'workout'>;
 type GenerationContext = { profile: TitanProfile; assessment: TitanTrainingAssessment };
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
 const APP_VERSION = packageInfo.version;
 const tabs: Array<{ id: NavigationTab; label: string }> = [
   { id: 'today', label: 'Hoje' },
-  { id: 'programming', label: 'Treinos' },
+  { id: 'programming', label: 'Programação' },
   { id: 'health', label: 'Saúde' },
-  { id: 'progress', label: 'Progresso' },
   { id: 'settings', label: 'Ajustes' },
 ];
-function isTabId(value: unknown): value is TabId { return value === 'workout' || tabs.some((tab) => tab.id === value); }
+function isCurrentTabId(value: unknown): value is TabId { return value === 'workout' || tabs.some((tab) => tab.id === value); }
+function normalizeTabId(value: unknown): TabId { if (value === 'progress') return 'health'; return isCurrentTabId(value) ? value : 'today'; }
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<TabId>(() => isTabId(window.history.state?.titanTab) ? window.history.state.titanTab : 'today');
+  const [activeTab, setActiveTab] = useState<TabId>(() => normalizeTabId(window.history.state?.titanTab));
   const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
   const [showImporter, setShowImporter] = useState(false);
   const [generationContext, setGenerationContext] = useState<GenerationContext | null>(null);
@@ -53,7 +52,7 @@ export function App() {
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
     const clearTransientNavigation = () => { setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); };
     const handlePopState = (event: PopStateEvent) => {
-      const nextTab = isTabId(event.state?.titanTab) ? event.state.titanTab : 'today';
+      const nextTab = normalizeTabId(event.state?.titanTab);
       setActiveTab(nextTab);
       clearTransientNavigation();
     };
@@ -63,9 +62,10 @@ export function App() {
       window.history.replaceState({ ...currentState, titanRoot: true, titanTab: 'today' }, '');
       window.history.pushState({ titanRoot: true, titanGuard: true, titanTab: 'today' }, '');
       setActiveTab('today');
-    } else if (!isTabId(currentState.titanTab)) {
-      window.history.replaceState({ ...currentState, titanRoot: true, titanTab: 'today' }, '');
-      setActiveTab('today');
+    } else {
+      const normalizedTab = normalizeTabId(currentState.titanTab);
+      if (normalizedTab !== currentState.titanTab) window.history.replaceState({ ...currentState, titanRoot: true, titanTab: normalizedTab }, '');
+      setActiveTab(normalizedTab);
     }
 
     window.addEventListener('online', updateConnection);
@@ -123,8 +123,7 @@ export function App() {
     <main className="app-main">
       {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openProjectSettings} onStartWorkout={startWorkout} />}
       {activeTab === 'programming' && <ProgrammingPage plan={activePlan} />}
-      {activeTab === 'health' && <SamsungHealthPage />}
-      {activeTab === 'progress' && <ProgressPage refreshKey={historyRefresh} />}
+      {activeTab === 'health' && <HealthHubPage refreshKey={historyRefresh} />}
       {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); setGenerationContext(null); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} />}
       {activeTab === 'settings' && generationContext && <PlanCandidatesPage profile={generationContext.profile} assessment={generationContext.assessment} onActivate={finishNewPlanActivation} onCancel={() => setGenerationContext(null)} />}
       {activeTab === 'settings' && !generationContext && <><EmptyPage title="Configurações" body="Projeto, perfil, dados, backup, instalação e manutenção do TITAN FIT." />
@@ -148,7 +147,6 @@ function NavIcon({ id }: { id: NavigationTab }) {
   if (id === 'today') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>;
   if (id === 'programming') return <svg className="nav-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M8 14h2M14 14h2M8 18h2"/></svg>;
   if (id === 'health') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/><path d="M3.5 13h4l1.5-3 2.5 6 2-4h7"/></svg>;
-  if (id === 'progress') return <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 18 9 13l3.5 3.5L20 8"/><path d="M15 8h5v5"/></svg>;
   return <svg className="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.5v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.5h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4.1v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8c.14.42.36.77.6 1 .3.27.68.4 1.1.4h.1v4.1h-.1A1.7 1.7 0 0 0 19.4 15Z"/></svg>;
 }
 function EmptyPage({ title, body }: { title: string; body: string }) { return <section className="hero-card compact" aria-labelledby="page-title"><span className="eyebrow">TREINE. REGISTRE. EVOLUA.</span><h2 id="page-title">{title}</h2><p>{body}</p></section>; }

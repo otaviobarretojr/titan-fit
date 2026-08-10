@@ -10,10 +10,9 @@ type Period = typeof PERIODS[number];
 export function NutritionEvolutionPanel() {
   const [period, setPeriod] = useState<Period>(7);
   const plan = loadActiveNutritionPlan();
-  const executions = loadNutritionExecutions();
   const target = plan?.defaultTarget;
 
-  const days = useMemo(() => buildDays(period, target), [period, target]);
+  const days = useMemo(() => buildDays(period), [period]);
   const recorded = days.filter(day => day.hasData);
   const adherence = target && recorded.length
     ? Math.round(recorded.filter(day => withinRange(day.totals.caloriesKcal, target.caloriesKcal)).length / recorded.length * 100)
@@ -41,7 +40,7 @@ export function NutritionEvolutionPanel() {
   </div>;
 }
 
-function buildDays(period: Period, target?: NutritionMacroTotals) {
+function buildDays(period: Period) {
   const executions = loadNutritionExecutions();
   const dates = new Set(executions.map(item => item.date));
   return Array.from({length:period},(_,index)=>{
@@ -49,7 +48,7 @@ function buildDays(period: Period, target?: NutritionMacroTotals) {
     date.setHours(12,0,0,0);
     date.setDate(date.getDate() - (period - 1 - index));
     const key = todayKey(date);
-    return {date:key,label:date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),shortLabel:period === 7 ? date.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','').slice(0,3) : String(date.getDate()).padStart(2,'0'),totals:nutritionTotalsForDate(key),hasData:dates.has(key),target};
+    return {date:key,label:date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),shortLabel:period === 7 ? date.toLocaleDateString('pt-BR',{weekday:'short'}).replace('.','').slice(0,3) : String(date.getDate()).padStart(2,'0'),totals:nutritionTotalsForDate(key),hasData:dates.has(key)};
   });
 }
 function withinRange(value:number,target:number){return target>0 && value>=target*.9 && value<=target*1.1}

@@ -1,4 +1,4 @@
-/* TITAN FIT v0.51.11 — definitive compact Android bottom navigation */
+/* TITAN FIT v0.53.3 — definitive compact Android bottom navigation */
 
 .bottom-navigation {
   position: fixed !important;
@@ -13,7 +13,7 @@
   margin: 0 auto !important;
   transform: none !important;
   display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   align-items: center !important;
   gap: 0 !important;
   box-sizing: border-box !important;
