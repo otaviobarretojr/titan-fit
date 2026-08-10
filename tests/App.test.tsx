@@ -40,6 +40,8 @@ describe('TITAN FIT', () => {
     fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
+    expect(screen.getByRole('region', { name: 'Programação nutricional' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Baixar modelo de dieta TITAN' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar todos os dados' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
