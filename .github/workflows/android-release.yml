@@ -27,6 +27,31 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Require Android signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.TITAN_ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.TITAN_ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo 'ERRO: assinatura permanente do TITAN FIT não está configurada.'
+            echo 'Cadastre TITAN_ANDROID_KEYSTORE_B64 e TITAN_ANDROID_KEYSTORE_PASSWORD nos Actions Secrets.'
+            exit 1
+          fi
+
+      - name: Restore TITAN signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.TITAN_ANDROID_KEYSTORE_B64 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/titan-signing"
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/titan-signing/titan-fit-upload.p12"
+          chmod 600 "$RUNNER_TEMP/titan-signing/titan-fit-upload.p12"
+          echo "TITAN_ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/titan-signing/titan-fit-upload.p12" >> "$GITHUB_ENV"
+
+      - name: Export signing password
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.TITAN_ANDROID_KEYSTORE_PASSWORD }}
+        run: echo "TITAN_ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+
       - name: Install dependencies
         run: npm ci
 
@@ -50,15 +75,20 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
 
-      - name: Compile debug APK
+      - name: Compile signed release APK
         working-directory: android
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Verify APK signature
+        run: |
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
+          "$APKSIGNER" verify --verbose --print-certs android/app/build/outputs/apk/release/app-release.apk
 
       - name: Prepare release package
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          cp android/app/build/outputs/apk/debug/app-debug.apk "TITAN-FIT-v${VERSION}-android-test.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "TITAN-FIT-v${VERSION}-android-test.apk"
           sha256sum "TITAN-FIT-v${VERSION}-android-test.apk" > "TITAN-FIT-v${VERSION}-android-test.apk.sha256"
 
       - name: Publish GitHub Release
@@ -73,5 +103,5 @@ jobs:
           else
             gh release create "$TAG" "$APK" "$CHECKSUM" \
               --title "TITAN FIT v${VERSION} — Android Test" \
-              --notes "Build Android corrigido para execução nativa via Capacitor, separado do caminho do GitHub Pages. Inclui ponte Kotlin para Health Connect e leitura dos dados Samsung Health autorizados pelo usuário."
+              --notes "Build Android assinado com a chave permanente do TITAN FIT. Atualizações futuras usam a mesma identidade de assinatura para preservar dados locais."
           fi
