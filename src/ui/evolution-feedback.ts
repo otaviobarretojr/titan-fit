@@ -41,9 +41,7 @@ function dailyBodyFat(samples: HealthSample[]): DailyBodyFat[] {
     if (sample.type !== 'body-composition' || !Number.isFinite(sample.value)) continue;
     const date = sample.startedAt.slice(0, 10);
     const current = byDay.get(date);
-    if (!current || sample.startedAt > current.recordedAt) {
-      byDay.set(date, { date, recordedAt: sample.startedAt, value: sample.value, source: sample.source });
-    }
+    if (!current || sample.startedAt > current.recordedAt) byDay.set(date, { date, recordedAt: sample.startedAt, value: sample.value, source: sample.source });
   }
   return [...byDay.values()].sort((a, b) => a.recordedAt.localeCompare(b.recordedAt));
 }
@@ -60,13 +58,8 @@ function sourceLabel(source?: string) {
   return source.includes('healthconnect') ? 'Health Connect' : 'Relógio';
 }
 
-function periodLabel(period: Period) {
-  return period === 'all' ? 'Tudo' : period === 90 ? '3 meses' : `${period} dias`;
-}
-
-function formatDay(value: string) {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(`${value}T12:00:00`));
-}
+function periodLabel(period: Period) { return period === 'all' ? 'Tudo' : period === 90 ? '3 meses' : `${period} dias`; }
+function formatDay(value: string) { return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(`${value}T12:00:00`)); }
 
 function buildPolyline(values: DailyBodyFat[]) {
   if (!values.length) return { points: '', dots: '', min: 0, max: 0 };
@@ -78,25 +71,13 @@ function buildPolyline(values: DailyBodyFat[]) {
   const floor = min - padding;
   const ceiling = max + padding;
   const range = ceiling - floor;
-  const points = values.map((item, index) => {
-    const x = 7 + (index / Math.max(values.length - 1, 1)) * 86;
-    const y = 88 - ((item.value - floor) / range) * 72;
-    return { ...item, x, y };
-  });
-  return {
-    points: points.map((point) => `${point.x},${point.y}`).join(' '),
-    dots: points.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="2.4"><title>${formatDay(point.date)} · ${point.value.toFixed(1)}%</title></circle>`).join(''),
-    min,
-    max,
-  };
+  const points = values.map((item, index) => ({ ...item, x: 7 + (index / Math.max(values.length - 1, 1)) * 86, y: 88 - ((item.value - floor) / range) * 72 }));
+  return { points: points.map((point) => `${point.x},${point.y}`).join(' '), dots: points.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="2.4"><title>${formatDay(point.date)} · ${point.value.toFixed(1)}%</title></circle>`).join(''), min, max };
 }
 
 function renderBioimpedanceSection(values: DailyBodyFat[]) {
   const bodyPage = document.querySelector<HTMLElement>('.body-evolution');
-  if (!bodyPage) {
-    document.getElementById('titan-health-bioimpedance-progress')?.remove();
-    return;
-  }
+  if (!bodyPage) { document.getElementById('titan-health-bioimpedance-progress')?.remove(); return; }
 
   const filtered = filterPeriod(values, activePeriod);
   let section = document.getElementById('titan-health-bioimpedance-progress');
@@ -104,12 +85,12 @@ function renderBioimpedanceSection(values: DailyBodyFat[]) {
     section = document.createElement('section');
     section.id = 'titan-health-bioimpedance-progress';
     section.className = 'health-bio-progress';
-    const anchor = bodyPage.querySelector('.latest-assessment-card, .body-dashboard-empty');
-    if (anchor) anchor.insertAdjacentElement('afterend', section); else bodyPage.append(section);
+    const hero = bodyPage.querySelector('.evolution-hero');
+    if (hero) hero.insertAdjacentElement('afterend', section); else bodyPage.prepend(section);
   }
 
   if (!values.length) {
-    section.innerHTML = `<div class="health-bio-heading"><div><span class="eyebrow">BIOIMPEDÂNCIA DO RELÓGIO</span><h3>Composição corporal</h3></div></div><div class="health-bio-empty"><strong>Sem medições sincronizadas ainda</strong><p>Quando uma medição de gordura corporal chegar pelo Samsung Health/Health Connect, ela aparecerá aqui por data.</p></div>`;
+    section.innerHTML = `<div class="health-bio-heading"><div><span class="eyebrow">BIOIMPEDÂNCIA AUTOMÁTICA</span><h3>Composição corporal</h3></div></div><div class="health-bio-empty"><strong>Sem medições sincronizadas ainda</strong><p>Meça pelo Galaxy Watch e sincronize a aba Saúde. O TITAN registra a evolução automaticamente, sem digitação manual.</p></div>`;
     return;
   }
 
@@ -124,60 +105,36 @@ function renderBioimpedanceSection(values: DailyBodyFat[]) {
   const periodButtons: Period[] = [7, 30, 90, 'all'];
 
   section.innerHTML = `
-    <div class="health-bio-heading">
-      <div><span class="eyebrow">BIOIMPEDÂNCIA DO RELÓGIO</span><h3>Composição corporal</h3></div>
-      <small>${values.length} ${values.length === 1 ? 'dia medido' : 'dias medidos'}</small>
-    </div>
-    <div class="health-bio-periods" role="group" aria-label="Período do gráfico">
-      ${periodButtons.map((period) => `<button type="button" data-bio-period="${period}" class="${activePeriod === period ? 'active' : ''}">${periodLabel(period)}</button>`).join('')}
-    </div>
+    <div class="health-bio-heading"><div><span class="eyebrow">BIOIMPEDÂNCIA AUTOMÁTICA</span><h3>Composição corporal</h3><p>Sincronizada pelo relógio</p></div><small>${values.length} ${values.length === 1 ? 'dia medido' : 'dias medidos'}</small></div>
+    <div class="health-bio-periods" role="group" aria-label="Período do gráfico">${periodButtons.map((period) => `<button type="button" data-bio-period="${period}" class="${activePeriod === period ? 'active' : ''}">${periodLabel(period)}</button>`).join('')}</div>
     <div class="health-bio-metrics">
-      <div><span>Última medição</span><strong>${latest.value.toFixed(1)}%</strong><small>${formatDay(latest.date)} · ${sourceLabel(latest.source)}</small></div>
+      <div><span>Gordura corporal</span><strong>${latest.value.toFixed(1)}%</strong><small>${formatDay(latest.date)} · ${sourceLabel(latest.source)}</small></div>
       <div><span>Vs. anterior</span><strong>${variation === null ? '—' : `${variation > 0 ? '+' : ''}${variation.toFixed(1)} p.p.`}</strong><small>${previous ? `${formatDay(previous.date)} → ${formatDay(latest.date)}` : 'Aguardando outra medição'}</small></div>
       <div><span>Tendência</span><strong>${trend}</strong><small>${periodVariation === null ? 'Base inicial' : `${periodVariation > 0 ? '+' : ''}${periodVariation.toFixed(1)} p.p. no período`}</small></div>
     </div>
-    <article class="health-bio-chart-card">
-      <header><div><span>Gordura corporal</span><strong>${latest.value.toFixed(1)}%</strong></div><small>${periodLabel(activePeriod)}</small></header>
+    <article class="health-bio-chart-card"><header><div><span>Evolução diária</span><strong>${latest.value.toFixed(1)}%</strong></div><small>${periodLabel(activePeriod)}</small></header>
       ${visible.length > 1 ? `<div class="health-bio-chart-wrap"><div class="health-bio-y"><span>${graph.max.toFixed(1)}%</span><span>${((graph.max + graph.min) / 2).toFixed(1)}%</span><span>${graph.min.toFixed(1)}%</span></div><div class="health-bio-plot"><i></i><i></i><i></i><svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Evolução diária da gordura corporal"><polyline points="${graph.points}" fill="none" vector-effect="non-scaling-stroke"></polyline>${graph.dots}</svg><div class="health-bio-x"><span>${formatDay(visible[0].date)}</span><span>${formatDay(visible[Math.floor((visible.length - 1) / 2)].date)}</span><span>${formatDay(latest.date)}</span></div></div></div>` : `<div class="health-bio-empty compact"><p>Uma segunda medição libera a linha de tendência.</p></div>`}
     </article>
-    <p class="health-bio-note">Bioimpedância é exibida como tendência. Hidratação, alimentação e horário podem alterar uma medição isolada.</p>`;
+    <p class="health-bio-note">A bioimpedância do relógio é usada como tendência. Hidratação, alimentação e horário podem alterar uma medição isolada.</p>`;
 
-  section.querySelectorAll<HTMLButtonElement>('[data-bio-period]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const raw = button.dataset.bioPeriod;
-      activePeriod = raw === 'all' ? 'all' : Number(raw) as 7 | 30 | 90;
-      renderBioimpedanceSection(values);
-    });
-  });
+  section.querySelectorAll<HTMLButtonElement>('[data-bio-period]').forEach((button) => button.addEventListener('click', () => { const raw = button.dataset.bioPeriod; activePeriod = raw === 'all' ? 'all' : Number(raw) as 7 | 30 | 90; renderBioimpedanceSection(values); }));
 }
 
 async function refreshBioimpedanceProgress() {
   if (!document.querySelector('.body-evolution')) return;
-  try {
-    const samples = await loadHealthSamples();
-    renderBioimpedanceSection(dailyBodyFat(samples));
-  } catch {
-    renderBioimpedanceSection([]);
-  }
+  try { renderBioimpedanceSection(dailyBodyFat(await loadHealthSamples())); } catch { renderBioimpedanceSection([]); }
 }
 
 function queueBioimpedanceRender() {
   if (bioimpedanceRenderQueued) return;
   bioimpedanceRenderQueued = true;
-  window.setTimeout(() => {
-    bioimpedanceRenderQueued = false;
-    void refreshBioimpedanceProgress();
-  }, 80);
+  window.setTimeout(() => { bioimpedanceRenderQueued = false; void refreshBioimpedanceProgress(); }, 80);
 }
 
 export function enableEvolutionFeedback() {
   if (typeof document === 'undefined') return;
   decorateComparisonCards();
   queueBioimpedanceRender();
-
-  const observer = new MutationObserver(() => {
-    decorateComparisonCards();
-    queueBioimpedanceRender();
-  });
+  const observer = new MutationObserver(() => { decorateComparisonCards(); queueBioimpedanceRender(); });
   observer.observe(document.body, { childList: true, subtree: true });
 }
