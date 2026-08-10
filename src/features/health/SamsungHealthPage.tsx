@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DEFAULT_HEALTH_METRICS, healthConnectAvailable, readHealthSamples, requestHealthPermissions } from './bridge';
+import { DEFAULT_HEALTH_METRICS, diagnoseHealthData, healthConnectAvailable, readHealthSamples, requestHealthPermissions } from './bridge';
 import { loadHealthSamples, loadHealthSyncStatus, mergeHealthSamples, saveHealthSyncStatus } from './repository';
-import type { HealthMetricType, HealthSample, HealthSyncStatus } from './types';
+import type { HealthDiagnostics, HealthMetricType, HealthSample, HealthSyncStatus } from './types';
 
 const INITIAL_STATUS: HealthSyncStatus = {
   provider: 'health-connect',
@@ -19,9 +19,12 @@ const METRICS: Array<{ type: HealthMetricType; label: string }> = [
   { type: 'body-composition', label: 'Composição corporal' },
 ];
 
+const DIAGNOSTIC_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
 export function SamsungHealthPage() {
   const [status, setStatus] = useState<HealthSyncStatus>(INITIAL_STATUS);
   const [samples, setSamples] = useState<HealthSample[]>([]);
+  const [diagnostics, setDiagnostics] = useState<HealthDiagnostics | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function refreshLocalState() {
@@ -82,15 +85,26 @@ export function SamsungHealthPage() {
         await connect();
         return;
       }
-      const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, status.lastSyncAt);
+
+      const needsBackfill = samples.length === 0;
+      const incrementalSince = needsBackfill ? undefined : status.lastSyncAt;
+      const diagnosticSince = new Date(Date.now() - DIAGNOSTIC_WINDOW_MS).toISOString();
+      const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, incrementalSince);
       const merged = await mergeHealthSamples(incoming);
+      const diagnosticResult = await diagnoseHealthData(DEFAULT_HEALTH_METRICS, diagnosticSince).catch(() => null);
+      const now = new Date().toISOString();
       const next: HealthSyncStatus = {
         ...status,
-        lastSyncAt: new Date().toISOString(),
+        lastSyncAt: incoming.length > 0 ? now : status.lastSyncAt,
         lastSyncCount: incoming.length,
-        message: incoming.length > 0 ? `${incoming.length} registros recebidos do Health Connect.` : 'Nenhum dado novo encontrado.',
+        message: incoming.length > 0
+          ? `${incoming.length} registros recebidos do Health Connect.`
+          : needsBackfill
+            ? 'Nenhum registro encontrado no backfill de 30 dias. Consulte o diagnóstico abaixo.'
+            : 'Nenhum dado novo encontrado desde a última sincronização.',
       };
       setSamples(merged);
+      setDiagnostics(diagnosticResult);
       setStatus(next);
       await saveHealthSyncStatus(next);
     } finally {
@@ -112,7 +126,7 @@ export function SamsungHealthPage() {
         <small>Galaxy Watch → Samsung Health → Health Connect → TITAN FIT.</small>
       </div>
       {status.lastSyncAt && <div>
-        <span className="info-label">Última sincronização</span>
+        <span className="info-label">Última sincronização com dados</span>
         <strong>{new Date(status.lastSyncAt).toLocaleString('pt-BR')}</strong>
         <small>{status.lastSyncCount ?? 0} novos registros na última leitura.</small>
       </div>}
@@ -125,6 +139,23 @@ export function SamsungHealthPage() {
       </button>}
     </section>
 
+    {diagnostics && <section className="settings-card" aria-label="Diagnóstico Health Connect">
+      <div>
+        <span className="info-label">DIAGNÓSTICO HEALTH CONNECT</span>
+        <strong>{diagnostics.totalRecords} registros disponíveis em 30 dias</strong>
+        <small>Período: {new Date(diagnostics.from).toLocaleDateString('pt-BR')} até {new Date(diagnostics.to).toLocaleDateString('pt-BR')}.</small>
+      </div>
+      {METRICS.map(({ type, label }) => {
+        const metric = diagnostics.metrics.find((item) => item.type === type);
+        return <div key={type} className="health-metric-row">
+          <span>{label}</span>
+          <strong>{metric?.error ? 'Erro na leitura' : `${metric?.count ?? 0} registros`}</strong>
+          {metric?.sources.length ? <small>Origem: {metric.sources.join(', ')}</small> : <small>{metric?.error ?? 'Nenhuma origem encontrada.'}</small>}
+          {metric?.newestAt && <small>Mais recente: {new Date(metric.newestAt).toLocaleString('pt-BR')}</small>}
+        </div>;
+      })}
+    </section>}
+
     <section className="settings-card" aria-label="Dados do relógio">
       <div><span className="info-label">DADOS DO RELÓGIO</span><strong>Resumo mais recente</strong></div>
       {METRICS.map(({ type, label }) => {
@@ -133,13 +164,14 @@ export function SamsungHealthPage() {
           <span>{label}</span>
           <strong>{sample ? formatSample(sample) : 'Sem dados'}</strong>
           {sample && <small>{new Date(sample.startedAt).toLocaleString('pt-BR')}</small>}
+          {sample?.source && <small>Origem: {sample.source}</small>}
         </div>;
       })}
     </section>
 
     <section className="settings-card" aria-label="Status da integração">
       <div><span className="info-label">INTEGRAÇÃO</span><strong>{status.bridgeAvailable ? 'Leitura nativa disponível' : 'Fundação pronta no PWA'}</strong></div>
-      <small>No navegador o TITAN não lê o Health Connect diretamente. Quando a camada Android estiver instalada, esta mesma tela passa a receber os dados reais sem mudar seu fluxo de uso.</small>
+      <small>No Android, o TITAN lê dados autorizados pelo Health Connect. Se a sincronização vier vazia, o diagnóstico acima mostra separadamente o que existe em cada categoria.</small>
     </section>
   </div>;
 }
