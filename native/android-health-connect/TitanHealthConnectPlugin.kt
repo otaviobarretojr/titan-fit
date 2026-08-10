@@ -1,6 +1,5 @@
 package com.otaviobarretojr.titanfit.health
 
-import android.content.Context
 import androidx.activity.result.ActivityResultLauncher
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
@@ -21,11 +20,17 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import java.time.Instant
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 @CapacitorPlugin(name = "TitanHealthConnect")
 class TitanHealthConnectPlugin : Plugin() {
     private var permissionLauncher: ActivityResultLauncher<Set<String>>? = null
     private var pendingPermissionCall: PluginCall? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val client: HealthConnectClient?
         get() = if (HealthConnectClient.getSdkStatus(context) == HealthConnectClient.SDK_AVAILABLE) {
@@ -44,6 +49,11 @@ class TitanHealthConnectPlugin : Plugin() {
         }
     }
 
+    override fun handleOnDestroy() {
+        scope.cancel()
+        super.handleOnDestroy()
+    }
+
     @PluginMethod
     fun isAvailable(call: PluginCall) {
         val status = HealthConnectClient.getSdkStatus(context)
@@ -57,15 +67,20 @@ class TitanHealthConnectPlugin : Plugin() {
             return
         }
         val requested = permissionsFor(call.getArray("types") ?: JSArray())
-        bridge.execute {
-            val granted = hc.permissionController.getGrantedPermissions()
-            if (granted.containsAll(requested)) {
-                call.resolve(JSObject().put("granted", true))
-                return@execute
-            }
-            activity.runOnUiThread {
-                pendingPermissionCall = call
-                permissionLauncher?.launch(requested) ?: call.reject("Não foi possível abrir as permissões do Health Connect.")
+        scope.launch {
+            try {
+                val granted = hc.permissionController.getGrantedPermissions()
+                if (granted.containsAll(requested)) {
+                    call.resolve(JSObject().put("granted", true))
+                    return@launch
+                }
+                activity.runOnUiThread {
+                    pendingPermissionCall = call
+                    permissionLauncher?.launch(requested)
+                        ?: call.reject("Não foi possível abrir as permissões do Health Connect.")
+                }
+            } catch (error: Exception) {
+                call.reject("Falha ao consultar permissões do Health Connect.", error)
             }
         }
     }
@@ -80,7 +95,7 @@ class TitanHealthConnectPlugin : Plugin() {
         val since = call.getString("since")?.let(Instant::parse) ?: Instant.now().minusSeconds(30L * 24 * 60 * 60)
         val until = Instant.now()
 
-        bridge.execute {
+        scope.launch {
             try {
                 val samples = JSArray()
                 for (type in types.toList().mapNotNull { it?.toString() }) {
