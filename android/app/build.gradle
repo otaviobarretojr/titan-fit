@@ -1,9 +1,24 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
+def titanKeystorePath = System.getenv('TITAN_ANDROID_KEYSTORE_PATH')
+def titanKeystorePassword = System.getenv('TITAN_ANDROID_KEYSTORE_PASSWORD')
+
 android {
     namespace = "com.otaviobarretojr.titanfit"
     compileSdk = rootProject.ext.compileSdkVersion
+
+    signingConfigs {
+        titanRelease {
+            if (titanKeystorePath && titanKeystorePassword) {
+                storeFile file(titanKeystorePath)
+                storePassword titanKeystorePassword
+                keyAlias 'titanfit'
+                keyPassword titanKeystorePassword
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.otaviobarretojr.titanfit"
         minSdkVersion 26
@@ -20,6 +35,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            signingConfig signingConfigs.titanRelease
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
