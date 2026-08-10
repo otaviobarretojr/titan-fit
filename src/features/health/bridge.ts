@@ -8,9 +8,15 @@ type NativeHealthConnectPlugin = {
   diagnoseHealthData?: (options: { types: HealthMetricType[]; since?: string }) => Promise<HealthDiagnostics>;
 };
 
+export type SamsungHealthConnectionStatus = {
+  available: boolean;
+  granted: boolean;
+  message?: string;
+};
+
 type NativeSamsungHealthPlugin = {
-  isAvailable: () => Promise<{ available?: boolean; granted?: boolean }>;
-  requestSamsungHealthPermissions: () => Promise<{ granted?: boolean }>;
+  isAvailable: () => Promise<{ available?: boolean; granted?: boolean; message?: string }>;
+  requestSamsungHealthPermissions: () => Promise<{ granted?: boolean; message?: string }>;
   readDailyActivitySummary: () => Promise<DailyActivitySummary>;
 };
 
@@ -57,31 +63,37 @@ export async function healthConnectAvailable(): Promise<boolean> {
   try { return await bridge.isAvailable(); } catch { return false; }
 }
 
-export async function samsungHealthStatus(): Promise<{ available: boolean; granted: boolean }> {
+export async function samsungHealthStatus(): Promise<SamsungHealthConnectionStatus> {
   const plugin = samsungPlugin();
-  if (!plugin) return { available: false, granted: false };
+  if (!plugin) return { available: false, granted: false, message: 'Plugin Samsung Health não carregado no APK.' };
   try {
     const result = await plugin.isAvailable();
-    return { available: Boolean(result.available), granted: Boolean(result.granted) };
-  } catch {
-    return { available: false, granted: false };
+    return { available: Boolean(result.available), granted: Boolean(result.granted), message: result.message };
+  } catch (error) {
+    return { available: false, granted: false, message: error instanceof Error ? error.message : 'Falha ao consultar Samsung Health.' };
   }
 }
 
-export async function requestSamsungHealthPermissions(): Promise<boolean> {
+export async function requestSamsungHealthPermissions(): Promise<SamsungHealthConnectionStatus> {
   const plugin = samsungPlugin();
-  if (!plugin) return false;
-  try { const result = await plugin.requestSamsungHealthPermissions(); return Boolean(result.granted); } catch { return false; }
+  if (!plugin) return { available: false, granted: false, message: 'Plugin Samsung Health não carregado no APK.' };
+  try {
+    const result = await plugin.requestSamsungHealthPermissions();
+    const status = await samsungHealthStatus();
+    return {
+      available: status.available,
+      granted: Boolean(result.granted) || status.granted,
+      message: result.message ?? status.message,
+    };
+  } catch (error) {
+    return { available: true, granted: false, message: error instanceof Error ? error.message : 'Falha ao solicitar autorização Samsung Health.' };
+  }
 }
 
 export async function requestHealthPermissions(types = DEFAULT_HEALTH_METRICS): Promise<boolean> {
   const bridge = getHealthConnectBridge();
   if (!bridge) return false;
-  const healthConnectGranted = await bridge.requestPermissions(types);
-  if (healthConnectGranted) {
-    await requestSamsungHealthPermissions();
-  }
-  return healthConnectGranted;
+  return bridge.requestPermissions(types);
 }
 
 export async function readHealthSamples(types = DEFAULT_HEALTH_METRICS, since?: string): Promise<HealthSample[]> {
