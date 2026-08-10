@@ -58,6 +58,10 @@ assert(viteConfig.includes('disable: isAndroid'), 'Plugin PWA deve permanecer di
 assert(bootstrapWorkflow.includes('npm run build:android'), 'Bootstrap Android deve usar o build nativo');
 assert(releaseWorkflow.includes('npm run build:android'), 'Release Android deve usar o build nativo');
 assert(releaseWorkflow.includes('Guard Android bundle paths'), 'Release Android deve validar caminhos antes de gerar APK');
+assert(releaseWorkflow.includes('TITAN_ANDROID_KEYSTORE_B64') && releaseWorkflow.includes('TITAN_ANDROID_KEYSTORE_PASSWORD'), 'Release Android deve exigir os segredos da chave permanente');
+assert(releaseWorkflow.includes('assembleRelease') && !releaseWorkflow.includes('assembleDebug'), 'Release oficial Android deve compilar build release, não debug');
+assert(releaseWorkflow.includes('Verify APK signature') && releaseWorkflow.includes('apksigner'), 'Release Android deve verificar a assinatura antes de publicar');
+assert(androidGradle.includes("keyAlias 'titanfit'") && androidGradle.includes('signingConfig signingConfigs.titanRelease'), 'Gradle deve usar a identidade permanente titanfit');
 
 assert(plugin.includes('@CapacitorPlugin(name = "TitanHealthConnect")'), 'Plugin nativo TitanHealthConnect deve existir');
 for (const record of ['SleepSessionRecord', 'HeartRateRecord', 'StepsRecord', 'ActiveCaloriesBurnedRecord', 'ExerciseSessionRecord', 'DistanceRecord', 'BodyFatRecord']) {
