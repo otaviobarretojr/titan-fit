@@ -1,0 +1,128 @@
+/* TITAN FIT v0.51.10 — bottom navigation refinement */
+
+.bottom-navigation {
+  position: fixed;
+  left: 50%;
+  bottom: max(8px, var(--safe-bottom));
+  z-index: 60;
+  transform: translateX(-50%);
+  width: min(calc(100% - 16px), 504px);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0;
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(24, 35, 50, .985), rgba(15, 24, 37, .995));
+  box-shadow: 0 16px 44px rgba(15, 23, 42, .26), inset 0 1px 0 rgba(255, 255, 255, .045);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  overflow: hidden;
+}
+
+.bottom-navigation button {
+  position: relative;
+  min-width: 0;
+  min-height: 66px;
+  padding: 5px 1px 9px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent !important;
+  color: rgba(203, 213, 225, .72);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: .63rem;
+  font-weight: 760;
+  line-height: 1;
+  letter-spacing: -.015em;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .18s ease, transform .16s ease;
+}
+
+.bottom-navigation button:active {
+  transform: scale(.965);
+}
+
+.bottom-navigation button.active {
+  color: #60a5fa;
+}
+
+.nav-icon-wrap {
+  width: 44px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.bottom-navigation button.active .nav-icon-wrap {
+  background: linear-gradient(145deg, rgba(59, 130, 246, .22), rgba(37, 99, 235, .10));
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, .10);
+}
+
+.nav-icon {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bottom-navigation button.active .nav-icon {
+  stroke-width: 2.15;
+}
+
+.bottom-navigation button.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 26px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, .32);
+}
+
+/* Keep page content clear of the floating navigation. */
+.app-main {
+  padding-bottom: calc(112px + var(--safe-bottom)) !important;
+}
+
+/* No bottom navigation while executing workout/cardio; preserve immersive mode. */
+@media (max-width: 360px) {
+  .bottom-navigation {
+    width: calc(100% - 10px);
+    border-radius: 24px;
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  .bottom-navigation button {
+    font-size: .58rem;
+  }
+
+  .nav-icon-wrap {
+    width: 39px;
+    height: 36px;
+  }
+
+  .nav-icon {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+@media (min-width: 700px) {
+  .bottom-navigation {
+    bottom: 20px;
+  }
+}
