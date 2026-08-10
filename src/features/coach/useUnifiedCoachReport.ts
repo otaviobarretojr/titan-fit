@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { loadBodyEvolution } from '../evolution/storage';
+import type { BodyEvolutionEntry } from '../evolution/types';
 import { loadHealthSamples } from '../health/repository';
+import type { HealthSample } from '../health/types';
 import { loadWorkoutHistory } from '../history/storage';
 import { loadNutritionExecutions } from '../nutrition/execution';
 import { loadActiveNutritionPlan } from '../nutrition/storage';
@@ -14,8 +16,8 @@ export function useUnifiedCoachReport() {
     let active = true;
 
     async function load() {
-      let healthSamples = [];
-      let bodyEntries = [];
+      let healthSamples: HealthSample[] = [];
+      let bodyEntries: BodyEvolutionEntry[] = [];
 
       try {
         const [samples, bodyState] = await Promise.all([loadHealthSamples(), loadBodyEvolution()]);
