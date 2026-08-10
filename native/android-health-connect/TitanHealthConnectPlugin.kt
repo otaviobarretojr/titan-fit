@@ -11,6 +11,7 @@ import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
+import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import com.getcapacitor.JSArray
@@ -20,6 +21,8 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -109,6 +112,49 @@ class TitanHealthConnectPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun readDailyActivitySummary(call: PluginCall) {
+        val hc = client ?: run {
+            call.resolve(emptyDailySummary())
+            return
+        }
+        val zone = ZoneId.systemDefault()
+        val start = LocalDate.now(zone).atStartOfDay(zone).toInstant()
+        val end = Instant.now()
+
+        scope.launch {
+            try {
+                val result = hc.aggregate(
+                    AggregateRequest(
+                        metrics = setOf(
+                            StepsRecord.COUNT_TOTAL,
+                            ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL,
+                            ExerciseSessionRecord.EXERCISE_DURATION_TOTAL,
+                            DistanceRecord.DISTANCE_TOTAL
+                        ),
+                        timeRangeFilter = TimeRangeFilter.between(start, end)
+                    )
+                )
+                val steps = result[StepsRecord.COUNT_TOTAL] ?: 0L
+                val activeCalories = result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories ?: 0.0
+                val exerciseMinutes = result[ExerciseSessionRecord.EXERCISE_DURATION_TOTAL]?.toMinutes()?.toDouble() ?: 0.0
+                val distanceMeters = result[DistanceRecord.DISTANCE_TOTAL]?.inMeters ?: 0.0
+                call.resolve(
+                    JSObject()
+                        .put("date", LocalDate.now(zone).toString())
+                        .put("steps", steps)
+                        .put("activeCalories", activeCalories)
+                        .put("activeMinutes", exerciseMinutes)
+                        .put("distanceMeters", distanceMeters)
+                        .put("activeMinutesSource", "exercise-duration")
+                        .put("source", "health-connect-aggregate")
+                )
+            } catch (error: Exception) {
+                call.reject("Falha ao agregar a atividade diária do Health Connect.", error)
+            }
+        }
+    }
+
+    @PluginMethod
     fun diagnoseHealthData(call: PluginCall) {
         val hc = client ?: run {
             call.resolve(
@@ -155,6 +201,15 @@ class TitanHealthConnectPlugin : Plugin() {
             )
         }
     }
+
+    private fun emptyDailySummary(): JSObject = JSObject()
+        .put("date", LocalDate.now().toString())
+        .put("steps", 0)
+        .put("activeCalories", 0.0)
+        .put("activeMinutes", 0.0)
+        .put("distanceMeters", 0.0)
+        .put("activeMinutesSource", "exercise-duration")
+        .put("source", "health-connect-aggregate")
 
     private fun stringValues(values: JSArray): List<String> {
         val result = mutableListOf<String>()
