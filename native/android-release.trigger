@@ -1,1 +1,1 @@
-release-v0.51.12-health-dashboard-r3
+release-v0.52.0-titan-ui-2.0
