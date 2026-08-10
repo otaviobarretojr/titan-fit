@@ -2,7 +2,7 @@ import type { HealthMetricType, HealthSample, TitanHealthConnectBridge } from '.
 
 type NativeHealthConnectPlugin = {
   isAvailable: () => Promise<{ available?: boolean } | boolean>;
-  requestPermissions: (options: { types: HealthMetricType[] }) => Promise<{ granted?: boolean } | boolean>;
+  requestHealthPermissions: (options: { types: HealthMetricType[] }) => Promise<{ granted?: boolean } | boolean>;
   readSamples: (options: { types: HealthMetricType[]; since?: string }) => Promise<{ samples?: HealthSample[] } | HealthSample[]>;
 };
 
@@ -30,7 +30,7 @@ function capacitorBridge(): TitanHealthConnectBridge | null {
       return typeof result === 'boolean' ? result : Boolean(result.available);
     },
     async requestPermissions(types) {
-      const result = await plugin.requestPermissions({ types });
+      const result = await plugin.requestHealthPermissions({ types });
       return typeof result === 'boolean' ? result : Boolean(result.granted);
     },
     async readSamples(types, since) {
