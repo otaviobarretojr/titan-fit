@@ -49,6 +49,7 @@ jobs:
           mkdir -p "$PACKAGE_DIR/health"
           rm -f "$PACKAGE_DIR/MainActivity.java"
           cp native/android-health-connect/MainActivity.kt "$PACKAGE_DIR/MainActivity.kt"
+          cp native/android-health-connect/PermissionsRationaleActivity.kt "$PACKAGE_DIR/PermissionsRationaleActivity.kt"
           cp native/android-health-connect/TitanHealthConnectPlugin.kt "$PACKAGE_DIR/health/TitanHealthConnectPlugin.kt"
 
           python3 - <<'PY'
@@ -74,6 +75,14 @@ jobs:
           permissions = '''\n    <uses-permission android:name="android.permission.health.READ_SLEEP" />\n    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />\n    <uses-permission android:name="android.permission.health.READ_STEPS" />\n    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />\n    <uses-permission android:name="android.permission.health.READ_EXERCISE" />\n    <uses-permission android:name="android.permission.health.READ_DISTANCE" />\n    <uses-permission android:name="android.permission.health.READ_BODY_FAT" />\n'''
           if 'android.permission.health.READ_SLEEP' not in text:
               text = text.replace('<application', permissions + '\n    <application')
+
+          rationale = '''\n        <activity\n            android:name=".PermissionsRationaleActivity"\n            android:exported="true">\n            <intent-filter>\n                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />\n            </intent-filter>\n        </activity>\n\n        <activity-alias\n            android:name="ViewPermissionUsageActivity"\n            android:exported="true"\n            android:targetActivity=".PermissionsRationaleActivity"\n            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">\n            <intent-filter>\n                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />\n                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />\n            </intent-filter>\n        </activity-alias>\n'''
+          if 'PermissionsRationaleActivity' not in text:
+              text = text.replace('        <provider', rationale + '\n        <provider')
+
+          queries = '''\n    <queries>\n        <package android:name="com.google.android.apps.healthdata" />\n    </queries>\n'''
+          if 'com.google.android.apps.healthdata' not in text:
+              text = text.replace('</manifest>', queries + '\n</manifest>')
           manifest.write_text(text)
           PY
 
