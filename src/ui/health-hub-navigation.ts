@@ -6,15 +6,17 @@ function getNavButtons() {
   const buttons = Array.from(nav.querySelectorAll<HTMLButtonElement>(':scope > button'));
   const health = buttons.find((button) => button.textContent?.trim() === 'Saúde');
   const progress = buttons.find((button) => button.textContent?.trim() === 'Progresso');
-  return health && progress ? { health, progress } : null;
+  return health && progress ? { nav, health, progress } : null;
 }
 
 function syncHealthHub() {
-  const nav = getNavButtons();
-  if (!nav) return;
-  const progressActive = nav.progress.getAttribute('aria-current') === 'page';
-  const healthActive = nav.health.getAttribute('aria-current') === 'page';
-  if (progressActive) nav.health.classList.add('active');
+  const refs = getNavButtons();
+  if (!refs) return;
+  const { health, progress } = refs;
+  const progressActive = progress.getAttribute('aria-current') === 'page';
+  const healthActive = health.getAttribute('aria-current') === 'page';
+
+  health.classList.toggle('active', healthActive || progressActive);
 
   const existing = document.getElementById(HUB_ID);
   if (!healthActive && !progressActive) {
@@ -24,6 +26,7 @@ function syncHealthHub() {
 
   const main = document.querySelector<HTMLElement>('.app-main');
   if (!main) return;
+
   let switcher = existing;
   if (!switcher) {
     switcher = document.createElement('div');
@@ -35,11 +38,14 @@ function syncHealthHub() {
     switcher.addEventListener('click', (event) => {
       const target = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-health-view]');
       if (!target) return;
-      if (target.dataset.healthView === 'evolution') nav.progress.click();
-      else nav.health.click();
+      const current = getNavButtons();
+      if (!current) return;
+      if (target.dataset.healthView === 'evolution') current.progress.click();
+      else current.health.click();
     });
     main.prepend(switcher);
   }
+
   const today = switcher.querySelector<HTMLButtonElement>('[data-health-view="today"]');
   const evolution = switcher.querySelector<HTMLButtonElement>('[data-health-view="evolution"]');
   today?.classList.toggle('active', healthActive);
@@ -49,11 +55,35 @@ function syncHealthHub() {
 }
 
 export function enableHealthHubNavigation() {
-  const observer = new MutationObserver(syncHealthHub);
-  const start = () => {
-    syncHealthHub();
-    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-current'] });
+  let frame = 0;
+  let observedNav: HTMLElement | null = null;
+  let navObserver: MutationObserver | null = null;
+
+  const scheduleSync = () => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = 0;
+      syncHealthHub();
+      attachNavObserver();
+    });
   };
+
+  const attachNavObserver = () => {
+    const refs = getNavButtons();
+    const nav = refs?.nav ?? null;
+    if (!nav || nav === observedNav) return;
+    navObserver?.disconnect();
+    observedNav = nav;
+    navObserver = new MutationObserver(scheduleSync);
+    navObserver.observe(nav, { subtree: true, attributes: true, attributeFilter: ['aria-current'] });
+    nav.addEventListener('click', scheduleSync);
+  };
+
+  const start = () => {
+    attachNavObserver();
+    syncHealthHub();
+  };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
 }
