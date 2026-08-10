@@ -41,7 +41,7 @@ describe('TITAN FIT', () => {
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Resetar TITAN FIT' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Resetar todos os dados' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
   });
