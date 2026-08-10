@@ -4,6 +4,7 @@ import { TitanEntry } from './app/TitanEntry';
 import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
 import { enablePostWorkoutCoach } from './ui/post-workout-coach';
+import { enableHealthHubNavigation } from './ui/health-hub-navigation';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/dashboard.css';
@@ -58,6 +59,7 @@ import './styles/health-hub-v0529.css';
 enableTitanHaptics();
 enableEvolutionFeedback();
 enablePostWorkoutCoach();
+enableHealthHubNavigation();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
