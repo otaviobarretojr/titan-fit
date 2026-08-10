@@ -1,0 +1,95 @@
+{
+  "schema": "titan-nutrition-plan",
+  "schemaVersion": 1,
+  "id": "plano-nutricional-exemplo",
+  "name": "Plano Nutricional TITAN",
+  "objective": "Hipertrofia com controle de gordura",
+  "defaultTarget": {
+    "caloriesKcal": 3200,
+    "proteinG": 200,
+    "carbohydrateG": 390,
+    "fatG": 85
+  },
+  "days": [
+    {
+      "day": "segunda",
+      "meals": [
+        {
+          "id": "seg-cafe",
+          "name": "Café da manhã",
+          "plannedTime": "07:00",
+          "foods": [
+            {
+              "id": "ovos-seg-cafe",
+              "name": "Ovos",
+              "quantity": 4,
+              "unit": "un",
+              "macros": {
+                "caloriesKcal": 280,
+                "proteinG": 24,
+                "carbohydrateG": 2,
+                "fatG": 20
+              },
+              "alternatives": [
+                {
+                  "name": "Whey protein",
+                  "quantity": 30,
+                  "unit": "g",
+                  "macros": {
+                    "caloriesKcal": 120,
+                    "proteinG": 24,
+                    "carbohydrateG": 3,
+                    "fatG": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "macros": {
+            "caloriesKcal": 280,
+            "proteinG": 24,
+            "carbohydrateG": 2,
+            "fatG": 20
+          }
+        },
+        {
+          "id": "seg-almoco",
+          "name": "Almoço",
+          "plannedTime": "12:00",
+          "foods": [
+            {
+              "id": "frango-seg-almoco",
+              "name": "Peito de frango",
+              "quantity": 200,
+              "unit": "g",
+              "macros": {
+                "caloriesKcal": 330,
+                "proteinG": 62,
+                "carbohydrateG": 0,
+                "fatG": 7
+              }
+            },
+            {
+              "id": "arroz-seg-almoco",
+              "name": "Arroz cozido",
+              "quantity": 200,
+              "unit": "g",
+              "macros": {
+                "caloriesKcal": 260,
+                "proteinG": 5,
+                "carbohydrateG": 56,
+                "fatG": 1
+              }
+            }
+          ],
+          "macros": {
+            "caloriesKcal": 590,
+            "proteinG": 67,
+            "carbohydrateG": 56,
+            "fatG": 8
+          }
+        }
+      ]
+    }
+  ]
+}
