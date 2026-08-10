@@ -11,6 +11,22 @@ export type HealthSample = {
   metadata?: Record<string, string | number | boolean | null>;
 };
 
+export type HealthMetricDiagnostic = {
+  type: HealthMetricType;
+  count: number;
+  sources: string[];
+  oldestAt?: string;
+  newestAt?: string;
+  error?: string;
+};
+
+export type HealthDiagnostics = {
+  from: string;
+  to: string;
+  totalRecords: number;
+  metrics: HealthMetricDiagnostic[];
+};
+
 export type HealthSyncStatus = {
   provider: 'health-connect';
   bridgeAvailable: boolean;
@@ -24,4 +40,5 @@ export type TitanHealthConnectBridge = {
   isAvailable: () => Promise<boolean>;
   requestPermissions: (types: HealthMetricType[]) => Promise<boolean>;
   readSamples: (types: HealthMetricType[], since?: string) => Promise<HealthSample[]>;
+  diagnoseHealthData?: (types: HealthMetricType[], since?: string) => Promise<HealthDiagnostics>;
 };
