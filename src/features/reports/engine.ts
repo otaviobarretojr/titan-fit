@@ -1,8 +1,6 @@
 import type { CoachContext } from '../coach/types';
-import type { NutritionMacroTotals } from '../nutrition/types';
 
 const DAY = 86_400_000;
-const ZERO: NutritionMacroTotals = { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 };
 
 export type TitanReportPeriod = 7 | 30;
 export type TitanReportTrend = 'up' | 'down' | 'stable' | 'unavailable';
@@ -23,16 +21,6 @@ export type TitanReport = {
     sessionsComparison: TitanReportComparison;
     volumeComparison: TitanReportComparison;
   };
-  nutrition: {
-    registeredDays: number;
-    averageCaloriesKcal: number | null;
-    averageProteinG: number | null;
-    calorieAdherencePercent: number | null;
-    proteinAdherencePercent: number | null;
-    registeredDaysComparison: TitanReportComparison;
-    calorieAdherenceComparison: TitanReportComparison;
-    proteinAdherenceComparison: TitanReportComparison;
-  };
   recovery: {
     sleepDays: number;
     averageSleepHours: number | null;
@@ -52,11 +40,6 @@ export type TitanReport = {
 type ReportWindow = {
   trainingSessions: number;
   totalVolumeKg: number;
-  nutritionDays: number;
-  averageCaloriesKcal: number | null;
-  averageProteinG: number | null;
-  calorieAdherencePercent: number | null;
-  proteinAdherencePercent: number | null;
   sleepDays: number;
   averageSleepHours: number | null;
   bodyRecords: number;
@@ -80,16 +63,6 @@ export function buildTitanReport(context: CoachContext, periodDays: TitanReportP
       sessionsComparison: compare(current.trainingSessions, previous.trainingSessions),
       volumeComparison: compare(Math.round(current.totalVolumeKg), Math.round(previous.totalVolumeKg)),
     },
-    nutrition: {
-      registeredDays: current.nutritionDays,
-      averageCaloriesKcal: current.averageCaloriesKcal === null ? null : Math.round(current.averageCaloriesKcal),
-      averageProteinG: current.averageProteinG === null ? null : round1(current.averageProteinG),
-      calorieAdherencePercent: current.calorieAdherencePercent,
-      proteinAdherencePercent: current.proteinAdherencePercent,
-      registeredDaysComparison: compare(current.nutritionDays, previous.nutritionDays),
-      calorieAdherenceComparison: compare(current.calorieAdherencePercent, previous.calorieAdherencePercent),
-      proteinAdherenceComparison: compare(current.proteinAdherencePercent, previous.proteinAdherencePercent),
-    },
     recovery: {
       sleepDays: current.sleepDays,
       averageSleepHours: current.averageSleepHours,
@@ -108,7 +81,7 @@ export function buildTitanReport(context: CoachContext, periodDays: TitanReportP
 }
 
 function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, now: Date, offsetDays: number): ReportWindow {
-  const { workouts, nutritionPlan, nutritionExecutions = [], healthSamples = [], bodyEntries = [] } = context;
+  const { workouts, healthSamples = [], bodyEntries = [] } = context;
   const end = now.getTime() - offsetDays * DAY;
   const start = end - periodDays * DAY;
   const inWindow = (value: string) => {
@@ -118,26 +91,6 @@ function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, n
 
   const workoutsInWindow = workouts.filter((item) => inWindow(item.completedAt) && item.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength'));
   const totalVolumeKg = workoutsInWindow.reduce((sum, item) => sum + Math.max(0, item.totalVolumeKg || 0), 0);
-
-  const nutritionInWindow = nutritionExecutions.filter((item) => inWindow(`${item.date}T12:00:00`));
-  const nutritionByDate = new Map<string, NutritionMacroTotals>();
-  for (const item of nutritionInWindow) {
-    const totals = nutritionByDate.get(item.date) ?? { ...ZERO };
-    totals.caloriesKcal += item.macros.caloriesKcal;
-    totals.proteinG += item.macros.proteinG;
-    totals.carbohydrateG += item.macros.carbohydrateG;
-    totals.fatG += item.macros.fatG;
-    nutritionByDate.set(item.date, totals);
-  }
-  const nutritionDays = [...nutritionByDate.values()];
-  const averageCaloriesKcal = averageOrNull(nutritionDays.map((day) => day.caloriesKcal));
-  const averageProteinG = averageOrNull(nutritionDays.map((day) => day.proteinG));
-  const calorieAdherencePercent = nutritionPlan && nutritionDays.length && nutritionPlan.defaultTarget.caloriesKcal > 0
-    ? Math.round(average(nutritionDays.map((day) => Math.max(0, 1 - Math.abs(day.caloriesKcal - nutritionPlan.defaultTarget.caloriesKcal) / nutritionPlan.defaultTarget.caloriesKcal))) * 100)
-    : null;
-  const proteinAdherencePercent = nutritionPlan && nutritionDays.length && nutritionPlan.defaultTarget.proteinG > 0
-    ? Math.round(average(nutritionDays.map((day) => Math.min(1, day.proteinG / nutritionPlan.defaultTarget.proteinG))) * 100)
-    : null;
 
   const sleep = healthSamples
     .filter((sample) => sample.type === 'sleep' && inWindow(sample.startedAt))
@@ -151,7 +104,6 @@ function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, n
 
   const availableSections = [
     workoutsInWindow.length > 0,
-    nutritionDays.length > 0,
     sleep.length > 0,
     body.length > 0,
   ].filter(Boolean).length;
@@ -159,11 +111,6 @@ function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, n
   return {
     trainingSessions: workoutsInWindow.length,
     totalVolumeKg,
-    nutritionDays: nutritionDays.length,
-    averageCaloriesKcal,
-    averageProteinG,
-    calorieAdherencePercent,
-    proteinAdherencePercent,
     sleepDays: sleep.length,
     averageSleepHours: sleep.length ? round1(average(sleep)) : null,
     bodyRecords: body.length,
@@ -184,10 +131,6 @@ function compare(current: number | null, previous: number | null): TitanReportCo
 
 function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
-
-function averageOrNull(values: number[]) {
-  return values.length ? average(values) : null;
 }
 
 function round1(value: number) {
