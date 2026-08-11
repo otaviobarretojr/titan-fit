@@ -1,0 +1,84 @@
+name: Apply TITAN FIT v0.58.6 progression audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v0586-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Apply progression corrections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/core/titan-engine/progression.ts')
+          text = path.read_text()
+          text = text.replace("  const rirAllowsLoad = !rirKnown || latest.averageRir! >= targetRir;", "  const rirAllowsLoad = rirKnown && latest.averageRir! >= targetRir;")
+          old = "  const allAtTop = latest.minimumReps >= maxReps;"
+          new = "  const allAtTop = latest.minimumReps >= maxReps;\n  const latestTopLoadSets = sessionsDescending[0]?.sets.filter((set) => (set.weightKg ?? 0) === latest.maxWeightKg && (set.repetitions ?? 0) > 0) ?? [];\n  const topLoadReachedRangeTop = latestTopLoadSets.length > 0 && latestTopLoadSets.every((set) => (set.repetitions ?? 0) >= maxReps);"
+          if old not in text:
+              raise SystemExit('allAtTop marker missing')
+          text = text.replace(old, new)
+          text = text.replace("  if (allAtTop && rirAllowsLoad) {", "  if (allAtTop && topLoadReachedRangeTop && rirAllowsLoad) {")
+          old2 = "  if (latest.averageReps >= minReps && latest.averageReps < maxReps) {"
+          new2 = "  if (allAtTop && !rirKnown) {\n    return decision('maintain', 'Confirmar esforço antes de subir', `Você chegou ao topo da faixa com ${formatWeight(latest.maxWeightKg)}, mas faltou registrar o RIR. Repita a carga e registre o esforço antes de aumentar.`, latest.maxWeightKg, maxReps, performances.length >= 3 ? 'high' : 'medium', trend);\n  }\n  if (latest.averageReps >= minReps && latest.averageReps < maxReps) {"
+          if old2 not in text:
+              raise SystemExit('rep progression marker missing')
+          text = text.replace(old2, new2)
+          path.write_text(text)
+
+          test = Path('tests/titan-engine.test.ts')
+          content = test.read_text()
+          content = content.replace(
+              "import { generateTitanEngineBlueprints, type TitanEngineAssessment, type TitanEngineExercise } from '../src/core/titan-engine';",
+              "import { decideTitanProgression, generateTitanEngineBlueprints, type TitanEngineAssessment, type TitanEngineExercise } from '../src/core/titan-engine';",
+          )
+          marker = "describe('TITAN Engine', () => {\n"
+          cases = '''describe('Progressão TITAN', () => {\n  it('não aumenta carga sem RIR registrado mesmo no topo da faixa', () => {\n    const result = decideTitanProgression([\n      { sets: [{ weightKg: 80, repetitions: 12, rir: null }, { weightKg: 80, repetitions: 12, rir: null }] },\n      { sets: [{ weightKg: 80, repetitions: 11, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },\n    ], { minReps: 8, maxReps: 12, targetRir: 2 });\n    expect(result.status).toBe('maintain');\n    expect(result.title).toContain('Confirmar esforço');\n    expect(result.suggestedWeightKg).toBe(80);\n  });\n\n  it('não usa séries leves no topo para justificar aumento da maior carga', () => {\n    const result = decideTitanProgression([\n      { sets: [{ weightKg: 90, repetitions: 8, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }] },\n      { sets: [{ weightKg: 90, repetitions: 8, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },\n    ], { minReps: 8, maxReps: 12, targetRir: 2 });\n    expect(result.status).not.toBe('progress');\n    expect(result.suggestedWeightKg).toBe(90);\n  });\n\n  it('aumenta carga quando a maior carga também fecha o topo com RIR adequado', () => {\n    const result = decideTitanProgression([\n      { sets: [{ weightKg: 80, repetitions: 12, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }] },\n      { sets: [{ weightKg: 80, repetitions: 11, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },\n    ], { minReps: 8, maxReps: 12, targetRir: 2 });\n    expect(result.status).toBe('progress');\n    expect(result.suggestedWeightKg).toBeGreaterThan(80);\n  });\n});\n\n'''
+          if marker not in content:
+              raise SystemExit('describe marker missing')
+          content = content.replace(marker, cases + marker)
+          test.write_text(content)
+          PY
+
+      - name: Bump version and changelog
+        run: |
+          npm version 0.58.6 --no-git-tag-version
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('CHANGELOG.md')
+          text = path.read_text()
+          marker = 'Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.\n'
+          section = '''\n## v0.58.6 — Progressão inteligente\n- TITAN deixa de sugerir aumento de carga quando o RIR da sessão não foi registrado.\n- Aumento de carga passa a exigir que a própria maior carga da sessão alcance o topo da faixa prescrita, evitando progressão falsa baseada em séries mais leves.\n- Quando o topo é atingido sem RIR, o Coach orienta repetir a referência e registrar esforço antes de subir.\n- Novos testes cobrem ausência de RIR, séries com cargas mistas e progressão válida.\n'''
+          if '## v0.58.6 — Progressão inteligente' not in text:
+              text = text.replace(marker, marker + section)
+          path.write_text(text)
+          PY
+
+      - name: Validate locally
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm run validate
+
+      - name: Commit stable v0.58.6
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/core/titan-engine/progression.ts tests/titan-engine.test.ts package.json package-lock.json CHANGELOG.md
+          git commit -m "feat: harden smart progression v0.58.6"
+          git push
