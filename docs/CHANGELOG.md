@@ -1,6 +1,22 @@
 # Changelog
 
-## v0.54 — Coach TITAN 1.0 (em desenvolvimento)
+## v0.55 — Relatórios
+
+- Criada a área `Saúde → Relatórios` sem adicionar nova aba principal.
+- Relatórios consolidados para períodos de 7 e 30 dias.
+- Treino passa a resumir sessões e volume total registrado.
+- Nutrição passa a resumir dias registrados, médias de calorias e proteína, aderência calórica e aderência proteica.
+- Recuperação passa a resumir dias com sono e média de horas registradas.
+- Evolução passa a resumir registros corporais, peso mais recente e variação de peso quando existem dados suficientes.
+- Cada período agora é comparado com a janela imediatamente anterior de mesma duração.
+- Adicionados deltas e tendências para sessões, volume, aderência nutricional, sono e peso quando os dois períodos possuem dados válidos.
+- Relatório declara explicitamente quando não existe base anterior suficiente para comparação.
+- Incluída leitura automática do período com prioridade para queda relevante de sono, aderência nutricional ou consistência de treino.
+- Mantido o princípio de não inventar métricas para áreas sem registros.
+- Adicionados testes específicos para períodos, ausência de dados e comparação entre janelas consecutivas.
+- Lint, TypeScript, testes, build e `npm run validate` concluídos com sucesso antes da publicação Android.
+
+## v0.54 — Coach TITAN 1.0
 
 - Coach passa a cruzar dados de treino, nutrição, recuperação e evolução corporal sem criar uma nova fonte de persistência.
 - Mantida compatibilidade com o relatório legado baseado apenas em histórico de treinos.
@@ -10,8 +26,12 @@
 - Recuperação passa a utilizar registros de sono do Health Connect quando disponíveis e declara explicitamente quando faltarem dados.
 - Evolução considera a presença de registros corporais recentes sem inferir diagnóstico ou composição corporal inexistente.
 - Saúde ganha uma terceira seção interna, `Coach`, sem alterar as quatro abas principais do aplicativo.
+- Prioridade unificada passa a favorecer fadiga crítica e, depois, o pior pilar disponível, em vez da ordem fixa dos alertas.
+- A tela Hoje passa a exibir a mesma prioridade unificada do Coach, preservando a orientação específica do treino do dia.
+- Nutrição, Saúde e Evolução passam a atualizar a leitura do Coach sem exigir reinício da tela.
 - Corrigida regra CSS legada que podia ocultar visualmente o quarto item da navegação inferior.
-- Adicionados testes específicos para compatibilidade, score multipilar e ausência de dados.
+- Adicionados testes específicos para compatibilidade, score multipilar, prioridade e ausência de dados.
+- APK Android assinado publicado na Release `v0.54.0`.
 
 ## v0.53.3 — Nutrição em Evolução
 
