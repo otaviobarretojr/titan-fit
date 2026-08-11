@@ -4,7 +4,6 @@ import { TitanEntry } from './app/TitanEntry';
 import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
 import { enablePostWorkoutCoach } from './ui/post-workout-coach';
-import { enableNutritionToday } from './ui/nutrition-today';
 import { enableNutritionHealthInsights } from './ui/nutrition-health';
 import './styles/tokens.css';
 import './styles/global.css';
@@ -65,7 +64,6 @@ import './styles/navigation-sync-v0571.css';
 enableTitanHaptics();
 enableEvolutionFeedback();
 enablePostWorkoutCoach();
-enableNutritionToday();
 enableNutritionHealthInsights();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
