@@ -53,5 +53,38 @@ describe('Relatórios TITAN', () => {
     expect(report.recovery.averageSleepHours).toBeNull();
     expect(report.evolution.latestWeightKg).toBeNull();
     expect(report.availableSections).toBe(0);
+    expect(report.previousAvailableSections).toBe(0);
+    expect(report.recovery.sleepComparison.trend).toBe('unavailable');
+  });
+
+  it('compara o período atual com o período imediatamente anterior', () => {
+    const report = buildTitanReport({
+      workouts: [
+        workout('current-1', '2026-08-09T20:00:00', 5000),
+        workout('current-2', '2026-08-08T20:00:00', 4500),
+        workout('previous-1', '2026-08-02T20:00:00', 4000),
+      ],
+      nutritionPlan,
+      nutritionExecutions: [
+        { date: '2026-08-09', mealId: 'current', status: 'consumed', completedAt: '2026-08-09T20:00:00', foods: [], macros: { caloriesKcal: 2500, proteinG: 200, carbohydrateG: 280, fatG: 65 } },
+        { date: '2026-08-02', mealId: 'previous', status: 'consumed', completedAt: '2026-08-02T20:00:00', foods: [], macros: { caloriesKcal: 2000, proteinG: 160, carbohydrateG: 220, fatG: 55 } },
+      ],
+      healthSamples: [
+        { id: 'sleep-current', type: 'sleep', startedAt: '2026-08-09T06:00:00', value: 8, unit: 'h' },
+        { id: 'sleep-previous', type: 'sleep', startedAt: '2026-08-02T06:00:00', value: 6, unit: 'h' },
+      ],
+      bodyEntries: [],
+    }, 7, now);
+
+    expect(report.training.sessionsComparison.current).toBe(2);
+    expect(report.training.sessionsComparison.previous).toBe(1);
+    expect(report.training.sessionsComparison.trend).toBe('up');
+    expect(report.nutrition.calorieAdherenceComparison.current).toBe(100);
+    expect(report.nutrition.calorieAdherenceComparison.previous).toBe(80);
+    expect(report.nutrition.calorieAdherenceComparison.delta).toBe(20);
+    expect(report.recovery.sleepComparison.current).toBe(8);
+    expect(report.recovery.sleepComparison.previous).toBe(6);
+    expect(report.recovery.sleepComparison.trend).toBe('up');
+    expect(report.previousAvailableSections).toBe(3);
   });
 });
