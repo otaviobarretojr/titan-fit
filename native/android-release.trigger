@@ -1,1 +1,1 @@
-release-v0.58.12-bottom-navigation-stable
+release-v0.58.13-navigation-proportion-stable
