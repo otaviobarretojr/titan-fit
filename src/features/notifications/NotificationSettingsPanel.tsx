@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { TitanPlan } from '../plan/types';
 import { loadWorkoutHistory } from '../history/storage';
-import { loadNutritionExecutions } from '../nutrition/execution';
-import { loadActiveNutritionPlan } from '../nutrition/storage';
 import { buildSmartReminders, currentSmartAlerts } from './engine';
 import { disableNativeNotifications, getNotificationPermissionState, notificationCapability, requestNotificationPermission, syncSmartNotifications, type NotificationPermissionState } from './native';
 import { loadNotificationPreferences, saveNotificationPreferences, type NotificationPreferences } from './preferences';
@@ -21,13 +19,7 @@ export function NotificationSettingsPanel({ plan }: { plan: TitanPlan | null }) 
     return () => { active = false; };
   }, []);
 
-  const context = useMemo(() => ({
-    plan,
-    nutritionPlan: loadActiveNutritionPlan(),
-    nutritionExecutions: loadNutritionExecutions(),
-    workoutHistory: loadWorkoutHistory(),
-    preferences,
-  }), [plan, preferences]);
+  const context = useMemo(() => ({ plan, workoutHistory: loadWorkoutHistory(), preferences }), [plan, preferences]);
   const previews = useMemo(() => [...currentSmartAlerts(context), ...buildSmartReminders(context)].slice(0, 6), [context]);
 
   async function update(next: NotificationPreferences) {
@@ -49,7 +41,7 @@ export function NotificationSettingsPanel({ plan }: { plan: TitanPlan | null }) 
     const nextPermission = await requestNotificationPermission();
     setPermission(nextPermission);
     if (nextPermission !== 'granted') {
-      setMessage('Permissão de notificações não concedida. Os alertas internos continuam disponíveis quando o TITAN FIT estiver aberto.');
+      setMessage('Permissão de notificações não concedida.');
       return;
     }
     const next = { ...preferences, enabled: true };
@@ -68,21 +60,18 @@ export function NotificationSettingsPanel({ plan }: { plan: TitanPlan | null }) 
   }
 
   return <section className="settings-card notification-settings-v057" aria-label="Notificações inteligentes">
-    <div className="notification-settings-head"><div><span className="info-label">Notificações inteligentes</span><strong>Lembretes TITAN</strong><small>Usam os horários do seu plano de dieta, musculação e cardio. Alterações nos registros atualizam os próximos lembretes.</small></div><span className={`notification-status ${preferences.enabled ? 'active' : ''}`}>{statusLabel(capability, permission, preferences.enabled)}</span></div>
+    <div className="notification-settings-head"><div><span className="info-label">Notificações inteligentes</span><strong>Lembretes TITAN</strong><small>Usam os horários de musculação e cardio do projeto ativo.</small></div><span className={`notification-status ${preferences.enabled ? 'active' : ''}`}>{statusLabel(capability, permission, preferences.enabled)}</span></div>
 
-    <label className="notification-master-toggle"><input type="checkbox" checked={preferences.enabled} onChange={(event) => void update({ ...preferences, enabled: event.target.checked })} /><span><strong>Ativar lembretes inteligentes</strong><small>{capability === 'native' ? 'No Android, o sistema pode exibir os lembretes mesmo com o app fechado após a permissão ser concedida.' : 'No navegador/PWA, os alertas internos dependem do aplicativo estar aberto.'}</small></span></label>
+    <label className="notification-master-toggle"><input type="checkbox" checked={preferences.enabled} onChange={(event) => void update({ ...preferences, enabled: event.target.checked })} /><span><strong>Ativar lembretes inteligentes</strong><small>{capability === 'native' ? 'No Android, os lembretes podem aparecer mesmo com o app fechado após a permissão ser concedida.' : 'No navegador/PWA, os alertas dependem do aplicativo estar em uso.'}</small></span></label>
 
     <div className="notification-options">
-      <Toggle label="Refeições" detail="No horário planejado de cada refeição." checked={preferences.nutrition} onChange={(value) => void update({ ...preferences, nutrition: value })} />
-      <Toggle label="Refeições atrasadas" detail={`Novo alerta ${preferences.overdueMealMinutes} min depois se ainda não houver registro.`} checked={preferences.overdueMeals} onChange={(value) => void update({ ...preferences, overdueMeals: value })} />
       <Toggle label="Musculação" detail={`${preferences.workoutLeadMinutes} min antes do horário real do treino.`} checked={preferences.workout} onChange={(value) => void update({ ...preferences, workout: value })} />
       <Toggle label="Cardio" detail={`${preferences.cardioLeadMinutes} min antes do horário da sessão programada.`} checked={preferences.cardio} onChange={(value) => void update({ ...preferences, cardio: value })} />
     </div>
 
-    <div className="notification-lead-grid">
+    <div className="notification-lead-grid notification-lead-grid-two">
       <LeadSelect label="Avisar treino antes" value={preferences.workoutLeadMinutes} onChange={(value) => void update({ ...preferences, workoutLeadMinutes: value })} />
       <LeadSelect label="Avisar cardio antes" value={preferences.cardioLeadMinutes} onChange={(value) => void update({ ...preferences, cardioLeadMinutes: value })} />
-      <LeadSelect label="Considerar refeição atrasada" value={preferences.overdueMealMinutes} onChange={(value) => void update({ ...preferences, overdueMealMinutes: value })} />
     </div>
 
     {capability === 'native' && permission !== 'granted' && <button type="button" className="primary-action" onClick={() => void enableAndroid()}>Permitir notificações no Android</button>}
@@ -92,7 +81,7 @@ export function NotificationSettingsPanel({ plan }: { plan: TitanPlan | null }) 
 
     <div className="notification-preview"><div><span className="info-label">Próximos alertas</span><strong>{previews.length ? `${previews.length} em destaque` : 'Nenhum alerta pendente'}</strong></div>{previews.length > 0 && <div className="notification-preview-list">{previews.map((item) => <article key={`${item.key}:${item.at.toISOString()}`}><span>{formatReminderTime(item.at)}</span><div><strong>{item.title}</strong><small>{item.body}</small></div></article>)}</div>}</div>
 
-    <small className="notification-platform-note">O Android agenda notificações locais no aparelho, sem servidor. O horário pode sofrer pequenos ajustes do próprio sistema para economia de bateria. No PWA/navegador, o TITAN mantém apenas os alertas internos enquanto o app está em uso.</small>
+    <small className="notification-platform-note">O Android agenda notificações locais no aparelho, sem servidor. O horário pode sofrer pequenos ajustes do próprio sistema para economia de bateria.</small>
   </section>;
 }
 
