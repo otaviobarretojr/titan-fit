@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.56 — Cardio 2.0
+
+- Criada engine própria de evolução cardiovascular reutilizando o histórico já existente, sem nova persistência.
+- Tela de Cardio passa a oferecer leitura de 7 e 30 dias.
+- Adicionados total de sessões, tempo acumulado, distância acumulada, melhor distância, ritmo médio e frequência cardíaca média.
+- Adicionada comparação com o período imediatamente anterior para sessões, distância e ritmo.
+- Ritmo passa a ser interpretado corretamente: menor tempo por quilômetro representa melhora.
+- Criada barra de progresso real para a meta de 5 km, baseada na melhor distância terrestre registrada.
+- Corrida e caminhada alimentam a meta de 5 km; bike, escada, remo e elíptico continuam contando no volume cardiovascular geral, mas não podem concluir falsamente a meta de corrida.
+- Adicionada leitura TITAN contextual para base insuficiente, evolução de ritmo, queda de ritmo, avanço de distância e marco de 5 km.
+- Execução atual de cardio, registro pelo smartwatch e histórico anterior foram preservados.
+- Adicionados testes para métricas do período, comparação de ritmo, ausência de distância, separação de musculação e proteção contra 5 km falso por ciclismo.
+- Lint, TypeScript, testes, build e `npm run validate` concluídos com sucesso antes da publicação Android.
+
+## v0.55.1 — Correção de classificação dos Relatórios
+
+- Sessões exclusivamente de cardio deixam de ser contabilizadas como sessões de musculação nos Relatórios TITAN.
+- Volume de treino dos relatórios passa a considerar somente registros que realmente possuem exercício de força.
+- Histórico de cardio permanece intacto e disponível para o Cardio 2.0.
+- Adicionado teste específico impedindo regressão dessa classificação.
+- APK Android assinado publicado na Release `v0.55.1`.
+
 ## v0.55 — Relatórios
 
 - Criada a área `Saúde → Relatórios` sem adicionar nova aba principal.
