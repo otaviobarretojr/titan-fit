@@ -1,0 +1,129 @@
+/* TITAN FIT v0.58.13 — proportional mobile bottom navigation
+   Final mobile geometry: 4 equal zones, larger icons, hard centering. */
+:root{
+  --titan-nav-height:80px;
+  --titan-nav-safe:env(safe-area-inset-bottom,0px);
+}
+
+.bottom-navigation{
+  position:fixed !important;
+  z-index:140 !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  transform:none !important;
+  width:100vw !important;
+  max-width:none !important;
+  height:calc(var(--titan-nav-height) + var(--titan-nav-safe)) !important;
+  margin:0 !important;
+  padding:7px 0 calc(7px + var(--titan-nav-safe)) !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,25%) !important;
+  grid-auto-flow:column !important;
+  align-items:center !important;
+  justify-items:stretch !important;
+  gap:0 !important;
+  box-sizing:border-box !important;
+  border:0 !important;
+  border-top:1px solid rgba(15,23,42,.10) !important;
+  border-radius:0 !important;
+  background:rgba(255,255,255,.99) !important;
+  box-shadow:0 -8px 24px rgba(15,23,42,.08) !important;
+  backdrop-filter:blur(22px) saturate(145%) !important;
+  -webkit-backdrop-filter:blur(22px) saturate(145%) !important;
+  overflow:visible !important;
+}
+
+.bottom-navigation button{
+  position:relative !important;
+  width:100% !important;
+  min-width:0 !important;
+  height:66px !important;
+  min-height:66px !important;
+  margin:0 !important;
+  padding:4px 0 3px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#737d8c !important;
+  display:grid !important;
+  grid-template-rows:38px 16px !important;
+  align-content:center !important;
+  justify-items:center !important;
+  align-items:center !important;
+  gap:4px !important;
+  font-size:.75rem !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+  letter-spacing:-.01em !important;
+  text-align:center !important;
+  cursor:pointer !important;
+  -webkit-tap-highlight-color:transparent !important;
+  transition:color .16s ease,transform .10s ease !important;
+}
+
+.bottom-navigation button:active{transform:scale(.97) !important}
+.bottom-navigation button.active{color:#1263c7 !important;background:transparent !important}
+.bottom-navigation button.active::after{content:none !important}
+
+.bottom-navigation .nav-icon-wrap{
+  width:56px !important;
+  height:38px !important;
+  min-width:56px !important;
+  min-height:38px !important;
+  margin:0 auto !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:999px !important;
+  background:transparent !important;
+  color:inherit !important;
+  transform:none !important;
+}
+
+.bottom-navigation button.active .nav-icon-wrap{
+  background:#e4efff !important;
+}
+
+.bottom-navigation .nav-icon{
+  display:block !important;
+  width:30px !important;
+  height:30px !important;
+  min-width:30px !important;
+  min-height:30px !important;
+  margin:0 !important;
+  padding:0 !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.9 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  overflow:visible !important;
+  transform:none !important;
+}
+
+.bottom-navigation button.active .nav-icon{stroke-width:2.15 !important}
+
+.bottom-navigation button>span:last-child{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 2px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  text-align:center !important;
+  color:inherit !important;
+}
+
+.app-shell{padding-bottom:0 !important}
+.app-main{padding-bottom:calc(var(--titan-nav-height) + var(--titan-nav-safe) + 18px) !important}
+
+@media(max-width:380px){
+  :root{--titan-nav-height:76px}
+  .bottom-navigation button{height:62px !important;min-height:62px !important;font-size:.70rem !important;grid-template-rows:36px 15px !important}
+  .bottom-navigation .nav-icon-wrap{width:52px !important;height:36px !important;min-width:52px !important;min-height:36px !important}
+  .bottom-navigation .nav-icon{width:28px !important;height:28px !important;min-width:28px !important;min-height:28px !important}
+}
