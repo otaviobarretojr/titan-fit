@@ -1,1 +1,1 @@
-release-v0.57.5-workout-skip
+release-v0.57.6-dashboard-workout-completed
