@@ -1,4 +1,4 @@
-name: Apply TITAN FIT v0.58.8 history evolution audit
+name: "Apply TITAN FIT v0.58.8 history evolution audit"
 
 on:
   push:
@@ -17,150 +17,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
-
-      - name: Apply history and evolution corrections
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          history = Path('src/features/history/HistoryPage.tsx')
-          history.write_text(r'''import { useState } from 'react';
-import { loadWorkoutHistory } from './storage';
-import type { HistorySet, WorkoutHistoryRecord } from './types';
-
-type HistoryPageProps = { refreshKey?: number };
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' }).format(new Date(value)).replace('.', '').toUpperCase();
-}
-function formatDuration(seconds: number) { const minutes = Math.round(seconds / 60); return `${minutes} min`; }
-function completedRecords(record: WorkoutHistoryRecord) { return record.exercises.reduce((sum, exercise) => sum + exercise.sets.length, 0); }
-function cardioPace(set: HistorySet) {
-  if (set.averagePace) return set.averagePace;
-  if (!set.durationSeconds || !set.distanceMeters || set.distanceMeters <= 0) return null;
-  const seconds = set.durationSeconds / (set.distanceMeters / 1000);
-  return `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}/km`;
-}
-
-export function HistoryPage({ refreshKey = 0 }: HistoryPageProps) {
-  void refreshKey;
-  const records = loadWorkoutHistory();
-  const [selected, setSelected] = useState<WorkoutHistoryRecord | null>(null);
-
-  if (selected) return <section className="history-detail-screen">
-    <header className="history-detail-header"><div><span className="eyebrow">{formatDate(selected.completedAt)} · {selected.workoutDay}</span><h2>{selected.workoutTitle}</h2><p>{formatDuration(selected.durationSeconds)} · {completedRecords(selected)} registros</p></div><button type="button" className="history-close" onClick={() => setSelected(null)} aria-label="Fechar histórico">×</button></header>
-    <div className="history-exercise-list">{selected.exercises.map((exercise) => <article className="history-exercise-card" key={exercise.exerciseId}><div className="history-exercise-heading"><div><span>{exercise.muscleGroup}</span><strong>{exercise.name}</strong></div><span className="history-type">{exercise.exerciseType === 'cardio' ? 'Cardio' : exercise.exerciseType === 'isometric' ? 'Isometria' : 'Musculação'}</span></div><div className="history-set-list">{exercise.sets.map((item) => { const pace = exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance' ? cardioPace(item) : null; return <div className="history-set-row" key={item.setNumber}><span>{exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance' ? 'Sessão' : `Série ${item.setNumber}`}</span>{item.weightKg !== null && <strong>{item.weightKg} kg</strong>}{item.repetitions !== null && <strong>{item.repetitions} reps</strong>}{item.rir !== null && <strong>RIR {item.rir}</strong>}{item.durationSeconds !== null && <strong>{Math.round(item.durationSeconds / 60)} min</strong>}{item.distanceMeters !== null && <strong>{(item.distanceMeters / 1000).toFixed(1)} km</strong>}{item.speedKmh !== null && <strong>{item.speedKmh} km/h</strong>}{pace && <strong>{pace}</strong>}{item.cardioZone && <strong>{item.cardioZone}</strong>}{item.averageHeartRate !== null && <strong>{item.averageHeartRate} bpm</strong>}{item.rpe !== undefined && item.rpe !== null && <strong>RPE {item.rpe}</strong>}{item.inclinePercent !== null && item.inclinePercent > 0 && <strong>{item.inclinePercent}% incl.</strong>}{item.calories !== null && <strong>{item.calories} kcal</strong>}</div>; })}</div></article>)}</div>
-    <button type="button" className="secondary-action history-back" onClick={() => setSelected(null)}>Voltar ao histórico</button>
-  </section>;
-
-  return <section className="history-page"><header className="section-header"><span className="eyebrow">TREINOS REALIZADOS</span><h2>Histórico</h2><p>Veja exatamente o que foi executado em cada sessão.</p></header>{records.length === 0 ? <div className="history-empty"><strong>Nenhum treino registrado</strong><p>Quando você concluir um treino, ele aparecerá aqui automaticamente.</p></div> : <div className="history-list">{records.map((record) => <button type="button" className="history-session-card" key={record.id} onClick={() => setSelected(record)}><div className="history-date"><strong>{formatDate(record.completedAt).split(' ')[0]}</strong><span>{formatDate(record.completedAt).split(' ')[1]}</span></div><div className="history-session-main"><span>{record.workoutDay}</span><strong>{record.workoutTitle}</strong><small>{formatDuration(record.durationSeconds)} · {completedRecords(record)} registros</small></div><span className="history-chevron">›</span></button>)}</div>}</section>;
-}
-''')
-
-          health = Path('src/features/health/HealthHubPage.tsx')
-          text = health.read_text()
-          text = text.replace("import { ProgressPage } from '../history/ProgressPage';", "import { HistoryPage } from '../history/HistoryPage';\nimport { ProgressPage } from '../history/ProgressPage';")
-          text = text.replace("type HealthView = 'today' | 'evolution' | 'coach' | 'reports';", "type HealthView = 'today' | 'evolution' | 'history' | 'coach' | 'reports';")
-          text = text.replace('health-hub-switch-four', 'health-hub-switch-five')
-          text = text.replace("<button type=\"button\" role=\"tab\" aria-selected={view === 'coach'}", "<button type=\"button\" role=\"tab\" aria-selected={view === 'history'} className={view === 'history' ? 'active' : ''} onClick={() => setView('history')}>Histórico</button>\n      <button type=\"button\" role=\"tab\" aria-selected={view === 'coach'}")
-          text = text.replace("{view === 'today' ? <SamsungHealthPage /> : view === 'evolution' ? <ProgressPage refreshKey={refreshKey} /> : view === 'coach' ? <CoachPage /> : <ReportsPanel />}", "{view === 'today' ? <SamsungHealthPage /> : view === 'evolution' ? <ProgressPage refreshKey={refreshKey} /> : view === 'history' ? <HistoryPage refreshKey={refreshKey} /> : view === 'coach' ? <CoachPage /> : <ReportsPanel />}")
-          health.write_text(text)
-
-          cardio = Path('src/features/cardio/evolution.ts')
-          text = cardio.read_text()
-          text = text.replace("type CardioEntry = { record: WorkoutHistoryRecord; exercise: WorkoutHistoryRecord['exercises'][number] };", "type CardioEntry = { record: WorkoutHistoryRecord; exercise: WorkoutHistoryRecord['exercises'][number] };\ntype CardioSession = { record: WorkoutHistoryRecord; entries: CardioEntry[] };")
-          old = '''  const entries: CardioEntry[] = records
-    .filter((record) => {
-      const time = new Date(record.completedAt).getTime();
-      return time >= start && time < end;
-    })
-    .flatMap((record) => record.exercises
-      .filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance')
-      .map((exercise) => ({ record, exercise })));
-
-  const sessions = entries.length;
-  const totalDurationSeconds = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDurationSeconds || 0), 0);
-  const totalDistanceMeters = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDistanceMeters || 0), 0);'''
-          new = '''  const cardioRecords: CardioSession[] = records
-    .filter((record) => {
-      const time = new Date(record.completedAt).getTime();
-      return time >= start && time < end;
-    })
-    .map((record) => ({ record, entries: record.exercises
-      .filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance')
-      .map((exercise) => ({ record, exercise })) }))
-    .filter((session) => session.entries.length > 0);
-  const entries = cardioRecords.flatMap((session) => session.entries);
-
-  const sessions = cardioRecords.length;
-  const totalDurationSeconds = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDurationSeconds || 0), 0);
-  const totalDistanceMeters = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDistanceMeters || 0), 0);'''
-          if old not in text: raise SystemExit('cardio summarize marker not found')
-          cardio.write_text(text.replace(old, new))
-
-          progress = Path('src/features/history/ProgressPage.tsx')
-          text = progress.read_text()
-          text = text.replace("import { BodyEvolutionPage } from '../evolution/BodyEvolutionPage';", "import { BodyEvolutionPage } from '../evolution/BodyEvolutionPage';\nimport { buildCardioEvolution } from '../cardio/evolution';")
-          text = text.replace("const [view, setView] = useState<'body' | 'training'>('body');", "const [view, setView] = useState<'body' | 'training' | 'cardio'>('body');")
-          text = text.replace('evolution-switch-two', 'evolution-switch-three')
-          text = text.replace("<button type=\"button\" role=\"tab\" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>", "<button type=\"button\" role=\"tab\" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>\n      <button type=\"button\" role=\"tab\" aria-selected={view === 'cardio'} className={view === 'cardio' ? 'active' : ''} onClick={() => setView('cardio')}>Cardio</button>")
-          text = text.replace("{view === 'body' ? <BodyEvolutionPage /> : <PrHall refreshKey={refreshKey} />}", "{view === 'body' ? <BodyEvolutionPage /> : view === 'training' ? <PrHall refreshKey={refreshKey} /> : <CardioEvolutionPanel refreshKey={refreshKey} />}")
-          marker = "type PrEvent = { exerciseId: string; exerciseName: string; muscleGroup: string; completedAt: string; weightKg: number; repetitions: number; };"
-          panel = r'''function CardioEvolutionPanel({ refreshKey }: { refreshKey: number }) {
-  void refreshKey;
-  const report = buildCardioEvolution(loadWorkoutHistory(), 30);
-  return <section className="hero-card compact cardio-evolution-summary"><span className="eyebrow">CARDIO INTEGRADO · 30 DIAS</span><h2>Evolução cardiovascular</h2><p>Os números abaixo vêm somente do cardio registrado dentro dos seus treinos.</p><div className="summary-grid"><div><span>Treinos com cardio</span><strong>{report.sessions}</strong></div><div><span>Tempo</span><strong>{Math.round(report.totalDurationSeconds / 60)} min</strong></div><div><span>Distância</span><strong>{report.totalDistanceMeters >= 1000 ? `${(report.totalDistanceMeters / 1000).toFixed(1)} km` : `${Math.round(report.totalDistanceMeters)} m`}</strong></div><div><span>FC média</span><strong>{report.averageHeartRate ? `${report.averageHeartRate} bpm` : '—'}</strong></div></div><div className="weekly-coach-priority"><span className="eyebrow">LEITURA TITAN</span><strong>{report.insight.title}</strong><p>{report.insight.message}</p></div></section>;
-}
-
-'''
-          if marker not in text: raise SystemExit('progress marker not found')
-          progress.write_text(text.replace(marker, panel + marker))
-
-          test = Path('tests/cardio-evolution.test.ts')
-          content = test.read_text()
-          insert = r'''
-  it('conta um treino com múltiplos blocos de cardio como uma única sessão', () => {
-    const record = cardioRecord('mixed', '2026-08-09T20:00:00', 2000, 1200, 140, 'Treino misto');
-    record.exercises.push({ ...record.exercises[0], exerciseId: 'mixed-cardio-2', name: 'Bike Zona 2', totalDistanceMeters: 5000, totalDurationSeconds: 1200 });
-    const report = buildCardioEvolution([record], 7, now);
-    expect(report.sessions).toBe(1);
-    expect(report.totalDistanceMeters).toBe(7000);
-    expect(report.totalDurationSeconds).toBe(2400);
-  });
-'''
-          content = content.replace("\n});\n", insert + "\n});\n")
-          test.write_text(content)
-
-          progress_test = Path('tests/ProgressPage.test.tsx')
-          content = progress_test.read_text()
-          content = content.replace("describe('ProgressPage v0.26.2'", "describe('ProgressPage v0.58.8'")
-          content = content.replace("\n});\n", r'''
-
-  it('mantém cardio como visão de evolução integrada, sem criar módulo isolado', () => {
-    render(<ProgressPage refreshKey={0} />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Cardio' }));
-    expect(screen.getByRole('heading', { name: 'Evolução cardiovascular' })).toBeInTheDocument();
-    expect(screen.getByText(/cardio registrado dentro dos seus treinos/i)).toBeInTheDocument();
-  });
-});
-''', 1)
-          progress_test.write_text(content)
-          PY
-
-      - name: Bump version and changelog
-        run: |
-          npm version 0.58.8 --no-git-tag-version
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('CHANGELOG.md')
-          text = path.read_text()
-          marker = 'Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.\n'
-          section = '''\n## v0.58.8 — Histórico e evolução integrados\n- Histórico volta a ficar acessível dentro do hub Saúde, sem criar uma nova aba principal.\n- Detalhe do cardio no histórico passa a exibir ritmo, zona realizada, RPE, calorias e demais métricas registradas.\n- Evolução ganha visão Cardio dentro do mesmo centro, explicitamente alimentada pelo cardio integrado aos treinos.\n- Contagem cardiovascular passa a considerar treinos com cardio, evitando duplicar uma sessão quando o mesmo treino possui mais de um bloco cardiovascular.\n- Musculação, PRs, composição corporal e histórico antigo permanecem compatíveis.\n'''
-          if '## v0.58.8 — Histórico e evolução integrados' not in text:
-              text = text.replace(marker, marker + section)
-          path.write_text(text)
-          PY
-
+      - name: Apply v0.58.8
+        run: node scripts/apply-v0588.mjs
       - name: Validate locally
         run: |
           npm ci
@@ -169,7 +27,6 @@ export function HistoryPage({ refreshKey = 0 }: HistoryPageProps) {
           npm run test
           npm run build
           npm run validate
-
       - name: Commit stable v0.58.8
         run: |
           git config user.name "github-actions[bot]"
