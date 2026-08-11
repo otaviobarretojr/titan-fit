@@ -124,9 +124,10 @@ class TitanHealthConnectPlugin : Plugin() {
 
         scope.launch {
             try {
-                val records = hc.readRecords(
+                val rawRecords = hc.readRecords(
                     ReadRecordsRequest(NutritionRecord::class, TimeRangeFilter.between(start, end))
                 ).records
+                val records = deduplicateNutritionRecords(rawRecords)
                 var calories = 0.0
                 var protein = 0.0
                 var carbohydrate = 0.0
@@ -153,6 +154,8 @@ class TitanHealthConnectPlugin : Plugin() {
                         .put("fatGrams", fat)
                         .put("fiberGrams", fiber)
                         .put("records", records.size)
+                        .put("rawRecords", rawRecords.size)
+                        .put("duplicatesRemoved", rawRecords.size - records.size)
                         .put("sources", JSArray(sources.toList()))
                         .put("source", "health-connect")
                 )
@@ -218,8 +221,27 @@ class TitanHealthConnectPlugin : Plugin() {
         .put("fatGrams", 0)
         .put("fiberGrams", 0)
         .put("records", 0)
+        .put("rawRecords", 0)
+        .put("duplicatesRemoved", 0)
         .put("sources", JSArray())
         .put("source", "health-connect")
+
+    private fun nutritionSignature(record: NutritionRecord): String = listOf(
+        record.metadata.dataOrigin.packageName,
+        record.startTime.toString(),
+        record.endTime.toString(),
+        record.name ?: "",
+        record.energy?.inKilocalories ?: 0.0,
+        record.protein?.inGrams ?: 0.0,
+        record.totalCarbohydrate?.inGrams ?: 0.0,
+        record.totalFat?.inGrams ?: 0.0,
+        record.dietaryFiber?.inGrams ?: 0.0
+    ).joinToString("|")
+
+    private fun deduplicateNutritionRecords(records: List<NutritionRecord>): List<NutritionRecord> {
+        val seen = linkedSetOf<String>()
+        return records.filter { record -> seen.add(nutritionSignature(record)) }
+    }
 
     private fun stringValues(values: JSArray): List<String> {
         val result = mutableListOf<String>()
@@ -328,7 +350,8 @@ class TitanHealthConnectPlugin : Plugin() {
     }
 
     private suspend fun readNutrition(client: HealthConnectClient, start: Instant, end: Instant, output: JSArray) {
-        client.readRecords(ReadRecordsRequest(NutritionRecord::class, TimeRangeFilter.between(start, end))).records.forEach { record ->
+        val rawRecords = client.readRecords(ReadRecordsRequest(NutritionRecord::class, TimeRangeFilter.between(start, end))).records
+        deduplicateNutritionRecords(rawRecords).forEach { record ->
             output.put(
                 sample("nutrition", record.metadata.id, record.startTime, record.endTime, record.energy?.inKilocalories ?: 0.0, "kcal", record.metadata.dataOrigin.packageName)
                     .put("metadata", JSObject()
