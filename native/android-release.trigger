@@ -1,1 +1,1 @@
-release-v0.57.11-health-connect-nutrition-dedup
+release-v0.57.12-remove-nutrition-module
