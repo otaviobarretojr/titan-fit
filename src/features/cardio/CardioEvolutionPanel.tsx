@@ -14,9 +14,9 @@ export function CardioEvolutionPanel({ records }: { records: WorkoutHistoryRecor
     </div>
 
     <div className="cardio-evolution-grid">
-      <Metric label="Sessões" value={String(evolution.sessions)} comparison={deltaLabel(evolution.sessionsDelta, '')} />
+      <Metric label="Sessões" value={String(evolution.sessions)} comparison={countDeltaLabel(evolution.sessionsDelta)} />
       <Metric label="Tempo" value={formatDuration(evolution.totalDurationSeconds)} comparison={null} />
-      <Metric label="Distância" value={formatDistance(evolution.totalDistanceMeters)} comparison={deltaLabel(evolution.distanceDeltaMeters, ' m')} />
+      <Metric label="Distância" value={formatDistance(evolution.totalDistanceMeters)} comparison={distanceDeltaLabel(evolution.distanceDeltaMeters)} />
       <Metric label="Melhor distância" value={formatDistance(evolution.bestDistanceMeters)} comparison={null} />
       <Metric label="Ritmo médio" value={formatPace(evolution.averagePaceSecondsPerKm)} comparison={paceComparison(evolution.paceDeltaSecondsPerKm)} />
       <Metric label="FC média" value={evolution.averageHeartRate ? `${evolution.averageHeartRate} bpm` : '—'} comparison={null} />
@@ -35,20 +35,22 @@ function Metric({ label, value, comparison }: { label: string; value: string; co
   return <article><span>{label}</span><strong>{value}</strong>{comparison && <small>{comparison}</small>}</article>;
 }
 
-function deltaLabel(delta: number | null, suffix: string) {
+function countDeltaLabel(delta: number | null) {
   if (delta === null) return null;
   if (delta === 0) return '→ igual ao período anterior';
-  return `${delta > 0 ? '↑ +' : '↓ '}${formatDelta(delta)}${suffix} vs. anterior`;
+  return `${delta > 0 ? '↑ +' : '↓ '}${Math.abs(delta)} vs. anterior`;
+}
+
+function distanceDeltaLabel(delta: number | null) {
+  if (delta === null) return null;
+  if (delta === 0) return '→ distância igual ao período anterior';
+  return `${delta > 0 ? '↑ +' : '↓ '}${formatDistance(Math.abs(delta))} vs. anterior`;
 }
 
 function paceComparison(delta: number | null) {
   if (delta === null) return null;
   if (Math.abs(delta) <= 3) return '→ ritmo estável';
   return delta < 0 ? `↑ ${Math.abs(delta)} s/km mais rápido` : `↓ ${delta} s/km mais lento`;
-}
-
-function formatDelta(value: number) {
-  return Math.abs(value) >= 1000 ? (Math.abs(value) / 1000).toFixed(1) : String(Math.round(value));
 }
 
 function formatDuration(seconds: number) {
