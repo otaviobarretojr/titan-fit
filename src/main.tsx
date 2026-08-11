@@ -60,6 +60,7 @@ import './styles/nutrition-health-v053.css';
 import './styles/nutrition-program-clean-v058.css';
 import './styles/home-compact-v058.css';
 import './styles/navigation-sync-v0571.css';
+import './styles/home-nutrition-next-v0572.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
