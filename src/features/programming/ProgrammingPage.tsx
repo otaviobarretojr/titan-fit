@@ -1,11 +1,9 @@
 import { useMemo, useState } from 'react';
 import { ExerciseLibraryPage } from '../exercise-library/ExerciseLibraryPage';
-import { NutritionProgramPanel } from '../nutrition/NutritionProgramPanel';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
-import '../../styles/nutrition-v053.css';
 
 type Props = { plan: TitanPlan | null };
-type ProgrammingTab = 'week' | 'nutrition' | 'library';
+type ProgrammingTab = 'week' | 'library';
 const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 const JS_DAY_TO_TITAN = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
@@ -21,16 +19,14 @@ export function ProgrammingPage({ plan }: Props) {
   const nextDay = DAY_ORDER[(DAY_ORDER.indexOf(today) + 1) % DAY_ORDER.length];
 
   return <div className="programming-page">
-    <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Treino, cardio e dieta organizados em uma única programação semanal.</p></section>
+    <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Treino, cardio e biblioteca organizados em uma única área.</p></section>
 
-    <div className="programming-tabs programming-tabs-v053" role="tablist" aria-label="Conteúdo da programação">
+    <div className="programming-tabs programming-tabs-two" role="tablist" aria-label="Conteúdo da programação">
       <button type="button" role="tab" aria-selected={activeTab === 'week'} className={activeTab === 'week' ? 'active' : ''} onClick={() => setActiveTab('week')}>Treino</button>
-      <button type="button" role="tab" aria-selected={activeTab === 'nutrition'} className={activeTab === 'nutrition' ? 'active' : ''} onClick={() => setActiveTab('nutrition')}>Dieta</button>
       <button type="button" role="tab" aria-selected={activeTab === 'library'} className={activeTab === 'library' ? 'active' : ''} onClick={() => setActiveTab('library')}>Biblioteca</button>
     </div>
 
     {activeTab === 'library' && <ExerciseLibraryPage />}
-    {activeTab === 'nutrition' && <NutritionProgramPanel />}
 
     {activeTab === 'week' && (!plan ? <ProgrammingEmpty /> : <>
       <section className="programming-today" aria-label="Treino de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p></div></section>
@@ -45,7 +41,7 @@ export function ProgrammingPage({ plan }: Props) {
   </div>;
 }
 
-function ProgrammingEmpty() { return <section className="programming-empty"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Nenhum projeto de treino ativo</h2><p>Importe ou gere um projeto de treino para preencher esta área. O plano nutricional é independente e pode ser inserido pela aba Dieta.</p></section>; }
+function ProgrammingEmpty() { return <section className="programming-empty"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Nenhum projeto de treino ativo</h2><p>Importe ou gere um projeto de treino para preencher esta área.</p></section>; }
 
 function WorkoutDetail({ workout, onBack }: { workout: TitanWorkoutDay; onBack: () => void }) {
   const strength = workout.exercises.filter(isStrength);
