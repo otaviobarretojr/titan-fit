@@ -23,6 +23,8 @@ function isStrength(exercise: TitanExercise) { return (exercise.exerciseType ?? 
 function isCardio(exercise: TitanExercise) { return exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance'; }
 function getGreeting() { const hour = new Date().getHours(); if (hour < 12) return 'Bom dia'; if (hour < 18) return 'Boa tarde'; return 'Boa noite'; }
 function formatToday() { return new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }).format(new Date()); }
+function isSameLocalDay(value: string, reference = new Date()) { const date = new Date(value); return date.getFullYear() === reference.getFullYear() && date.getMonth() === reference.getMonth() && date.getDate() === reference.getDate(); }
+function wasWorkoutCompletedToday(history: WorkoutHistoryRecord[], planId: string, workoutId: string) { return history.some((record) => record.planId === planId && record.workoutId === workoutId && isSameLocalDay(record.completedAt)); }
 
 export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPageProps) {
   const unifiedCoach = useUnifiedCoachReport();
@@ -37,6 +39,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const setCount = strengthExercises.reduce((total, exercise) => total + Math.max(1, exercise.sets ?? 1), 0);
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
   const history = loadWorkoutHistory();
+  const workoutCompletedToday = dayPlan ? wasWorkoutCompletedToday(history, plan.id, dayPlan.id) : false;
   const workoutCoach = getTodayCoachPriority(dayPlan);
   const weeklyCoach = buildWeeklyCoachSummary(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
@@ -59,7 +62,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       <h3 id="today-workout-title">{dayPlan.title}</h3>
       <p>{dayPlan.focus ?? 'Siga o projeto e registre cada etapa.'}</p>
       <div className="today-workout-metrics"><span><strong>{exercises.length}</strong> etapas</span>{setCount > 0 && <span><strong>{setCount}</strong> séries</span>}<span><strong>{compositionLabel}</strong></span></div>
-      <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>
+      {workoutCompletedToday ? <span className="today-rest-badge">✓ TREINO CONCLUÍDO</span> : <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>}
     </section> : <section className="today-rest-card" aria-label="Recuperação"><span className="eyebrow">PROJETO TITAN</span><h3>Dia de recuperação</h3><p>Hoje não há sessão programada no projeto ativo.</p><span className="today-rest-badge">RECUPERAÇÃO</span></section>}
 
     <section className={`dashboard-coach-card status-${coachStatus}`} aria-label="Prioridade do Coach TITAN"><div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN 1.0</span><span>{coachBadge}</span></div><strong>{coachTitle}</strong><p>{coachMessage}</p>{unifiedCoach ? <small className="coach-context">{unifiedCoach.availablePillars}/4 pilares · confiança {confidenceName(unifiedCoach.score.dataConfidence)}</small> : workoutCoach.context && <small className="coach-context">{workoutCoach.context}</small>}<div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}><div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div><div className="coach-weekly-metrics"><span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span><span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span><span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span><span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span></div><p>{weeklyCoach.message}</p></div>{workoutCoach.detail && <details><summary>Ver orientação do treino de hoje</summary><p>{workoutCoach.detail}</p></details>}</section>
