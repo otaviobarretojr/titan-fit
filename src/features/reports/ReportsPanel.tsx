@@ -44,7 +44,7 @@ export function ReportsPanel() {
     <section className="section-header">
       <span className="eyebrow">RELATÓRIOS TITAN</span>
       <h2>Seu período em números</h2>
-      <p>Treino, recuperação e evolução reunidos a partir dos registros existentes.</p>
+      <p>Treino, cardio integrado, recuperação e evolução reunidos a partir dos registros existentes.</p>
     </section>
 
     <div className="report-period-switch" role="tablist" aria-label="Período do relatório">
@@ -66,7 +66,9 @@ export function ReportsPanel() {
       </section>
 
       <div className="report-grid report-grid-three">
-        <ReportCard title="Treino" primary={`${report.training.sessions} sessões`} secondary={`${formatNumber(report.training.totalVolumeKg)} kg de volume registrado`} comparison={report.training.sessionsComparison} comparisonLabel="sessões" />
+        <ReportCard title="Treino" primary={`${report.training.sessions} sessões`} secondary={`${formatNumber(report.training.totalVolumeKg)} kg de volume registrado`} comparison={report.training.sessionsComparison} comparisonLabel="sessões">
+          <IntegratedCardio report={report} />
+        </ReportCard>
         <ReportCard title="Recuperação" primary={report.recovery.averageSleepHours === null ? 'Sem dados' : `${report.recovery.averageSleepHours} h`} secondary={report.recovery.sleepDays ? `média em ${report.recovery.sleepDays} registros de sono` : 'Sincronize o sono para incluir recuperação'} comparison={report.recovery.sleepComparison} comparisonLabel="sono médio" suffix=" h" />
         <ReportCard title="Evolução" primary={report.evolution.latestWeightKg === null ? 'Sem peso' : `${report.evolution.latestWeightKg} kg`} secondary={evolutionSummary(report)} comparison={report.evolution.weightComparison} comparisonLabel="peso" suffix=" kg" />
       </div>
@@ -80,8 +82,15 @@ export function ReportsPanel() {
   </div>;
 }
 
-function ReportCard({ title, primary, secondary, comparison, comparisonLabel, suffix = '' }: { title: string; primary: string; secondary: string; comparison: TitanReportComparison; comparisonLabel: string; suffix?: string }) {
-  return <article className="report-card"><span>{title}</span><strong>{primary}</strong><p>{secondary}</p><ComparisonLine comparison={comparison} label={comparisonLabel} suffix={suffix} /></article>;
+function ReportCard({ title, primary, secondary, comparison, comparisonLabel, suffix = '', children }: { title: string; primary: string; secondary: string; comparison: TitanReportComparison; comparisonLabel: string; suffix?: string; children?: React.ReactNode }) {
+  return <article className="report-card"><span>{title}</span><strong>{primary}</strong><p>{secondary}</p>{children}<ComparisonLine comparison={comparison} label={comparisonLabel} suffix={suffix} /></article>;
+}
+
+function IntegratedCardio({ report }: { report: TitanReport }) {
+  if (!report.training.cardioSessions) return <small className="report-comparison unavailable">Sem cardio registrado dentro dos treinos neste período</small>;
+  const distance = report.training.cardioDistanceMeters >= 1000 ? `${(report.training.cardioDistanceMeters / 1000).toFixed(1)} km` : `${Math.round(report.training.cardioDistanceMeters)} m`;
+  const heartRate = report.training.cardioAverageHeartRate ? ` · ${report.training.cardioAverageHeartRate} bpm` : '';
+  return <div className="report-integrated-cardio"><span>Cardio integrado</span><strong>{report.training.cardioSessions} treino{report.training.cardioSessions === 1 ? '' : 's'} · {Math.round(report.training.cardioDurationSeconds / 60)} min</strong><small>{distance}{heartRate}</small><ComparisonLine comparison={report.training.cardioSessionsComparison} label="treinos com cardio" suffix="" /></div>;
 }
 
 function ComparisonLine({ comparison, label, suffix }: { comparison: TitanReportComparison; label: string; suffix: string }) {
