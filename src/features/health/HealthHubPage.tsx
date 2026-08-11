@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CoachPage } from '../coach/CoachPage';
 import { ProgressPage } from '../history/ProgressPage';
 import { ReportsPanel } from '../reports/ReportsPanel';
+import { HealthNutritionSyncPanel } from './HealthNutritionSyncPanel';
 import { SamsungHealthPage } from './SamsungHealthPage';
 
 type HealthView = 'today' | 'evolution' | 'coach' | 'reports';
@@ -17,7 +18,7 @@ export function HealthHubPage({ refreshKey }: { refreshKey: number }) {
       <button type="button" role="tab" aria-selected={view === 'reports'} className={view === 'reports' ? 'active' : ''} onClick={() => setView('reports')}>Relatórios</button>
     </div>
     <div className="health-hub-content">
-      {view === 'today' ? <SamsungHealthPage /> : view === 'evolution' ? <ProgressPage refreshKey={refreshKey} /> : view === 'coach' ? <CoachPage /> : <ReportsPanel />}
+      {view === 'today' ? <><HealthNutritionSyncPanel /><SamsungHealthPage /></> : view === 'evolution' ? <ProgressPage refreshKey={refreshKey} /> : view === 'coach' ? <CoachPage /> : <ReportsPanel />}
     </div>
   </section>;
 }
