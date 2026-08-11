@@ -1,0 +1,41 @@
+.programming-tabs-two,
+.evolution-switch-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboard-training-focus .dashboard-heading {
+  margin-bottom: 18px;
+}
+
+.dashboard-training-focus > .today-workout,
+.dashboard-training-focus > .today-rest-card,
+.dashboard-training-focus > .dashboard-coach-card {
+  width: 100%;
+}
+
+.dashboard-training-focus > .today-workout,
+.dashboard-training-focus > .today-rest-card {
+  margin-top: 0;
+}
+
+.coach-pillars-three,
+.report-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.notification-lead-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 520px) {
+  .coach-pillars-three,
+  .report-grid-three {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-lead-grid-two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
