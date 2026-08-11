@@ -1,5 +1,5 @@
 import { putRecord, getRecord } from './indexedDb';
-import { STORE_NAMES, type DatabaseMetadata } from './schema';
+import { STORE_NAMES, TITAN_DB_VERSION, type DatabaseMetadata } from './schema';
 
 const LEGACY_KEYS = {
   activePlan: 'titan-fit.active-plan.v1',
@@ -54,7 +54,7 @@ export async function migrateLegacyStorage(): Promise<{ migrated: boolean; items
   }
 
   await putRecord<DatabaseMetadata>(STORE_NAMES.metadata, 'database', {
-    schemaVersion: 1,
+    schemaVersion: TITAN_DB_VERSION,
     migratedFromLocalStorageAt: new Date().toISOString()
   });
 

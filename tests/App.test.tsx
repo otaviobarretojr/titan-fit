@@ -38,16 +38,15 @@ describe('TITAN FIT', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Evolução' }));
     expect(screen.getByRole('tab', { name: 'Corpo' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Treino' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Nutrição' }));
-    expect(screen.getByText('Sem plano nutricional ativo')).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Nutrição' })).not.toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
     expect(screen.getByRole('heading', { name: 'Nenhum projeto de treino ativo' })).toBeInTheDocument();
     fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
-    expect(screen.getByRole('region', { name: 'Programação nutricional' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Baixar modelo de dieta TITAN' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Programação nutricional' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Baixar modelo de dieta TITAN' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar todos os dados' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();

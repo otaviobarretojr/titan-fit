@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.0 — Auditoria e estabilização pós-Nutrição
+- Auditoria geral iniciada sobre a base v0.57.12 após a remoção integral do módulo de Nutrição.
+- Correção da suíte de testes principal para validar explicitamente que abas, painéis e links de Nutrição não existem mais.
+- Correção da metadata da migração do banco local para registrar a versão real do schema IndexedDB.
+- Preservação dos projetos, histórico, evolução, cardio, saúde, preferências e sessões existentes.
+- Pipeline de qualidade mantido com lint, TypeScript, testes, build e validadores antes da publicação Android.
+
 ## v0.57.2 — Home nutricional e navegação definitiva
 - Home passa a exibir somente a próxima refeição futura em formato compacto.
 - Refeições atrasadas deixam de substituir a próxima refeição na Home.
