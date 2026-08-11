@@ -58,6 +58,8 @@ import './styles/health-clean-v0527.css';
 import './styles/health-hub-v0529.css';
 import './styles/nutrition-today-v053.css';
 import './styles/nutrition-health-v053.css';
+import './styles/nutrition-program-clean-v058.css';
+import './styles/home-compact-v058.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
