@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.11 — Execução de treino blindada
+- Séries de musculação só podem ser registradas com carga informada, repetições válidas e RIR real entre 0 e 10.
+- RIR executado deixa de nascer preenchido com o RIR-alvo, evitando contaminar histórico e progressão.
+- Reset da sessão passa a sobrescrever o estado persistido sem disputa entre delete e novo save no IndexedDB.
+- Troca de alternativa considera qualquer dado já registrado, não apenas carga e repetições.
+- Cardio, distância, isometria e mobilidade exigem sua métrica principal antes de concluir o registro.
+
 ## v0.58.10 — Dashboard e programação sincronizados
 - Dashboard detecta sessão ativa salva e troca a ação principal de Iniciar treino para Retomar treino.
 - Sessões em andamento passam a ficar visíveis também na Programação, evitando dúvida sobre o estado atual do treino.

@@ -49,9 +49,25 @@ describe('WorkoutExecutionView', () => {
     expect(saved).toContain('"completed":true');
   });
 
-  it('inicia o descanso automático ao registrar a série', () => {
-    render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+  it('exige dados executados antes de registrar uma série', () => {
+    render(<WorkoutExecutionView planId="plan-required" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     unlockVideoIfPresent();
+    const register = screen.getAllByRole('button', { name: 'Registrar série' })[0];
+    expect(screen.getByLabelText('Supino máquina série 1 RIR')).toHaveValue(null);
+    expect(register).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
+    expect(register).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });
+    expect(register).toBeEnabled();
+  });
+
+  it('inicia o descanso automático ao registrar uma série válida', () => {
+    render(<WorkoutExecutionView planId="plan-rest" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    unlockVideoIfPresent();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
@@ -119,6 +135,8 @@ describe('WorkoutExecutionView', () => {
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 2 carga'), { target: { value: '82.5' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 2 RIR'), { target: { value: '2' } });
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);

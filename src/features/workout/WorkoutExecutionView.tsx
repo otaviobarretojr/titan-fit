@@ -71,7 +71,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   function selectExerciseOption(option: TitanExercise) {
     const current = execution.exercises[baseExercise.id];
     if (current.selectedExerciseId === option.id && current.selectedExerciseName === option.name) return;
-    const hasRecordedData = current.sets.some(hasRecordedStrengthData);
+    const hasRecordedData = current.sets.some(hasRecordedExerciseData);
     if (hasRecordedData && !window.confirm('Já existem séries registradas neste exercício. Trocar a opção irá limpar as séries desta sessão. Deseja continuar?')) return;
     const freshSets = Array.from({ length: Math.max(1, option.sets ?? baseExercise.sets ?? 1) }, (_, index) => blankSet(index + 1, option));
     setExecution((state) => ({
@@ -148,7 +148,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }
   function resetSession() {
     if (!window.confirm('Apagar todos os registros desta sessão?')) return;
-    const next = createExecution(planId, workout); removeWorkoutExecution(planId, workout.id); setExecution(next); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setSessionSeconds(0); setPrCelebration(null);
+    const next = createExecution(planId, workout); saveWorkoutExecution(next); setExecution(next); setActiveExerciseIndex(0); setTimerRunning(false); setTimerSeconds(0); setSessionSeconds(0); setPrCelebration(null);
   }
 
   if (summary) return <section className="workout-summary"><span className="eyebrow">TREINO CONCLUÍDO</span><h2>{workout.title}</h2><p>Sessão salva com todas as métricas registradas.</p><div className="summary-grid"><div><span>Tempo</span><strong>{formatDuration(summary.durationSeconds)}</strong></div><div><span>Volume</span><strong>{Math.round(summary.totalVolumeKg).toLocaleString('pt-BR')} kg</strong></div><div><span>Registros</span><strong>{summary.totalSets}</strong></div><div><span>Cardio</span><strong>{summary.cardioMinutes ? `${summary.cardioMinutes} min` : '—'}</strong></div></div><button type="button" className="primary-action" onClick={onCompleted}>Ver progresso</button></section>;
@@ -230,7 +230,7 @@ function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, o
     {exerciseType === 'isometric' && numeric('durationSeconds', 'Tempo (segundos)')}
     {exerciseType === 'mobility' && <>{numeric('durationSeconds', 'Tempo (segundos)')}<label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
     {exerciseType === 'cardio' && <><label>Duração (min)<input aria-label={`${exercise.name} duração em minutos`} type="number" inputMode="decimal" min="0" step="1" value={set.durationSeconds == null ? '' : Number((set.durationSeconds / 60).toFixed(1))} onChange={(event) => onNumeric(set.setNumber, 'durationSeconds', event.target.value === '' ? '' : String(Number(event.target.value) * 60))} /></label>{numeric('distanceMeters', 'Distância (m)', '1')}{numeric('speedKmh', 'Velocidade (km/h)', '0.1')}{numeric('inclinePercent', 'Inclinação (%)', '0.5')}<label>Ritmo médio<input aria-label={`${exercise.name} ritmo médio`} value={set.averagePace ?? ''} placeholder="ex.: 6:30/km" onChange={(event) => onText('averagePace', event.target.value)} /></label><label>Zona realizada<input aria-label={`${exercise.name} zona realizada`} value={set.cardioZone ?? ''} placeholder={exercise.cardioZone ?? 'ex.: Zona 2'} onChange={(event) => onText('cardioZone', event.target.value)} /></label>{numeric('averageHeartRate', 'FC média (bpm)')}<label>RPE (0–10)<input aria-label={`${exercise.name} RPE`} type="number" inputMode="decimal" min="0" max="10" step="1" value={set.rpe ?? ''} onChange={(event) => onNumeric(set.setNumber, 'rpe', event.target.value)} /></label>{numeric('calories', 'Calorias')}<CardioCalculatedSummary set={set} /><label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
-  </div><button type="button" className="complete-set-action" aria-pressed={set.completed} onClick={onComplete}>{set.completed ? '✓ Registro concluído' : exerciseType === 'strength' ? 'Registrar série' : exerciseType === 'cardio' ? 'Registrar cardio' : `Concluir ${typeLabel(exerciseType).toLowerCase()}`}</button></div>;
+  </div><button type="button" className="complete-set-action" aria-pressed={set.completed} disabled={!set.completed && !canCompleteSet(exerciseType, set)} onClick={onComplete}>{set.completed ? '✓ Registro concluído' : exerciseType === 'strength' ? 'Registrar série' : exerciseType === 'cardio' ? 'Registrar cardio' : `Concluir ${typeLabel(exerciseType).toLowerCase()}`}</button></div>;
 }
 
 function CardioCalculatedSummary({ set }: { set: ExecutedSet }) {
@@ -258,7 +258,7 @@ function ProgressionPlan({ exercise }: { exercise: TitanExercise }) { return <de
 function resolveExerciseType(exercise: TitanExercise): ExerciseType { return exercise.exerciseType ?? 'strength'; }
 function typeLabel(type: ExerciseType) { return ({ strength: 'Musculação', distance: 'Distância', cardio: 'Cardio', isometric: 'Isometria', mobility: 'Mobilidade' })[type]; }
 function ariaField(field: NumericField) { return ({ weightKg: 'carga', repetitions: 'repetições', rir: 'RIR', durationSeconds: 'tempo', distanceMeters: 'distância', speedKmh: 'velocidade', inclinePercent: 'inclinação', averageHeartRate: 'frequência cardíaca', calories: 'calorias', rpe: 'RPE' })[field]; }
-function blankSet(setNumber: number, exercise: TitanExercise): ExecutedSet { return { setNumber, weightKg: null, repetitions: null, rir: resolveExerciseType(exercise) === 'strength' ? exercise.targetRir ?? null : null, durationSeconds: exercise.durationSeconds ?? null, distanceMeters: exercise.distanceMeters ?? exercise.minDistanceMeters ?? null, speedKmh: exercise.speedKmh ?? exercise.speedMinKmh ?? null, inclinePercent: exercise.inclinePercent ?? null, averagePace: exercise.averagePace ?? null, averageHeartRate: exercise.averageHeartRate ?? null, calories: exercise.calories ?? null, rpe: null, cardioZone: exercise.cardioZone ?? null, notes: exercise.notes ?? null, completed: false }; }
+function blankSet(setNumber: number, exercise: TitanExercise): ExecutedSet { return { setNumber, weightKg: null, repetitions: null, rir: null, durationSeconds: exercise.durationSeconds ?? null, distanceMeters: exercise.distanceMeters ?? exercise.minDistanceMeters ?? null, speedKmh: exercise.speedKmh ?? exercise.speedMinKmh ?? null, inclinePercent: exercise.inclinePercent ?? null, averagePace: exercise.averagePace ?? null, averageHeartRate: exercise.averageHeartRate ?? null, calories: exercise.calories ?? null, rpe: null, cardioZone: exercise.cardioZone ?? null, notes: exercise.notes ?? null, completed: false }; }
 function createExecution(planId: string, workout: TitanWorkoutDay): WorkoutExecution { const now = new Date().toISOString(); return { planId, workoutId: workout.id, startedAt: now, updatedAt: now, exercises: Object.fromEntries(workout.exercises.map((exercise) => [exercise.id, { exerciseId: exercise.id, exerciseType: resolveExerciseType(exercise), selectedExerciseId: exercise.id, selectedExerciseName: exercise.name, sets: Array.from({ length: Math.max(1, exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, exercise)) }])) }; }
 function normalizeExecution(saved: WorkoutExecution | null, planId: string, workout: TitanWorkoutDay): WorkoutExecution {
   if (!saved) return createExecution(planId, workout);
@@ -289,7 +289,14 @@ function effectiveExercise(base: TitanExercise, execution?: ExerciseExecution): 
   return exerciseOptions(base).find((option) => option.id === selectedId) ?? exerciseOptions(base).find((option) => option.name === selectedName) ?? (selectedId === base.id ? base : legacyAlternative(base, selectedName));
 }
 function alternativeExerciseId(baseId: string, name: string) { const slug = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); return `${baseId}::alt::${slug || 'alternativa'}`; }
-function hasRecordedStrengthData(set: ExecutedSet) { return set.completed || (set.weightKg ?? 0) > 0 || (set.repetitions ?? 0) > 0 || Boolean(set.notes); }
+function hasRecordedExerciseData(set: ExecutedSet) { return set.completed || set.weightKg !== null || set.repetitions !== null || set.rir !== null || set.durationSeconds !== null || set.distanceMeters !== null || set.speedKmh !== null || set.averageHeartRate !== null || set.rpe !== null || Boolean(set.averagePace) || Boolean(set.cardioZone) || Boolean(set.notes); }
+function canCompleteSet(exerciseType: ExerciseType, set: ExecutedSet) {
+  if (exerciseType === 'strength') return set.weightKg !== null && set.weightKg >= 0 && (set.repetitions ?? 0) > 0 && set.rir !== null && set.rir >= 0 && set.rir <= 10;
+  if (exerciseType === 'cardio') return (set.durationSeconds ?? 0) > 0;
+  if (exerciseType === 'distance') return (set.distanceMeters ?? 0) > 0;
+  if (exerciseType === 'isometric' || exerciseType === 'mobility') return (set.durationSeconds ?? 0) > 0;
+  return true;
+}
 
 function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
   const sessions = getStrengthSessions(history, exercise.id);
