@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.12 — Menu inferior realinhado
+- Menu inferior recebe uma única camada final de estilos para evitar conflito entre regras antigas.
+- Ícones aumentados e centralizados, com distribuição uniforme entre as quatro abas.
+- Espaçamento entre ícone e legenda reduzido e alinhamento vertical padronizado.
+- Área de toque e altura do menu ajustadas para ergonomia no Android e safe-area inferior.
+- Estado ativo mantém destaque discreto no padrão visual One UI.
+
 ## v0.58.11 — Execução de treino blindada
 - Séries de musculação só podem ser registradas com carga informada, repetições válidas e RIR real entre 0 e 10.
 - RIR executado deixa de nascer preenchido com o RIR-alvo, evitando contaminar histórico e progressão.
