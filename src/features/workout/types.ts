@@ -22,6 +22,7 @@ export type ExerciseExecution = {
   exerciseType: ExerciseType;
   selectedExerciseId?: string;
   selectedExerciseName?: string;
+  skipped?: boolean;
   sets: ExecutedSet[];
 };
 

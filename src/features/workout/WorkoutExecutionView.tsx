@@ -42,10 +42,12 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   }, [prCelebration]);
 
   const totals = useMemo(() => {
-    const entries = Object.values(execution.exercises).flatMap((exercise) => exercise.sets);
+    const exerciseEntries = Object.values(execution.exercises);
+    const entries = exerciseEntries.flatMap((exercise) => exercise.sets);
     const completed = entries.filter((set) => set.completed);
+    const resolved = exerciseEntries.reduce((total, exercise) => total + (exercise.skipped ? exercise.sets.length : exercise.sets.filter((set) => set.completed).length), 0);
     const volume = completed.reduce((total, set) => total + (set.weightKg ?? 0) * (set.repetitions ?? 0), 0);
-    return { completed: completed.length, total: entries.length, volume };
+    return { completed: completed.length, resolved, total: entries.length, volume };
   }, [execution]);
 
   const baseExercise = workout.exercises[activeExerciseIndex];
@@ -55,14 +57,15 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const alternativeSelected = activeExercise.id !== baseExercise.id;
   const exerciseType = resolveExerciseType(activeExercise);
   const activeSets = activeExecution.sets;
-  const exerciseCompleted = activeSets.every((set) => set.completed);
-  const progress = totals.total ? Math.round((totals.completed / totals.total) * 100) : 0;
+  const exerciseSkipped = Boolean(activeExecution.skipped);
+  const exerciseCompleted = exerciseSkipped || activeSets.every((set) => set.completed);
+  const progress = totals.total ? Math.round((totals.resolved / totals.total) * 100) : 0;
   const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
   const exerciseVideo = getExerciseVideo(activeExercise);
   const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
   function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
-    setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
+    setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: false, sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
   }
   function updateNumeric(setNumber: number, field: NumericField, value: string) { updateSet(setNumber, { [field]: value === '' ? null : Number(value) }); }
   function selectExerciseOption(option: TitanExercise) {
@@ -81,6 +84,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
           selectedExerciseId: option.id,
           selectedExerciseName: option.name,
           exerciseType: resolveExerciseType(option),
+          skipped: false,
           sets: freshSets,
         },
       },
@@ -101,10 +105,42 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     updateSet(set.setNumber, { completed });
     if (completed && (activeExercise.restSeconds ?? 0) > 0) { setTimerSeconds(activeExercise.restSeconds ?? 0); setTimerRunning(true); }
   }
+  function skipExercise() {
+    const completedSets = activeSets.filter((set) => set.completed).length;
+    const message = completedSets > 0
+      ? `Pular o restante de \"${activeExercise.name}\"? As ${completedSets} série(s) já concluída(s) serão mantidas no histórico.`
+      : `Pular \"${activeExercise.name}\" nesta sessão? O exercício ficará sem volume e sem PR.`;
+    if (!window.confirm(message)) return;
+    setExecution((current) => ({
+      ...current,
+      updatedAt: new Date().toISOString(),
+      exercises: {
+        ...current.exercises,
+        [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: true },
+      },
+    }));
+    setTimerRunning(false);
+    setTimerSeconds(0);
+    setPrCelebration(null);
+    if (activeExerciseIndex < workout.exercises.length - 1) {
+      setActiveExerciseIndex((value) => Math.min(workout.exercises.length - 1, value + 1));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+  function restoreSkippedExercise() {
+    setExecution((current) => ({
+      ...current,
+      updatedAt: new Date().toISOString(),
+      exercises: {
+        ...current.exercises,
+        [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: false },
+      },
+    }));
+  }
   function nextExercise() { setActiveExerciseIndex((value) => Math.min(workout.exercises.length - 1, value + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function previousExerciseNav() { setActiveExerciseIndex((value) => Math.max(0, value - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   function finishWorkout() {
-    if (totals.completed !== totals.total) return;
+    if (totals.resolved !== totals.total) return;
     const completedAt = new Date().toISOString(); const record = createHistoryRecord(planId, planName, workout, execution, completedAt);
     addWorkoutHistoryRecord(record); removeWorkoutExecution(planId, workout.id); setTimerRunning(false); setTimerSeconds(0);
     const cardioMinutes = record.exercises.filter((exercise) => exercise.exerciseType === 'cardio').reduce((total, exercise) => total + Math.round(exercise.totalDurationSeconds / 60), 0);
@@ -120,11 +156,11 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   return <div className="workout-mode">
     {prCelebration && <div className="live-pr-celebration" role="status" aria-live="polite"><span className="live-pr-trophy">🏆</span><div><small>NOVO PR</small><strong>{prCelebration.exerciseName}</strong><span>{formatStrengthReference(prCelebration.reference)}</span></div></div>}
     <button type="button" className="secondary-action back-action" onClick={onBack}>← Sair do modo treino</button>
-    <section className="workout-progress-card compact-workout-progress"><div><span className="eyebrow">EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} / {totals.total} concluídos · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
+    <section className="workout-progress-card compact-workout-progress"><div><span className="eyebrow">EXERCÍCIO {activeExerciseIndex + 1} DE {workout.exercises.length}</span><h2>{workout.title}</h2><p>{totals.completed} séries feitas · {totals.resolved} / {totals.total} resolvidas · Tempo {formatSessionTime(sessionSeconds)}</p></div><strong>{progress}%</strong><div className="workout-progress-track"><span style={{ width: `${progress}%` }} /></div></section>
     {timerSeconds > 0 && <section className="rest-timer active" aria-label="Cronômetro de descanso"><div><span className="info-label">DESCANSO AUTOMÁTICO</span><strong>{formatTimer(timerSeconds)}</strong></div><div className="timer-actions"><button type="button" className="secondary-action" onClick={() => setTimerRunning((value) => !value)}>{timerRunning ? 'Pausar' : 'Continuar'}</button><button type="button" className="secondary-action" onClick={() => { setTimerRunning(false); setTimerSeconds(0); }}>Pular</button></div></section>}
 
     <article className={`active-exercise-card ${exerciseType === 'cardio' ? 'cardio-exercise' : ''}`}>
-      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3>{alternativeSelected && <small className="alternative-active-label">Alternativa selecionada · histórico próprio</small>}</div></header>
+      <header><span className="exercise-order">{activeExerciseIndex + 1}</span><div><span className="info-label">{activeExercise.muscleGroup} · {typeLabel(exerciseType)}</span><h3>{activeExercise.name}</h3>{alternativeSelected && <small className="alternative-active-label">Alternativa selecionada · histórico próprio</small>}{exerciseSkipped && <small className="workout-skipped-label">PULADO NESTA SESSÃO</small>}</div></header>
 
       {availableOptions.length > 1 ? <details className="exercise-alternative-picker">
         <summary><span><small>EXERCÍCIO DA SESSÃO</small><strong>{activeExercise.name}</strong></span><b>Trocar</b></summary>
@@ -162,11 +198,13 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
 
-      {!videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
+      {!exerciseSkipped && !videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
+      {exerciseSkipped && <div className="workout-skipped-state"><strong>Exercício pulado</strong><span>Não gera séries, volume ou PR para o que não foi executado.</span><button type="button" className="secondary-action" onClick={restoreSkippedExercise}>Voltar e fazer exercício</button></div>}
     </article>
 
+    {!exerciseCompleted && <button type="button" className="workout-skip-exercise" onClick={skipExercise}>Pular exercício · sem tempo</button>}
     {workout.exercises[activeExerciseIndex + 1] && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{effectiveExercise(workout.exercises[activeExerciseIndex + 1], execution.exercises[workout.exercises[activeExerciseIndex + 1].id]).name}</strong></aside>}
-    <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.completed !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
+    <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.resolved !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
   </div>;
 }
@@ -207,11 +245,11 @@ function normalizeExecution(saved: WorkoutExecution | null, planId: string, work
     const previous = saved.exercises?.[exercise.id]; if (!previous) continue;
     const selected = effectiveExercise(exercise, previous);
     const fallbackSets = Array.from({ length: Math.max(1, selected.sets ?? exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, selected));
-    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(selected), selectedExerciseId: selected.id, selectedExerciseName: selected.name, sets: fallbackSets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
+    fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(selected), selectedExerciseId: selected.id, selectedExerciseName: selected.name, skipped: Boolean(previous.skipped), sets: fallbackSets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
   }
   return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, updatedAt: saved.updatedAt ?? fresh.updatedAt };
 }
-function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => execution.exercises[exercise.id]?.sets.some((set) => !set.completed)); return index < 0 ? workout.exercises.length - 1 : index; }
+function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => { const entry = execution.exercises[exercise.id]; return entry && !entry.skipped && entry.sets.some((set) => !set.completed); }); return index < 0 ? workout.exercises.length - 1 : index; }
 function resolveStructuredAlternative(base: TitanExercise, alternative: TitanExerciseAlternative): TitanExercise {
   return { ...base, ...alternative, muscleGroup: alternative.muscleGroup ?? base.muscleGroup, alternatives: undefined, alternativeExercises: undefined };
 }
@@ -333,14 +371,16 @@ function formatStrengthReference(value: StrengthReference) { return `${formatWei
 function formatWeight(value: number) { return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(1))); }
 
 function createHistoryRecord(planId: string, planName: string, workout: TitanWorkoutDay, execution: WorkoutExecution, completedAt: string): WorkoutHistoryRecord {
-  const exercises = workout.exercises.map((exercise) => {
+  const exercises = workout.exercises.flatMap((exercise) => {
     const exerciseExecution = execution.exercises[exercise.id];
     const selectedExercise = effectiveExercise(exercise, exerciseExecution);
-    const exerciseType = resolveExerciseType(selectedExercise); const sets = exerciseExecution.sets.map(({ completed: _completed, ...set }) => set);
+    const completedSets = exerciseExecution.sets.filter((set) => set.completed);
+    if (exerciseExecution.skipped && completedSets.length === 0) return [];
+    const exerciseType = resolveExerciseType(selectedExercise); const sets = completedSets.map(({ completed: _completed, ...set }) => set);
     const volumeKg = exerciseType === 'strength' ? sets.reduce((total, set) => total + (set.weightKg ?? 0) * (set.repetitions ?? 0), 0) : 0;
     const values = (key: keyof ExecutedSet) => sets.map((set) => set[key]).filter((value): value is number => typeof value === 'number');
     const heartRates = values('averageHeartRate');
-    return { exerciseId: selectedExercise.id, name: selectedExercise.name, muscleGroup: selectedExercise.muscleGroup, exerciseType, sets, volumeKg, bestWeightKg: values('weightKg').length ? Math.max(...values('weightKg')) : null, totalDistanceMeters: values('distanceMeters').reduce((a, b) => a + b, 0), totalDurationSeconds: values('durationSeconds').reduce((a, b) => a + b, 0), bestSpeedKmh: values('speedKmh').length ? Math.max(...values('speedKmh')) : null, bestInclinePercent: values('inclinePercent').length ? Math.max(...values('inclinePercent')) : null, averageHeartRate: heartRates.length ? Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length) : null };
+    return [{ exerciseId: selectedExercise.id, name: selectedExercise.name, muscleGroup: selectedExercise.muscleGroup, exerciseType, sets, volumeKg, bestWeightKg: values('weightKg').length ? Math.max(...values('weightKg')) : null, totalDistanceMeters: values('distanceMeters').reduce((a, b) => a + b, 0), totalDurationSeconds: values('durationSeconds').reduce((a, b) => a + b, 0), bestSpeedKmh: values('speedKmh').length ? Math.max(...values('speedKmh')) : null, bestInclinePercent: values('inclinePercent').length ? Math.max(...values('inclinePercent')) : null, averageHeartRate: heartRates.length ? Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length) : null }];
   });
   return { id: `${planId}:${workout.id}:${completedAt}`, planId, planName, workoutId: workout.id, workoutTitle: workout.title, workoutDay: workout.day, startedAt: execution.startedAt, completedAt, durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(execution.startedAt).getTime()) / 1000)), totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0), totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0), exercises };
 }
