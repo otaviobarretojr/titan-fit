@@ -1,1 +1,1 @@
-release-v0.57.1-navigation-nutrition-polish
+release-v0.57.2-home-navigation-final
