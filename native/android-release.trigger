@@ -1,1 +1,1 @@
-release-v0.57.12-cleanup-final
+release-v0.58.0-audit-stable
