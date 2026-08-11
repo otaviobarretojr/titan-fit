@@ -60,7 +60,7 @@ describe('WorkoutExecutionView', () => {
   it('permite pular exercício sem criar volume ou PR falso', () => {
     render(<WorkoutExecutionView planId="plan-skip" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     unlockVideoIfPresent();
-    fireEvent.click(screen.getByRole('button', { name: 'Pular exercício · sem tempo' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pular exercício' }));
 
     expect(screen.getByText('PULADO NESTA SESSÃO')).toBeInTheDocument();
     expect(screen.getByText('Exercício pulado')).toBeInTheDocument();
@@ -71,6 +71,17 @@ describe('WorkoutExecutionView', () => {
     const history = localStorage.getItem('titan-fit:history:v1');
     expect(history).toContain('"totalVolumeKg":0');
     expect(history).toContain('"exercises":[]');
+  });
+
+  it('trata cardio como etapa do treino e usa a ação Registrar cardio', () => {
+    const cardioWorkout: TitanWorkoutDay = {
+      id: 'mixed', day: 'Segunda', title: 'Treino + cardio',
+      exercises: [{ id: 'zone2', name: 'Zona 2', muscleGroup: 'Cardiovascular', exerciseType: 'cardio', sets: 1, durationSeconds: 1800, cardioZone: 'Zona 2' }]
+    };
+    render(<WorkoutExecutionView planId="plan-cardio" planName="Plano A" workout={cardioWorkout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Registrar cardio' })).toBeInTheDocument();
+    expect(screen.queryByText('Pular exercício · sem tempo')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pular exercício' })).toBeInTheDocument();
   });
 
   it('troca para uma alternativa oficial e exibe o vídeo próprio dela', () => {

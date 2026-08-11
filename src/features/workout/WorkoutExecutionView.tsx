@@ -202,7 +202,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {exerciseSkipped && <div className="workout-skipped-state"><strong>Exercício pulado</strong><span>Não gera séries, volume ou PR para o que não foi executado.</span><button type="button" className="secondary-action" onClick={restoreSkippedExercise}>Voltar e fazer exercício</button></div>}
     </article>
 
-    {!exerciseCompleted && <button type="button" className="workout-skip-exercise" onClick={skipExercise}>Pular exercício · sem tempo</button>}
+    {!exerciseCompleted && <button type="button" className="workout-skip-exercise" onClick={skipExercise}>Pular exercício</button>}
     {workout.exercises[activeExerciseIndex + 1] && <aside className="next-exercise-preview"><span>Próximo exercício</span><strong>{effectiveExercise(workout.exercises[activeExerciseIndex + 1], execution.exercises[workout.exercises[activeExerciseIndex + 1].id]).name}</strong></aside>}
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.resolved !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
@@ -218,7 +218,7 @@ function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, o
     {exerciseType === 'isometric' && numeric('durationSeconds', 'Tempo (segundos)')}
     {exerciseType === 'mobility' && <>{numeric('durationSeconds', 'Tempo (segundos)')}<label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
     {exerciseType === 'cardio' && <>{numeric('durationSeconds', 'Tempo (segundos)')}{numeric('distanceMeters', 'Distância (m)', '1')}{numeric('speedKmh', 'Velocidade (km/h)', '0.1')}{numeric('inclinePercent', 'Inclinação (%)', '0.5')}<label>Ritmo médio<input aria-label={`${exercise.name} ritmo médio`} value={set.averagePace ?? ''} placeholder="ex.: 6:30/km" onChange={(event) => onText('averagePace', event.target.value)} /></label>{numeric('averageHeartRate', 'FC média (bpm)')}{numeric('calories', 'Calorias')}<label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
-  </div><button type="button" className="complete-set-action" aria-pressed={set.completed} onClick={onComplete}>{set.completed ? '✓ Registro concluído' : exerciseType === 'strength' ? 'Registrar série' : `Concluir ${typeLabel(exerciseType).toLowerCase()}`}</button></div>;
+  </div><button type="button" className="complete-set-action" aria-pressed={set.completed} onClick={onComplete}>{set.completed ? '✓ Registro concluído' : exerciseType === 'strength' ? 'Registrar série' : exerciseType === 'cardio' ? 'Registrar cardio' : `Concluir ${typeLabel(exerciseType).toLowerCase()}`}</button></div>;
 }
 
 function Prescription({ exercise }: { exercise: TitanExercise }) {

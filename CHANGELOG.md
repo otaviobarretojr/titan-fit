@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.4 — Auditoria do modo treino
+- Revisão do fluxo principal de execução de treino após a integração definitiva do cardio ao projeto de musculação.
+- Correção da ação de pulo para exibir somente “Pular exercício”.
+- Cardio integrado passa a usar a ação explícita “Registrar cardio” dentro da própria sequência do treino.
+- Teste dedicado garante que o cardio seja tratado como etapa do treino, sem reintroduzir fluxo isolado.
+- Preservação de retomada de sessão, vídeos, alternativas, descanso automático, histórico e progressão.
+
 ## v0.58.3 — Cardio integrado ao treino
 - Remoção definitiva da tela, agendador e gerador de cardio isolado.
 - Cardio passa a existir somente como exercício/etapa dentro dos treinos do Projeto TITAN.
