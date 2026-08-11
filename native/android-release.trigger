@@ -1,1 +1,1 @@
-release-v0.58.3-integrated-cardio-stable
+release-v0.58.4-workout-mode-stable
