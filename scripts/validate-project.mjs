@@ -6,8 +6,8 @@ const read = (file) => readFile(path.join(root, file), 'utf8');
 const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
 
-const [pkgText, vite, app, appTest, types, validation, execution, healthPage, healthHub, healthBridge, nativeHealthDocs, dashboard, programmingPage, workoutTypes, historyTypes, progressPage, nutritionEvolution, intelligence, evolution, evolutionStorage, evolutionTypes, resetData, videoLibrary, database, backup, deploy, ci] = await Promise.all([
-  read('package.json'), read('vite.config.ts'), read('src/app/App.tsx'), read('tests/App.test.tsx'), read('src/features/plan/types.ts'), read('src/features/plan/validation.ts'), read('src/features/workout/WorkoutExecutionView.tsx'), read('src/features/health/SamsungHealthPage.tsx'), read('src/features/health/HealthHubPage.tsx'), read('src/features/health/bridge.ts'), read('native/android-health-connect/README.md'), read('src/features/dashboard/DashboardPage.tsx'), read('src/features/programming/ProgrammingPage.tsx'), read('src/features/workout/types.ts'), read('src/features/history/types.ts'), read('src/features/history/ProgressPage.tsx'), read('src/features/nutrition/NutritionEvolutionPanel.tsx'), read('src/features/history/intelligence.ts'), read('src/features/evolution/BodyEvolutionPage.tsx'), read('src/features/evolution/storage.ts'), read('src/features/evolution/types.ts'), read('src/core/database/resetAppData.ts'), read('src/features/exercise-library/videos.ts'), read('src/core/database/indexedDb.ts'), read('src/core/backup/backup.ts'), read('.github/workflows/deploy-pages.yml'), read('.github/workflows/ci.yml')
+const [pkgText, vite, app, appTest, types, validation, execution, healthPage, healthHub, healthBridge, nativeHealthDocs, dashboard, programmingPage, workoutTypes, historyTypes, progressPage, intelligence, evolution, evolutionStorage, evolutionTypes, resetData, videoLibrary, database, backup, deploy, ci] = await Promise.all([
+  read('package.json'), read('vite.config.ts'), read('src/app/App.tsx'), read('tests/App.test.tsx'), read('src/features/plan/types.ts'), read('src/features/plan/validation.ts'), read('src/features/workout/WorkoutExecutionView.tsx'), read('src/features/health/SamsungHealthPage.tsx'), read('src/features/health/HealthHubPage.tsx'), read('src/features/health/bridge.ts'), read('native/android-health-connect/README.md'), read('src/features/dashboard/DashboardPage.tsx'), read('src/features/programming/ProgrammingPage.tsx'), read('src/features/workout/types.ts'), read('src/features/history/types.ts'), read('src/features/history/ProgressPage.tsx'), read('src/features/history/intelligence.ts'), read('src/features/evolution/BodyEvolutionPage.tsx'), read('src/features/evolution/storage.ts'), read('src/features/evolution/types.ts'), read('src/core/database/resetAppData.ts'), read('src/features/exercise-library/videos.ts'), read('src/core/database/indexedDb.ts'), read('src/core/backup/backup.ts'), read('.github/workflows/deploy-pages.yml'), read('.github/workflows/ci.yml')
 ]);
 
 const pkg = JSON.parse(pkgText);
@@ -15,7 +15,6 @@ assert(/^\d+\.\d+\.\d+$/.test(pkg.version), 'package.json deve declarar uma vers
 assert(pkg.scripts?.lint?.includes('--max-warnings 0'), 'Lint deve falhar quando houver warnings');
 assert(app.includes("import packageInfo from '../../package.json'") && app.includes('const APP_VERSION = packageInfo.version;'), 'Versão visível deve vir do package.json');
 assert(appTest.includes("import packageInfo from '../package.json'") && appTest.includes('`v${packageInfo.version}`'), 'Teste do App deve usar a versão dinâmica');
-
 assert(vite.includes("base: isAndroid ? './' : '/titan-fit/'") && vite.includes("display: 'standalone'") && vite.includes('disable: isAndroid'), 'Build PWA/Android deve manter configuração oficial');
 assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar Node 24');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar antes de publicar');
@@ -25,9 +24,9 @@ assert(!app.includes("{ id: 'progress', label: 'Progresso' }") && app.includes("
 assert(!app.includes("CardioPage") && !app.includes("'cardio' |") && !app.includes("activeTab === 'cardio'") && !app.includes('directCardioId') && !app.includes('startCardio'), 'App não deve manter rota ou execução de cardio standalone');
 assert(!dashboard.includes('../cardio/currentCardio') && !dashboard.includes('onStartCardio') && !dashboard.includes('Iniciar cardio'), 'Dashboard não deve iniciar cardio por módulo isolado');
 assert(dashboard.includes('dayPlan?.exercises') && dashboard.includes("exercise.exerciseType === 'cardio'") && dashboard.includes('onStartWorkout(dayPlan.id)'), 'Dashboard deve executar musculação e cardio pelo treino do projeto');
-assert(!programmingPage.includes('../cardio/currentCardio') && !programmingPage.includes("ProgrammingTab = 'strength' | 'cardio'") && programmingPage.includes("ProgrammingTab = 'week' | 'nutrition' | 'library'"), 'Programação deve remover cardio isolado e manter dieta integrada');
-assert(programmingPage.includes('Treino, cardio e dieta organizados em uma única programação semanal.') && programmingPage.includes("exercise.exerciseType === 'cardio'") && programmingPage.includes("exercise.exerciseType === 'distance'"), 'Programação deve reunir musculação, cardio e dieta sem separar o cardio em módulo próprio');
-assert(programmingPage.includes('NutritionProgramPanel') && programmingPage.includes("activeTab === 'nutrition'"), 'Programação deve manter o plano nutricional importável dentro da área principal');
+assert(!programmingPage.includes('../cardio/currentCardio') && programmingPage.includes("ProgrammingTab = 'week' | 'library'"), 'Programação deve manter somente treino e biblioteca');
+assert(programmingPage.includes('Treino, cardio e biblioteca organizados em uma única área.') && programmingPage.includes("exercise.exerciseType === 'cardio'") && programmingPage.includes("exercise.exerciseType === 'distance'"), 'Programação deve reunir musculação e cardio no projeto');
+assert(!programmingPage.includes('NutritionProgramPanel') && !programmingPage.includes("activeTab === 'nutrition'"), 'Programação não deve manter módulo nutricional');
 assert(programmingPage.includes("const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']"), 'Semana oficial deve começar no domingo');
 
 assert(app.includes("activeTab === 'health' && <HealthHubPage refreshKey={historyRefresh} />"), 'Saúde deve usar o hub consolidado de visão geral e evolução');
@@ -44,10 +43,9 @@ assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKm
 assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas cardiovasculares');
 assert(execution.includes('getExerciseVideo(activeExercise)') && execution.includes('exerciseOptions(baseExercise)') && execution.includes('selectedExerciseId: option.id'), 'Modo treino deve preservar vídeo e substituições');
 
-assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall') && progressPage.includes('NutritionEvolutionPanel'), 'Evolução deve manter corpo, PRs e nutrição');
-for (const tab of ['Corpo', 'Treino', 'Nutrição']) assert(progressPage.includes(`>${tab}</button>`), `Evolução deve manter a aba ${tab}`);
-assert(nutritionEvolution.includes('const PERIODS = [7, 30, 90] as const') && nutritionEvolution.includes('Aderência calórica') && nutritionEvolution.includes('Proteína na meta') && nutritionEvolution.includes('Dias registrados'), 'Nutrição em Evolução deve manter períodos e indicadores principais');
-assert(nutritionEvolution.includes('nutritionTotalsForDate') && nutritionEvolution.includes('loadNutritionExecutions') && nutritionEvolution.includes('loadActiveNutritionPlan'), 'Nutrição em Evolução deve usar histórico e plano nutricional persistidos');
+assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Evolução deve manter corpo e PRs');
+for (const tab of ['Corpo', 'Treino']) assert(progressPage.includes(`>${tab}</button>`), `Evolução deve manter a aba ${tab}`);
+assert(!progressPage.includes('NutritionEvolutionPanel') && !progressPage.includes('>Nutrição</button>'), 'Evolução não deve manter módulo nutricional');
 assert(evolution.includes('Bioimpedância automática do relógio') && evolution.includes('Medidas e fotos') && evolution.includes('A bioimpedância vem automaticamente do Samsung Health'), 'Evolução corporal deve manter bioimpedância automática e registros manuais complementares');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução deve permanecer versionado');
 assert(evolutionStorage.includes('body-evolution-v1'), 'Evolução deve permanecer persistida');
