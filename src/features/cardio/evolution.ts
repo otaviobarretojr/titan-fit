@@ -25,6 +25,7 @@ export type CardioEvolution = {
 
 type WindowSummary = Omit<CardioEvolution, 'periodDays' | 'sessionsDelta' | 'distanceDeltaMeters' | 'paceDeltaSecondsPerKm' | 'paceTrend' | 'insight'>;
 type CardioEntry = { record: WorkoutHistoryRecord; exercise: WorkoutHistoryRecord['exercises'][number] };
+type CardioSession = { record: WorkoutHistoryRecord; entries: CardioEntry[] };
 
 export function buildCardioEvolution(records: WorkoutHistoryRecord[], periodDays: CardioEvolutionPeriod, now = new Date()): CardioEvolution {
   const current = summarize(records, periodDays, now, 0);
@@ -50,16 +51,18 @@ export function buildCardioEvolution(records: WorkoutHistoryRecord[], periodDays
 function summarize(records: WorkoutHistoryRecord[], periodDays: CardioEvolutionPeriod, now: Date, offsetDays: number): WindowSummary {
   const end = now.getTime() - offsetDays * DAY;
   const start = end - periodDays * DAY;
-  const entries: CardioEntry[] = records
+  const cardioRecords: CardioSession[] = records
     .filter((record) => {
       const time = new Date(record.completedAt).getTime();
       return time >= start && time < end;
     })
-    .flatMap((record) => record.exercises
+    .map((record) => ({ record, entries: record.exercises
       .filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance')
-      .map((exercise) => ({ record, exercise })));
+      .map((exercise) => ({ record, exercise })) }))
+    .filter((session) => session.entries.length > 0);
+  const entries = cardioRecords.flatMap((session) => session.entries);
 
-  const sessions = entries.length;
+  const sessions = cardioRecords.length;
   const totalDurationSeconds = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDurationSeconds || 0), 0);
   const totalDistanceMeters = entries.reduce((sum, item) => sum + Math.max(0, item.exercise.totalDistanceMeters || 0), 0);
   const runWalkEntries = entries.filter(isRunWalkEntry);

@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.8 — Histórico e evolução integrados
+- Histórico volta a ficar acessível dentro do hub Saúde, sem criar uma nova aba principal.
+- Detalhe do cardio no histórico passa a exibir ritmo, zona realizada, RPE, calorias e demais métricas registradas.
+- Evolução ganha visão Cardio dentro do mesmo centro, explicitamente alimentada pelo cardio integrado aos treinos.
+- Contagem cardiovascular passa a considerar treinos com cardio, evitando duplicar uma sessão quando o mesmo treino possui mais de um bloco cardiovascular.
+- Musculação, PRs, composição corporal e histórico antigo permanecem compatíveis.
+
 ## v0.58.7 — Cardio integrado 2.0
 - Cardio permanece exclusivamente como etapa do treino do Projeto TITAN, sem módulo isolado.
 - Entrada de duração passa de segundos para minutos na interface, mantendo segundos internamente para compatibilidade histórica.

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { buildCardioEvolution } from '../cardio/evolution';
 import { BodyEvolutionPage } from '../evolution/BodyEvolutionPage';
 import { getExerciseSessions } from './intelligence';
 import { loadWorkoutHistory } from './storage';
@@ -6,15 +7,22 @@ import type { HistoryExercise, WorkoutHistoryRecord } from './types';
 import { WeeklyCoachSummary } from './WeeklyCoachSummary';
 
 export function ProgressPage({ refreshKey }: { refreshKey: number }) {
-  const [view, setView] = useState<'body' | 'training'>('body');
+  const [view, setView] = useState<'body' | 'training' | 'cardio'>('body');
   return <>
     <section className="section-header evolution-center-header"><span className="eyebrow">CENTRO DE EVOLUÇÃO</span><h2>Evolução</h2><p>Acompanhe composição corporal e seus recordes de treino no mesmo lugar.</p></section>
-    <div className="evolution-switch evolution-switch-two" role="tablist" aria-label="Centro de evolução">
+    <div className="evolution-switch evolution-switch-three" role="tablist" aria-label="Centro de evolução">
       <button type="button" role="tab" aria-selected={view === 'body'} className={view === 'body' ? 'active' : ''} onClick={() => setView('body')}>Corpo</button>
       <button type="button" role="tab" aria-selected={view === 'training'} className={view === 'training' ? 'active' : ''} onClick={() => setView('training')}>Treino</button>
+      <button type="button" role="tab" aria-selected={view === 'cardio'} className={view === 'cardio' ? 'active' : ''} onClick={() => setView('cardio')}>Cardio</button>
     </div>
-    {view === 'body' ? <BodyEvolutionPage /> : <PrHall refreshKey={refreshKey} />}
+    {view === 'body' ? <BodyEvolutionPage /> : view === 'training' ? <PrHall refreshKey={refreshKey} /> : <CardioEvolutionPanel refreshKey={refreshKey} />}
   </>;
+}
+
+function CardioEvolutionPanel({ refreshKey }: { refreshKey: number }) {
+  void refreshKey;
+  const report = buildCardioEvolution(loadWorkoutHistory(), 30);
+  return <section className="hero-card compact cardio-evolution-summary"><span className="eyebrow">CARDIO INTEGRADO · 30 DIAS</span><h2>Evolução cardiovascular</h2><p>Os números abaixo vêm somente do cardio registrado dentro dos seus treinos.</p><div className="summary-grid"><div><span>Treinos com cardio</span><strong>{report.sessions}</strong></div><div><span>Tempo</span><strong>{Math.round(report.totalDurationSeconds / 60)} min</strong></div><div><span>Distância</span><strong>{report.totalDistanceMeters >= 1000 ? `${(report.totalDistanceMeters / 1000).toFixed(1)} km` : `${Math.round(report.totalDistanceMeters)} m`}</strong></div><div><span>FC média</span><strong>{report.averageHeartRate ? `${report.averageHeartRate} bpm` : '—'}</strong></div></div><div className="weekly-coach-priority"><span className="eyebrow">LEITURA TITAN</span><strong>{report.insight.title}</strong><p>{report.insight.message}</p></div></section>;
 }
 
 type PrEvent = { exerciseId: string; exerciseName: string; muscleGroup: string; completedAt: string; weightKg: number; repetitions: number; };

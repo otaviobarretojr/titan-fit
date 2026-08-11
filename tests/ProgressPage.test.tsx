@@ -49,7 +49,7 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-describe('ProgressPage v0.26.2', () => {
+describe('ProgressPage v0.58.8', () => {
   it('trata a primeira execução apenas como linha de base', () => {
     localStorage.setItem('titan-fit:history:v1', JSON.stringify([
       strengthRecord('record-1', '2026-08-06T21:00:00.000Z', 80, 10),
@@ -79,5 +79,11 @@ describe('ProgressPage v0.26.2', () => {
     expect(screen.getByText('82.5 kg × 10')).toBeInTheDocument();
     expect(screen.getByText('1 conquista')).toBeInTheDocument();
     expect(screen.queryByText('80 kg × 10')).not.toBeInTheDocument();
+  });
+  it('mantém cardio como visão de evolução integrada, sem criar módulo isolado', () => {
+    render(<ProgressPage refreshKey={0} />);
+    fireEvent.click(screen.getByRole('tab', { name: 'Cardio' }));
+    expect(screen.getByRole('heading', { name: 'Evolução cardiovascular' })).toBeInTheDocument();
+    expect(screen.getByText(/cardio registrado dentro dos seus treinos/i)).toBeInTheDocument();
   });
 });

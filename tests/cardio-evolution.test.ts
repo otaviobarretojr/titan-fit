@@ -91,4 +91,12 @@ describe('Cardio 2.0 — evolução cardiovascular', () => {
     expect(report.fiveKmReached).toBe(false);
     expect(report.averagePaceSecondsPerKm).toBe(600);
   });
+  it('conta um treino com múltiplos blocos de cardio como uma única sessão', () => {
+    const record = cardioRecord('mixed', '2026-08-09T20:00:00', 2000, 1200, 140, 'Treino misto');
+    record.exercises.push({ ...record.exercises[0], exerciseId: 'mixed-cardio-2', name: 'Bike Zona 2', totalDistanceMeters: 5000, totalDurationSeconds: 1200 });
+    const report = buildCardioEvolution([record], 7, now);
+    expect(report.sessions).toBe(1);
+    expect(report.totalDistanceMeters).toBe(7000);
+    expect(report.totalDurationSeconds).toBe(2400);
+  });
 });
