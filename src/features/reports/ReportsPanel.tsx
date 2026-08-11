@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { loadBodyEvolution } from '../evolution/storage';
 import type { BodyEvolutionEntry } from '../evolution/types';
 import { loadHealthSamples } from '../health/repository';
@@ -82,7 +82,7 @@ export function ReportsPanel() {
   </div>;
 }
 
-function ReportCard({ title, primary, secondary, comparison, comparisonLabel, suffix = '', children }: { title: string; primary: string; secondary: string; comparison: TitanReportComparison; comparisonLabel: string; suffix?: string; children?: React.ReactNode }) {
+function ReportCard({ title, primary, secondary, comparison, comparisonLabel, suffix = '', children }: { title: string; primary: string; secondary: string; comparison: TitanReportComparison; comparisonLabel: string; suffix?: string; children?: ReactNode }) {
   return <article className="report-card"><span>{title}</span><strong>{primary}</strong><p>{secondary}</p>{children}<ComparisonLine comparison={comparison} label={comparisonLabel} suffix={suffix} /></article>;
 }
 
