@@ -62,4 +62,12 @@ describe('CardioPage — execução planejada', () => {
     expect(screen.queryByRole('button', { name: 'Iniciar cardio' })).not.toBeInTheDocument();
     expect(screen.getByText('CARDIO DE HOJE')).toBeInTheDocument();
   });
+
+  it('exibe a evolução cardiovascular e a meta de 5 km sem exigir novo cadastro', () => {
+    render(<CardioPage plan={plan} />);
+    expect(screen.getByRole('heading', { name: 'Evolução cardiovascular' })).toBeInTheDocument();
+    expect(screen.getByText('META 5 KM')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '7 dias' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: '30 dias' })).toBeInTheDocument();
+  });
 });
