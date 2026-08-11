@@ -9,10 +9,15 @@ const nutritionPlan: TitanNutritionPlan = {
   defaultTarget: { caloriesKcal: 2500, proteinG: 200, carbohydrateG: 280, fatG: 65 },
 };
 
-function workout(id: string, completedAt: string, volume: number): WorkoutHistoryRecord {
+function workout(id: string, completedAt: string, volume: number, exerciseType: 'strength' | 'cardio' | 'distance' = 'strength'): WorkoutHistoryRecord {
   return {
     id, planId: 'p1', planName: 'Plano', workoutId: id, workoutTitle: id, workoutDay: 'Segunda',
-    startedAt: completedAt, completedAt, durationSeconds: 3600, totalSets: 0, totalVolumeKg: volume, exercises: [],
+    startedAt: completedAt, completedAt, durationSeconds: 3600, totalSets: 1, totalVolumeKg: volume,
+    exercises: [{
+      exerciseId: `${id}-exercise`, name: id, muscleGroup: exerciseType === 'strength' ? 'Peitoral' : 'Cardio', exerciseType,
+      sets: [], volumeKg: volume, bestWeightKg: null, totalDistanceMeters: exerciseType === 'distance' ? 5000 : 0,
+      totalDurationSeconds: exerciseType === 'strength' ? 0 : 1800, bestSpeedKmh: null, bestInclinePercent: null, averageHeartRate: null,
+    }],
   };
 }
 
@@ -86,5 +91,18 @@ describe('Relatórios TITAN', () => {
     expect(report.recovery.sleepComparison.previous).toBe(6);
     expect(report.recovery.sleepComparison.trend).toBe('up');
     expect(report.previousAvailableSections).toBe(3);
+  });
+
+  it('não conta sessões exclusivamente de cardio como treino de musculação', () => {
+    const report = buildTitanReport({
+      workouts: [
+        workout('strength', '2026-08-09T20:00:00', 5000, 'strength'),
+        workout('run', '2026-08-08T20:00:00', 0, 'distance'),
+        workout('zone2', '2026-08-07T20:00:00', 0, 'cardio'),
+      ],
+    }, 7, now);
+
+    expect(report.training.sessions).toBe(1);
+    expect(report.training.totalVolumeKg).toBe(5000);
   });
 });
