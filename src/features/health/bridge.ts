@@ -1,11 +1,10 @@
-import type { DailyActivitySummary, DailyNutritionSummary, HealthDiagnostics, HealthMetricType, HealthSample, TitanHealthConnectBridge } from './types';
+import type { DailyActivitySummary, HealthDiagnostics, HealthMetricType, HealthSample, TitanHealthConnectBridge } from './types';
 
 type NativeHealthConnectPlugin = {
   isAvailable: () => Promise<{ available?: boolean } | boolean>;
   requestHealthPermissions: (options: { types: HealthMetricType[] }) => Promise<{ granted?: boolean } | boolean>;
   readSamples: (options: { types: HealthMetricType[]; since?: string }) => Promise<{ samples?: HealthSample[] } | HealthSample[]>;
   readDailyActivitySummary?: () => Promise<DailyActivitySummary>;
-  readDailyNutritionSummary?: () => Promise<DailyNutritionSummary>;
   diagnoseHealthData?: (options: { types: HealthMetricType[]; since?: string }) => Promise<HealthDiagnostics>;
 };
 
@@ -33,7 +32,7 @@ declare global {
   }
 }
 
-export const DEFAULT_HEALTH_METRICS: HealthMetricType[] = ['sleep', 'heart-rate', 'steps', 'active-calories', 'exercise', 'distance', 'body-composition', 'nutrition'];
+export const DEFAULT_HEALTH_METRICS: HealthMetricType[] = ['sleep', 'heart-rate', 'steps', 'active-calories', 'exercise', 'distance', 'body-composition'];
 
 function capacitorBridge(): TitanHealthConnectBridge | null {
   if (typeof window === 'undefined') return null;
@@ -44,7 +43,6 @@ function capacitorBridge(): TitanHealthConnectBridge | null {
     async requestPermissions(types) { const result = await plugin.requestHealthPermissions({ types }); return typeof result === 'boolean' ? result : Boolean(result.granted); },
     async readSamples(types, since) { const result = await plugin.readSamples({ types, since }); return Array.isArray(result) ? result : result.samples ?? []; },
     readDailyActivitySummary: plugin.readDailyActivitySummary ? () => plugin.readDailyActivitySummary!() : undefined,
-    readDailyNutritionSummary: plugin.readDailyNutritionSummary ? () => plugin.readDailyNutritionSummary!() : undefined,
     diagnoseHealthData: plugin.diagnoseHealthData ? (types, since) => plugin.diagnoseHealthData!({ types, since }) : undefined,
   };
 }
@@ -117,12 +115,6 @@ export async function readDailyActivitySummary(): Promise<DailyActivitySummary |
   const bridge = getHealthConnectBridge();
   if (!bridge?.readDailyActivitySummary) return null;
   try { return await bridge.readDailyActivitySummary(); } catch { return null; }
-}
-
-export async function readDailyNutritionSummary(): Promise<DailyNutritionSummary | null> {
-  const bridge = getHealthConnectBridge();
-  if (!bridge?.readDailyNutritionSummary) return null;
-  try { return await bridge.readDailyNutritionSummary(); } catch { return null; }
 }
 
 export async function diagnoseHealthData(types = DEFAULT_HEALTH_METRICS, since?: string): Promise<HealthDiagnostics | null> {
