@@ -1,1 +1,1 @@
-release-v0.57.2-home-navigation-final
+release-v0.57.3-dashboard-cleanup
