@@ -1,0 +1,62 @@
+name: "Finalize TITAN FIT v0.58.11 Workout audit"
+on:
+  push:
+    paths:
+      - '.github/workflows/v05811-finalize.yml'
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Apply workout execution fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/features/workout/WorkoutExecutionView.tsx')
+          s=p.read_text()
+          s=s.replace("    const hasRecordedData = current.sets.some(hasRecordedStrengthData);", "    const hasRecordedData = current.sets.some(hasRecordedExerciseData);")
+          s=s.replace("    const next = createExecution(planId, workout); removeWorkoutExecution(planId, workout.id); setExecution(next); setActiveExerciseIndex(0);", "    const next = createExecution(planId, workout); saveWorkoutExecution(next); setExecution(next); setActiveExerciseIndex(0);")
+          s=s.replace("  </div><button type=\"button\" className=\"complete-set-action\" aria-pressed={set.completed} onClick={onComplete}>", "  </div><button type=\"button\" className=\"complete-set-action\" aria-pressed={set.completed} disabled={!set.completed && !canCompleteSet(exerciseType, set)} onClick={onComplete}>")
+          s=s.replace("function blankSet(setNumber: number, exercise: TitanExercise): ExecutedSet { return { setNumber, weightKg: null, repetitions: null, rir: resolveExerciseType(exercise) === 'strength' ? exercise.targetRir ?? null : null,", "function blankSet(setNumber: number, exercise: TitanExercise): ExecutedSet { return { setNumber, weightKg: null, repetitions: null, rir: null,")
+          s=s.replace("function hasRecordedStrengthData(set: ExecutedSet) { return set.completed || (set.weightKg ?? 0) > 0 || (set.repetitions ?? 0) > 0 || Boolean(set.notes); }", "function hasRecordedExerciseData(set: ExecutedSet) { return set.completed || set.weightKg !== null || set.repetitions !== null || set.rir !== null || set.durationSeconds !== null || set.distanceMeters !== null || set.speedKmh !== null || set.averageHeartRate !== null || set.rpe !== null || Boolean(set.averagePace) || Boolean(set.cardioZone) || Boolean(set.notes); }\nfunction canCompleteSet(exerciseType: ExerciseType, set: ExecutedSet) {\n  if (exerciseType === 'strength') return set.weightKg !== null && set.weightKg >= 0 && (set.repetitions ?? 0) > 0 && set.rir !== null && set.rir >= 0 && set.rir <= 10;\n  if (exerciseType === 'cardio') return (set.durationSeconds ?? 0) > 0;\n  if (exerciseType === 'distance') return (set.distanceMeters ?? 0) > 0;\n  if (exerciseType === 'isometric' || exerciseType === 'mobility') return (set.durationSeconds ?? 0) > 0;\n  return true;\n}")
+          p.write_text(s)
+
+          t=Path('tests/WorkoutExecutionView.test.tsx')
+          x=t.read_text()
+          old="""  it('inicia o descanso automático ao registrar a série', () => {\n    render(<WorkoutExecutionView planId=\"plan-1\" planName=\"Plano A\" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);\n    unlockVideoIfPresent();\n    fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);\n    expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();\n    expect(screen.getByText('1:30')).toBeInTheDocument();\n  });"""
+          new="""  it('exige dados executados antes de registrar uma série', () => {\n    render(<WorkoutExecutionView planId=\"plan-required\" planName=\"Plano A\" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);\n    unlockVideoIfPresent();\n    const register = screen.getAllByRole('button', { name: 'Registrar série' })[0];\n    expect(screen.getByLabelText('Supino máquina série 1 RIR')).toHaveValue(null);\n    expect(register).toBeDisabled();\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });\n    expect(register).toBeDisabled();\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });\n    expect(register).toBeEnabled();\n  });\n\n  it('inicia o descanso automático ao registrar uma série válida', () => {\n    render(<WorkoutExecutionView planId=\"plan-rest\" planName=\"Plano A\" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);\n    unlockVideoIfPresent();\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });\n    fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);\n    expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();\n    expect(screen.getByText('1:30')).toBeInTheDocument();\n  });"""
+          if old not in x: raise SystemExit('rest test marker missing')
+          x=x.replace(old,new)
+          x=x.replace("    fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });\n\n    fireEvent.click", "    fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '2' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 2 RIR'), { target: { value: '2' } });\n\n    fireEvent.click")
+          t.write_text(x)
+          PY
+      - name: Bump version and changelog
+        run: |
+          npm version 0.58.11 --no-git-tag-version
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('CHANGELOG.md'); s=p.read_text(); marker='Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.\n'
+          entry='''\n## v0.58.11 — Execução de treino blindada\n- Séries de musculação só podem ser registradas com carga informada, repetições válidas e RIR real entre 0 e 10.\n- RIR executado deixa de nascer preenchido com o RIR-alvo, evitando contaminar histórico e progressão.\n- Reset da sessão passa a sobrescrever o estado persistido sem disputa entre delete e novo save no IndexedDB.\n- Troca de alternativa considera qualquer dado já registrado, não apenas carga e repetições.\n- Cardio, distância, isometria e mobilidade exigem sua métrica principal antes de concluir o registro.\n'''
+          p.write_text(s.replace(marker, marker+entry, 1))
+          PY
+      - name: Validate release candidate
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test
+          npm run build
+          npm run validate
+      - name: Commit v0.58.11
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/workout/WorkoutExecutionView.tsx tests/WorkoutExecutionView.test.tsx package.json package-lock.json CHANGELOG.md
+          git commit -m "release: v0.58.11 workout execution integrity"
+          git push
