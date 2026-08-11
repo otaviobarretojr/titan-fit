@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.7 — Cardio integrado 2.0
+- Cardio permanece exclusivamente como etapa do treino do Projeto TITAN, sem módulo isolado.
+- Entrada de duração passa de segundos para minutos na interface, mantendo segundos internamente para compatibilidade histórica.
+- Registro integrado passa a incluir zona realizada e RPE 0–10, além de distância, velocidade, inclinação, ritmo, FC, calorias e observações.
+- A tela calcula velocidade média e ritmo a partir de duração + distância para conferência rápida do registro.
+- Histórico antigo continua compatível; novos campos são aditivos.
+
 ## v0.58.6 — Progressão inteligente
 - TITAN deixa de sugerir aumento de carga quando o RIR da sessão não foi registrado.
 - Aumento de carga passa a exigir que a própria maior carga da sessão alcance o topo da faixa prescrita, evitando progressão falsa baseada em séries mais leves.

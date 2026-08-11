@@ -80,6 +80,11 @@ describe('WorkoutExecutionView', () => {
     };
     render(<WorkoutExecutionView planId="plan-cardio" planName="Plano A" workout={cardioWorkout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     expect(screen.getByRole('button', { name: 'Registrar cardio' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Zona 2 duração em minutos')).toHaveValue(30);
+    expect(screen.getByLabelText('Zona 2 zona realizada')).toHaveValue('Zona 2');
+    expect(screen.getByLabelText('Zona 2 RPE')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Zona 2 série 1 distância'), { target: { value: '5000' } });
+    expect(screen.getByText(/10.0 km\/h/)).toBeInTheDocument();
     expect(screen.queryByText('Pular exercício · sem tempo')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pular exercício' })).toBeInTheDocument();
   });

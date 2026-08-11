@@ -13,6 +13,8 @@ export type ExecutedSet = {
   averagePace: string | null;
   averageHeartRate: number | null;
   calories: number | null;
+  rpe: number | null;
+  cardioZone: string | null;
   notes: string | null;
   completed: boolean;
 };
