@@ -1,1 +1,1 @@
-release-v0.58.2-persistence-stable
+release-v0.58.3-integrated-cardio-stable
