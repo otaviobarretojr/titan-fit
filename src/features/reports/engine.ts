@@ -116,7 +116,7 @@ function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, n
     return time >= start && time < end;
   };
 
-  const workoutsInWindow = workouts.filter((item) => inWindow(item.completedAt));
+  const workoutsInWindow = workouts.filter((item) => inWindow(item.completedAt) && item.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength'));
   const totalVolumeKg = workoutsInWindow.reduce((sum, item) => sum + Math.max(0, item.totalVolumeKg || 0), 0);
 
   const nutritionInWindow = nutritionExecutions.filter((item) => inWindow(`${item.date}T12:00:00`));
