@@ -1,1 +1,1 @@
-release-v0.57.12-remove-nutrition-module-validator-fixed
+release-v0.57.12-cleanup-final
