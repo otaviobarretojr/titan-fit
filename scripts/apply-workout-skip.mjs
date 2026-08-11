@@ -91,3 +91,4 @@ const cssFile = 'src/styles/workout-mode-v038.css';
 fs.appendFileSync(cssFile, `\n.workout-skip-exercise{width:100%;min-height:44px;border:1px dashed #d5a25a;border-radius:15px;background:#fffaf3;color:#9a5b14;font:inherit;font-weight:800}.workout-skipped-label{display:inline-flex;margin-top:5px;padding:4px 7px;border-radius:999px;background:#fff0df;color:#a45a17;font-size:10px;font-weight:900;letter-spacing:.05em}.workout-skipped-state{display:grid;gap:7px;margin-top:14px;padding:14px;border-radius:16px;background:#fffaf3;border:1px solid #f0d9b8}.workout-skipped-state span{color:var(--text-muted,#68707d);font-size:12px;line-height:1.4}\n`);
 
 console.log('Workout skip patch applied successfully.');
+// trigger: 2026-08-10
