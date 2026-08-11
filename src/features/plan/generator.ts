@@ -1,9 +1,8 @@
 import { generateTitanEngineBlueprints, orderTitanSessionExercises, type TitanEngineExercise, type TitanEngineTensionBias } from '../../core/titan-engine';
-import { generateCardioSchedule } from '../cardio/generator';
 import { TITAN_COMPLETE_EXERCISE_CATALOG, getEligibleExercises, getPrescriptionRule } from '../exercise-library/prescription';
 import type { TitanCatalogExercise } from '../exercise-library/catalog';
 import type { GeneratedPlanCandidate, TitanProfile, TitanTrainingAssessment } from '../profile/types';
-import type { TitanExerciseAlternative, TitanPlan, TitanWorkoutDay } from './types';
+import type { TitanExercise, TitanExerciseAlternative, TitanPlan, TitanWorkoutDay } from './types';
 
 function workoutTitle(focus: string) {
   if (focus === 'full-body') return 'Full Body';
@@ -85,6 +84,47 @@ function toStructuredAlternative(id: string): TitanExerciseAlternative | null {
   };
 }
 
+function integratedCardioExercises(assessment: TitanTrainingAssessment): TitanExercise[] {
+  if (assessment.cardioGoal === 'none') return [];
+  const level = assessment.currentCardioLevel ?? 'low';
+  const baseMinutes = level === 'low' ? 20 : level === 'moderate' ? 30 : 40;
+  const requested = Math.max(1, Math.min(assessment.cardioDaysPerWeek ?? (assessment.trainingDaysPerWeek >= 5 ? 2 : 3), assessment.trainingDaysPerWeek));
+  const make = (id: string, name: string, minutes: number, zone: string, notes: string): TitanExercise => ({
+    id,
+    name,
+    muscleGroup: 'Cardio',
+    exerciseType: 'cardio',
+    sets: 1,
+    durationSeconds: minutes * 60,
+    cardioZone: zone,
+    notes,
+  });
+
+  if (assessment.cardioGoal === '5k' || assessment.cardioGoal === '10k') {
+    const options = [
+      make('cardio-integrated-runwalk', 'Corrida + caminhada', baseMinutes, 'Zona 2–3', 'Alterne corrida leve e caminhada, mantendo esforço controlado e técnica estável.'),
+      make('cardio-integrated-zone2', 'Cardio Zona 2', baseMinutes + 10, 'Zona 2', 'Ritmo confortável e sustentável. Registre duração, distância, velocidade/ritmo e frequência cardíaca.'),
+      make('cardio-integrated-easy-run', 'Corrida leve', baseMinutes, 'Zona 2', 'Corrida contínua leve. Reduza para caminhada se a respiração ou a técnica degradarem.'),
+    ];
+    return options.slice(0, requested);
+  }
+
+  if (assessment.cardioGoal === 'conditioning') {
+    const options = [
+      make('cardio-integrated-zone2', 'Cardio Zona 2', baseMinutes + 10, 'Zona 2', 'Mantenha intensidade confortável e contínua.'),
+      make('cardio-integrated-intervals', 'Intervalado moderado', Math.max(15, baseMinutes - 5), 'Zona 3–4', 'Use blocos curtos de esforço mais forte com recuperação suficiente.'),
+    ];
+    return Array.from({ length: requested }, (_, index) => options[index % options.length]);
+  }
+
+  const label = assessment.cardioGoal === 'fat-loss-support' ? 'Cardio leve a moderado' : 'Cardio Zona 2';
+  const zone = 'Zona 2';
+  const note = assessment.cardioGoal === 'fat-loss-support'
+    ? 'Aumente o gasto sem comprometer a recuperação da musculação.'
+    : 'Construa consistência cardiovascular em intensidade sustentável.';
+  return Array.from({ length: requested }, (_, index) => make(`cardio-integrated-${index + 1}`, label, baseMinutes + (index === 0 ? 10 : 0), zone, note));
+}
+
 export function generateTitanPlanCandidates(
   profile: TitanProfile,
   assessment: TitanTrainingAssessment,
@@ -101,16 +141,13 @@ export function generateTitanPlanCandidates(
     weeklySetsPerMuscle: rule.weeklySetsPerMuscle,
     maxExercisesPerSession: rule.maxExercisesPerSession,
   });
-  const cardioSchedule = generateCardioSchedule(assessment);
+  const cardioExercises = integratedCardioExercises(assessment);
   const createdAt = new Date().toISOString();
 
   return engine.candidates.map((candidate) => {
-    const workouts: TitanWorkoutDay[] = candidate.workouts.map((workout) => ({
-      id: `${candidate.strategy}-${workout.dayIndex + 1}`,
-      day: workout.dayLabel,
-      title: workoutTitle(workout.focus),
-      focus: workout.focus,
-      exercises: orderTitanSessionExercises(workout.exercises).map((exercise) => {
+    const totalWorkouts = Math.max(1, candidate.workouts.length);
+    const workouts: TitanWorkoutDay[] = candidate.workouts.map((workout, workoutIndex) => {
+      const strengthExercises: TitanExercise[] = orderTitanSessionExercises(workout.exercises).map((exercise) => {
         const structuredAlternatives = exercise.substitutions
           .map(toStructuredAlternative)
           .filter((item): item is TitanExerciseAlternative => Boolean(item));
@@ -131,12 +168,20 @@ export function generateTitanPlanCandidates(
           alternatives: unresolvedAlternatives.length ? unresolvedAlternatives : undefined,
           alternativeExercises: structuredAlternatives.length ? structuredAlternatives : undefined,
         };
-      }),
-    }));
+      });
+      const cardioForWorkout = cardioExercises.filter((_, cardioIndex) => cardioIndex % totalWorkouts === workoutIndex);
+      return {
+        id: `${candidate.strategy}-${workout.dayIndex + 1}`,
+        day: workout.dayLabel,
+        title: workoutTitle(workout.focus),
+        focus: workout.focus,
+        exercises: [...strengthExercises, ...cardioForWorkout],
+      };
+    });
 
     const rationale = [...candidate.rationale];
     if (candidate.recommended) rationale.unshift(...engine.recommendationReasons);
-    if (cardioSchedule.length) rationale.push(`Inclui ${cardioSchedule.length} sessões de cardio alinhadas ao objetivo ${assessment.cardioGoal}.`);
+    if (cardioExercises.length) rationale.push(`Inclui ${cardioExercises.length} etapa(s) de cardio dentro dos próprios treinos, alinhadas ao objetivo ${assessment.cardioGoal}.`);
     rationale.push('A ordem da sessão prioriza músculos-alvo, compostos de maior demanda e acessórios de menor custo no fim.');
     rationale.push(`Prescrição processada pela TITAN Engine v${engine.engineVersion}.`);
     rationale.push(...engine.warnings);
@@ -152,7 +197,6 @@ export function generateTitanPlanCandidates(
         name: `Projeto ${profile.displayName}`,
         objective: profile.primaryGoal ?? 'general-fitness',
         cardioGoal: assessment.cardioGoal,
-        cardioSchedule,
       },
       workouts,
     };
