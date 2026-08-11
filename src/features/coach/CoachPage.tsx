@@ -1,11 +1,12 @@
 import { useUnifiedCoachReport } from './useUnifiedCoachReport';
+import type { CoachPillar } from './types';
 
 const confidenceLabels = { low: 'Baixa', medium: 'Média', high: 'Alta' } as const;
 
 export function CoachPage() {
   const report = useUnifiedCoachReport();
 
-  if (!report) return <section className="hero-card compact"><span className="eyebrow">COACH TITAN</span><h2>Analisando seus dados</h2><p>Reunindo treino, nutrição, saúde e evolução.</p></section>;
+  if (!report) return <section className="hero-card compact"><span className="eyebrow">COACH TITAN</span><h2>Analisando seus dados</h2><p>Reunindo treino, recuperação e evolução.</p></section>;
 
   return <div className="coach-page-v054">
     <section className="section-header">
@@ -19,16 +20,15 @@ export function CoachPage() {
       <div><span className="info-label">PRIORIDADE AGORA</span><h3>{report.priority.title}</h3><p>{report.priority.message}</p></div>
     </section>
 
-    <section className="coach-pillars coach-pillars-v054" aria-label="Pilares do Coach">
+    <section className="coach-pillars coach-pillars-v054 coach-pillars-three" aria-label="Pilares do Coach">
       <Pillar label="Treino" value={report.score.training} />
-      <Pillar label="Nutrição" value={report.score.nutrition} />
       <Pillar label="Recuperação" value={report.score.recovery} />
       <Pillar label="Evolução" value={report.score.evolution} />
     </section>
 
     <section className="coach-disclaimer">
       <strong>Confiança dos dados: {confidenceLabels[report.score.dataConfidence]}</strong>
-      <p>{report.availablePillars} de 4 pilares possuem dados suficientes. Pilares sem registros ficam fora da média e não reduzem artificialmente seu score.</p>
+      <p>{report.availablePillars} de 3 pilares possuem dados suficientes. Pilares sem registros ficam fora da média e não reduzem artificialmente seu score.</p>
     </section>
 
     <section className="progress-section">
@@ -44,8 +44,7 @@ function Pillar({ label, value }: { label: string; value: number | null }) {
   return <article><span>{label}</span><strong>{value === null ? '—' : value}</strong><small>{value === null ? 'Sem dados' : '/100'}</small></article>;
 }
 
-function pillarLabel(value?: 'training' | 'nutrition' | 'recovery' | 'evolution') {
-  if (value === 'nutrition') return 'NUTRIÇÃO';
+function pillarLabel(value?: CoachPillar) {
   if (value === 'recovery') return 'RECUPERAÇÃO';
   if (value === 'evolution') return 'EVOLUÇÃO';
   return 'TREINO';
