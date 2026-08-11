@@ -60,18 +60,16 @@ export function NotificationSettingsPanel({ plan }: { plan: TitanPlan | null }) 
   }
 
   return <section className="settings-card notification-settings-v057" aria-label="Notificações inteligentes">
-    <div className="notification-settings-head"><div><span className="info-label">Notificações inteligentes</span><strong>Lembretes TITAN</strong><small>Usam os horários de musculação e cardio do projeto ativo.</small></div><span className={`notification-status ${preferences.enabled ? 'active' : ''}`}>{statusLabel(capability, permission, preferences.enabled)}</span></div>
+    <div className="notification-settings-head"><div><span className="info-label">Notificações inteligentes</span><strong>Lembretes TITAN</strong><small>Usam o horário do treino completo do projeto ativo, incluindo o cardio quando estiver programado na sessão.</small></div><span className={`notification-status ${preferences.enabled ? 'active' : ''}`}>{statusLabel(capability, permission, preferences.enabled)}</span></div>
 
     <label className="notification-master-toggle"><input type="checkbox" checked={preferences.enabled} onChange={(event) => void update({ ...preferences, enabled: event.target.checked })} /><span><strong>Ativar lembretes inteligentes</strong><small>{capability === 'native' ? 'No Android, os lembretes podem aparecer mesmo com o app fechado após a permissão ser concedida.' : 'No navegador/PWA, os alertas dependem do aplicativo estar em uso.'}</small></span></label>
 
     <div className="notification-options">
-      <Toggle label="Musculação" detail={`${preferences.workoutLeadMinutes} min antes do horário real do treino.`} checked={preferences.workout} onChange={(value) => void update({ ...preferences, workout: value })} />
-      <Toggle label="Cardio" detail={`${preferences.cardioLeadMinutes} min antes do horário da sessão programada.`} checked={preferences.cardio} onChange={(value) => void update({ ...preferences, cardio: value })} />
+      <Toggle label="Treino do projeto" detail={`${preferences.workoutLeadMinutes} min antes do horário da sessão completa.`} checked={preferences.workout} onChange={(value) => void update({ ...preferences, workout: value })} />
     </div>
 
-    <div className="notification-lead-grid notification-lead-grid-two">
+    <div className="notification-lead-grid">
       <LeadSelect label="Avisar treino antes" value={preferences.workoutLeadMinutes} onChange={(value) => void update({ ...preferences, workoutLeadMinutes: value })} />
-      <LeadSelect label="Avisar cardio antes" value={preferences.cardioLeadMinutes} onChange={(value) => void update({ ...preferences, cardioLeadMinutes: value })} />
     </div>
 
     {capability === 'native' && permission !== 'granted' && <button type="button" className="primary-action" onClick={() => void enableAndroid()}>Permitir notificações no Android</button>}
