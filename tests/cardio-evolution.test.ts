@@ -4,13 +4,13 @@ import type { WorkoutHistoryRecord } from '../src/features/history/types';
 
 const now = new Date('2026-08-10T20:00:00');
 
-function cardioRecord(id: string, completedAt: string, distanceMeters: number, durationSeconds: number, heartRate: number | null): WorkoutHistoryRecord {
+function cardioRecord(id: string, completedAt: string, distanceMeters: number, durationSeconds: number, heartRate: number | null, name = 'Corrida'): WorkoutHistoryRecord {
   return {
     id,
     planId: 'p1',
     planName: 'Plano',
     workoutId: id,
-    workoutTitle: id,
+    workoutTitle: name,
     workoutDay: 'Domingo',
     startedAt: completedAt,
     completedAt,
@@ -19,7 +19,7 @@ function cardioRecord(id: string, completedAt: string, distanceMeters: number, d
     totalVolumeKg: 0,
     exercises: [{
       exerciseId: `${id}-cardio`,
-      name: 'Corrida',
+      name,
       muscleGroup: 'Cardio',
       exerciseType: distanceMeters > 0 ? 'distance' : 'cardio',
       sets: [],
@@ -76,5 +76,19 @@ describe('Cardio 2.0 — evolução cardiovascular', () => {
     expect(report.totalDurationSeconds).toBe(2400);
     expect(report.averagePaceSecondsPerKm).toBeNull();
     expect(report.fiveKmProgressPercent).toBe(0);
+  });
+
+  it('conta bike no volume cardiovascular, mas não usa ciclismo para concluir a meta de 5 km', () => {
+    const report = buildCardioEvolution([
+      cardioRecord('bike', '2026-08-09T20:00:00', 12000, 2400, 142, 'Bike Zona 2'),
+      cardioRecord('run', '2026-08-08T20:00:00', 2500, 1500, 148, 'Corrida leve'),
+    ], 7, now);
+
+    expect(report.sessions).toBe(2);
+    expect(report.totalDistanceMeters).toBe(14500);
+    expect(report.bestDistanceMeters).toBe(2500);
+    expect(report.fiveKmProgressPercent).toBe(50);
+    expect(report.fiveKmReached).toBe(false);
+    expect(report.averagePaceSecondsPerKm).toBe(600);
   });
 });
