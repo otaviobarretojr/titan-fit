@@ -108,8 +108,8 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   function skipExercise() {
     const completedSets = activeSets.filter((set) => set.completed).length;
     const message = completedSets > 0
-      ? `Pular o restante de \"${activeExercise.name}\"? As ${completedSets} série(s) já concluída(s) serão mantidas no histórico.`
-      : `Pular \"${activeExercise.name}\" nesta sessão? O exercício ficará sem volume e sem PR.`;
+      ? `Pular o restante de "${activeExercise.name}"? As ${completedSets} série(s) já concluída(s) serão mantidas no histórico.`
+      : `Pular "${activeExercise.name}" nesta sessão? O exercício ficará sem volume e sem PR.`;
     if (!window.confirm(message)) return;
     setExecution((current) => ({
       ...current,
