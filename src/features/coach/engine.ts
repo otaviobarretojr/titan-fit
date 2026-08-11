@@ -1,3 +1,4 @@
+import { buildCardioEvolution } from '../cardio/evolution';
 import { analyzeMuscleTrends } from '../history/trends';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { CoachContext, CoachInsight, CoachReport } from './types';
@@ -7,6 +8,10 @@ const DAY = 86_400_000;
 function daysSince(date: string, now: Date) { return Math.max(0, Math.floor((now.getTime() - new Date(date).getTime()) / DAY)); }
 function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(value))); }
 function average(values: number[]) { return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0; }
+function isTrainingSession(record: WorkoutHistoryRecord) {
+  if (!record.exercises.length) return true;
+  return record.exercises.some((exercise) => exercise.exerciseType !== 'cardio' && exercise.exerciseType !== 'distance');
+}
 
 export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Date()): CoachReport {
   return createUnifiedCoachReport({ workouts }, now);
@@ -14,17 +19,18 @@ export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Da
 
 export function createUnifiedCoachReport(context: CoachContext, now = new Date()): CoachReport {
   const { workouts, healthSamples = [], bodyEntries = [] } = context;
-  const recentWorkouts = workouts.filter((item) => daysSince(item.completedAt, now) <= 7);
+  const trainingWorkouts = workouts.filter(isTrainingSession);
+  const recentWorkouts = trainingWorkouts.filter((item) => daysSince(item.completedAt, now) <= 7);
   const trainingScore = clamp((recentWorkouts.length / 4) * 100);
   const insights: CoachInsight[] = [];
 
-  if (!workouts.length) insights.push({ id: 'no-training-data', pillar: 'training', severity: 'neutral', title: 'Treino ainda sem histórico', message: 'Conclua treinos para o Coach identificar consistência, progressão e fadiga.' });
+  if (!trainingWorkouts.length) insights.push({ id: 'no-training-data', pillar: 'training', severity: 'neutral', title: 'Treino ainda sem histórico', message: 'Conclua treinos de musculação para o Coach identificar consistência, progressão e fadiga.' });
   else if (recentWorkouts.length >= 4) insights.push({ id: 'training-consistency', pillar: 'training', severity: 'positive', title: 'Boa consistência de treino', message: `Você concluiu ${recentWorkouts.length} treinos nos últimos 7 dias.` });
   else insights.push({ id: 'training-low', pillar: 'training', severity: 'attention', title: 'Frequência abaixo da referência', message: `Foram ${recentWorkouts.length} treinos nos últimos 7 dias. A referência atual do Coach é 4 sessões semanais.` });
 
-  const latestWorkout = workouts[0];
+  const latestWorkout = trainingWorkouts[0];
   if (latestWorkout) {
-    const previousSame = workouts.find((item) => item.id !== latestWorkout.id && item.workoutId === latestWorkout.workoutId);
+    const previousSame = trainingWorkouts.find((item) => item.id !== latestWorkout.id && item.workoutId === latestWorkout.workoutId);
     if (previousSame && previousSame.totalVolumeKg > 0) {
       const change = ((latestWorkout.totalVolumeKg - previousSame.totalVolumeKg) / previousSame.totalVolumeKg) * 100;
       if (change >= 5) insights.push({ id: 'volume-up', pillar: 'training', severity: 'positive', title: 'Volume de treino aumentou', message: `${latestWorkout.workoutTitle} teve aumento de ${Math.round(change)}% em relação à execução anterior.` });
@@ -32,10 +38,17 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
     }
   }
 
-  for (const trend of analyzeMuscleTrends(workouts)) {
+  for (const trend of analyzeMuscleTrends(trainingWorkouts)) {
     if (trend.status === 'fatigued') insights.push({ id: `muscle-fatigue:${trend.muscleGroup}`, pillar: 'training', severity: 'attention', title: `Fadiga acumulada · ${trend.muscleGroup}`, message: trend.message });
     else if (trend.status === 'stalled') insights.push({ id: `muscle-stalled:${trend.muscleGroup}`, pillar: 'training', severity: 'attention', title: `Desempenho em queda · ${trend.muscleGroup}`, message: trend.message });
     else if (trend.status === 'progressing') insights.push({ id: `muscle-progress:${trend.muscleGroup}`, pillar: 'training', severity: 'positive', title: `Progressão · ${trend.muscleGroup}`, message: trend.message });
+  }
+
+  const cardio = buildCardioEvolution(workouts, 7, now);
+  if (cardio.sessions > 0) {
+    const distance = cardio.totalDistanceMeters >= 1000 ? `${(cardio.totalDistanceMeters / 1000).toFixed(1)} km` : `${Math.round(cardio.totalDistanceMeters)} m`;
+    const heartRate = cardio.averageHeartRate ? ` · FC média ${cardio.averageHeartRate} bpm` : '';
+    insights.push({ id: 'integrated-cardio', pillar: 'training', severity: 'neutral', title: 'Cardio integrado acompanhado', message: `${cardio.sessions} treino${cardio.sessions === 1 ? '' : 's'} com cardio nos últimos 7 dias · ${distance} · ${Math.round(cardio.totalDurationSeconds / 60)} min${heartRate}.` });
   }
 
   const recovery = analyzeRecovery(healthSamples, now);
@@ -44,17 +57,17 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
   if (evolution.insight) insights.push(evolution.insight);
 
   const availableScores = [
-    ...(workouts.length ? [trainingScore] : []),
+    ...(trainingWorkouts.length ? [trainingScore] : []),
     recovery.score,
     evolution.score,
   ].filter((value): value is number => value !== null);
   const availablePillars = availableScores.length;
   const total = clamp(average(availableScores));
-  const confidencePoints = Math.min(2, workouts.length / 4) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
+  const confidencePoints = Math.min(2, trainingWorkouts.length / 4) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
   const dataConfidence = confidencePoints >= 3 ? 'high' : confidencePoints >= 2 ? 'medium' : 'low';
 
   const pillarScores = {
-    training: workouts.length ? trainingScore : null,
+    training: trainingWorkouts.length ? trainingScore : null,
     recovery: recovery.score,
     evolution: evolution.score,
   };
