@@ -4,7 +4,6 @@ import { TitanEntry } from './app/TitanEntry';
 import { enableTitanHaptics } from './ui/haptics';
 import { enableEvolutionFeedback } from './ui/evolution-feedback';
 import { enablePostWorkoutCoach } from './ui/post-workout-coach';
-import { enableNutritionHealthInsights } from './ui/nutrition-health';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/dashboard.css';
@@ -51,19 +50,14 @@ import './styles/health-dashboard-v05112.css';
 import './styles/titan-ui-v052.css';
 import './styles/health-clean-v0527.css';
 import './styles/health-hub-v0529.css';
-import './styles/nutrition-today-v053.css';
-import './styles/nutrition-health-v053.css';
-import './styles/nutrition-program-clean-v058.css';
 import './styles/home-compact-v058.css';
-import './styles/home-nutrition-next-v0572.css';
 import './styles/navigation-definitive-v0572.css';
-import './styles/home-nutrition-card-v0574.css';
 import './styles/home-harmony-v0578.css';
+import './styles/layout-clean-v05712.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
 enablePostWorkoutCoach();
-enableNutritionHealthInsights();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
