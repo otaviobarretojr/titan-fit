@@ -2,8 +2,6 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { TitanPlan } from '../plan/types';
 import { loadWorkoutHistory } from '../history/storage';
-import { loadNutritionExecutions } from '../nutrition/execution';
-import { loadActiveNutritionPlan } from '../nutrition/storage';
 import { buildSmartReminders } from './engine';
 import { loadNotificationPreferences } from './preferences';
 
@@ -50,8 +48,6 @@ export async function syncSmartNotifications(activePlan: TitanPlan | null) {
 
   const reminders = buildSmartReminders({
     plan: activePlan,
-    nutritionPlan: loadActiveNutritionPlan(),
-    nutritionExecutions: loadNutritionExecutions(),
     workoutHistory: loadWorkoutHistory(),
     preferences,
   }).slice(0, MAX_SCHEDULED);
