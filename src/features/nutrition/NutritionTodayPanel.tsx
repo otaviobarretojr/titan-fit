@@ -37,9 +37,7 @@ export function NutritionTodayPanel() {
   const done = new Set(executions.map((item) => item.mealId));
   const now = new Date();
   const minutes = now.getHours() * 60 + now.getMinutes();
-  const next = meals.find((meal) => !done.has(meal.id) && toMinutes(meal.plannedTime) >= minutes)
-    ?? meals.find((meal) => !done.has(meal.id))
-    ?? null;
+  const next = meals.find((meal) => !done.has(meal.id) && toMinutes(meal.plannedTime) >= minutes) ?? null;
   const target = day?.target ?? plan.defaultTarget;
 
   function openMeal(meal: NutritionMeal) {
@@ -90,23 +88,20 @@ export function NutritionTodayPanel() {
     setRevision((value) => value + 1);
   }
 
-  return <>
-    <section className="nutrition-today-card" aria-label="Próxima refeição">
-      <div className="nutrition-today-head">
-        <div><span className="eyebrow">NUTRIÇÃO DE HOJE</span><h3>{next ? 'Próxima refeição' : 'Nutrição concluída'}</h3></div>
-      </div>
+  if (!next && !activeMeal) return null;
 
-      {next ? <>
-        <div className="nutrition-next-meal" style={{ cursor: 'default' }}>
-          <span className="nutrition-next-time">{next.plannedTime}</span>
-          <div>
-            <strong>{next.name}</strong>
-            <small>{next.macros.caloriesKcal} kcal · P {next.macros.proteinG} · C {next.macros.carbohydrateG} · G {next.macros.fatG}</small>
-          </div>
-        </div>
-        <button type="button" className="primary-action" onClick={() => openMeal(next)}>Consumir refeição</button>
-      </> : <p className="nutrition-all-done">Todas as refeições programadas de hoje já foram registradas.</p>}
-    </section>
+  return <>
+    {next && <section className="nutrition-next-compact" aria-label="Próxima refeição">
+      <button type="button" className="nutrition-next-compact-action" onClick={() => openMeal(next)}>
+        <span className="nutrition-next-compact-label">Próxima refeição</span>
+        <span className="nutrition-next-compact-time">{next.plannedTime}</span>
+        <span className="nutrition-next-compact-copy">
+          <strong>{next.name}</strong>
+          <small>{Math.round(next.macros.caloriesKcal)} kcal · P {round1(next.macros.proteinG)} · C {round1(next.macros.carbohydrateG)} · G {round1(next.macros.fatG)}</small>
+        </span>
+        <span className="nutrition-next-compact-cta">Consumir ›</span>
+      </button>
+    </section>}
 
     {activeMeal && <MealExecutionPage
       meal={activeMeal}
