@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/v0588-migration.yml'
+      - 'scripts/apply-v0588.mjs'
 
 permissions:
   contents: write
