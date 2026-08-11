@@ -57,6 +57,7 @@ import './styles/nutrition-program-clean-v058.css';
 import './styles/home-compact-v058.css';
 import './styles/home-nutrition-next-v0572.css';
 import './styles/navigation-definitive-v0572.css';
+import './styles/home-nutrition-card-v0574.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
