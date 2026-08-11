@@ -11,4 +11,15 @@ class MainActivity : BridgeActivity() {
         registerPlugin(TitanSamsungHealthPlugin::class.java)
         super.onCreate(savedInstanceState)
     }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        val webView = bridge.webView
+        if (webView.canGoBack()) {
+            webView.goBack()
+            return
+        }
+
+        super.onBackPressed()
+    }
 }
