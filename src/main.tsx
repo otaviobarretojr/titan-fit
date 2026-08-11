@@ -55,6 +55,7 @@ import './styles/navigation-definitive-v0572.css';
 import './styles/home-harmony-v0578.css';
 import './styles/layout-clean-v05712.css';
 import './styles/navigation-audit-v05812.css';
+import './styles/navigation-proportion-v05813.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
