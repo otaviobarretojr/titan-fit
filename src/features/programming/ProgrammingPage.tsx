@@ -1,22 +1,24 @@
 import { useMemo, useState } from 'react';
 import { ExerciseLibraryPage } from '../exercise-library/ExerciseLibraryPage';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
+import { loadWorkoutExecution } from '../workout/storage';
 
-type Props = { plan: TitanPlan | null };
+type Props = { plan: TitanPlan | null; onStartWorkout: (workoutId: string) => void };
 type ProgrammingTab = 'week' | 'library';
 const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 const JS_DAY_TO_TITAN = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
-export function ProgrammingPage({ plan }: Props) {
+export function ProgrammingPage({ plan, onStartWorkout }: Props) {
   const [selected, setSelected] = useState<TitanWorkoutDay | null>(null);
   const [activeTab, setActiveTab] = useState<ProgrammingTab>('week');
   const today = JS_DAY_TO_TITAN[new Date().getDay()];
   const workouts = useMemo(() => !plan ? [] : [...plan.workouts].sort((a, b) => dayIndex(a.day) - dayIndex(b.day)), [plan]);
 
-  if (selected) return <WorkoutDetail workout={selected} onBack={() => setSelected(null)} />;
+  if (selected) return <WorkoutDetail workout={selected} plan={plan} isToday={normalize(selected.day).includes(today)} onBack={() => setSelected(null)} onStartWorkout={onStartWorkout} />;
 
   const todayWorkout = workouts.find((item) => normalize(item.day).includes(today));
   const nextDay = DAY_ORDER[(DAY_ORDER.indexOf(today) + 1) % DAY_ORDER.length];
+  const todayExecution = plan && todayWorkout ? loadWorkoutExecution(plan.id, todayWorkout.id) : null;
 
   return <div className="programming-page">
     <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Treino, cardio e biblioteca organizados em uma única área.</p></section>
@@ -29,7 +31,7 @@ export function ProgrammingPage({ plan }: Props) {
     {activeTab === 'library' && <ExerciseLibraryPage />}
 
     {activeTab === 'week' && (!plan ? <ProgrammingEmpty /> : <>
-      <section className="programming-today" aria-label="Treino de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p></div></section>
+      <section className="programming-today" aria-label="Treino de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p>{todayWorkout && <button type="button" className="primary-action" onClick={() => onStartWorkout(todayWorkout.id)}>{todayExecution ? 'Retomar treino' : 'Iniciar treino'}</button>}</div></section>
       <section className="programming-section" aria-labelledby="week-program-title"><div className="programming-section-head"><div><span className="programming-section-icon strength">⌁</span><div><span className="eyebrow">DOMINGO → SÁBADO</span><h3 id="week-program-title">Treinos da semana</h3></div></div><small>{workouts.length} dias programados</small></div><div className="programming-list">{DAY_ORDER.map((day) => {
         const workout = workouts.find((item) => normalize(item.day).includes(day));
         const isToday = day === today;
@@ -43,10 +45,11 @@ export function ProgrammingPage({ plan }: Props) {
 
 function ProgrammingEmpty() { return <section className="programming-empty"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Nenhum projeto de treino ativo</h2><p>Importe ou gere um projeto de treino para preencher esta área.</p></section>; }
 
-function WorkoutDetail({ workout, onBack }: { workout: TitanWorkoutDay; onBack: () => void }) {
+function WorkoutDetail({ workout, plan, isToday, onBack, onStartWorkout }: { workout: TitanWorkoutDay; plan: TitanPlan | null; isToday: boolean; onBack: () => void; onStartWorkout: (workoutId: string) => void }) {
   const strength = workout.exercises.filter(isStrength);
   const cardio = workout.exercises.filter(isCardio);
-  return <div className="programming-detail"><button type="button" className="secondary-action programming-back" onClick={onBack}>‹ Voltar à programação</button><section className="programming-detail-hero"><span className="eyebrow">{workout.day.toUpperCase()} · PROJETO TITAN</span><h2>{workout.title}</h2><p>{workout.focus ?? 'Sessão programada no projeto ativo.'}</p><div className="programming-detail-summary"><span><small>Etapas</small><strong>{workout.exercises.length}</strong></span>{strength.length > 0 && <span><small>Séries</small><strong>{strength.reduce((sum, exercise) => sum + (exercise.sets ?? 1), 0)}</strong></span>}{cardio.length > 0 && <span><small>Cardio</small><strong>{cardio.length}</strong></span>}</div></section><div className="programming-exercise-list">{workout.exercises.map((exercise, index) => <ExerciseGuide key={exercise.id} exercise={exercise} index={index + 1} />)}</div></div>;
+  const activeExecution = plan ? loadWorkoutExecution(plan.id, workout.id) : null;
+  return <div className="programming-detail"><button type="button" className="secondary-action programming-back" onClick={onBack}>‹ Voltar à programação</button><section className="programming-detail-hero"><span className="eyebrow">{workout.day.toUpperCase()} · PROJETO TITAN</span><h2>{workout.title}</h2><p>{workout.focus ?? 'Sessão programada no projeto ativo.'}</p><div className="programming-detail-summary"><span><small>Etapas</small><strong>{workout.exercises.length}</strong></span>{strength.length > 0 && <span><small>Séries</small><strong>{strength.reduce((sum, exercise) => sum + (exercise.sets ?? 1), 0)}</strong></span>}{cardio.length > 0 && <span><small>Cardio</small><strong>{cardio.length}</strong></span>}</div>{isToday && <button type="button" className="primary-action" onClick={() => onStartWorkout(workout.id)}>{activeExecution ? 'Retomar treino' : 'Iniciar treino'}</button>}</section><div className="programming-exercise-list">{workout.exercises.map((exercise, index) => <ExerciseGuide key={exercise.id} exercise={exercise} index={index + 1} />)}</div></div>;
 }
 
 function ExerciseGuide({ exercise, index }: { exercise: TitanExercise; index: number }) {
