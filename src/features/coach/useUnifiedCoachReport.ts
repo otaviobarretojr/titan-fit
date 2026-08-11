@@ -4,8 +4,6 @@ import type { BodyEvolutionEntry } from '../evolution/types';
 import { loadHealthSamples } from '../health/repository';
 import type { HealthSample } from '../health/types';
 import { loadWorkoutHistory } from '../history/storage';
-import { loadNutritionExecutions } from '../nutrition/execution';
-import { loadActiveNutritionPlan } from '../nutrition/storage';
 import { createUnifiedCoachReport } from './engine';
 import type { CoachReport } from './types';
 
@@ -30,8 +28,6 @@ export function useUnifiedCoachReport() {
       if (!active) return;
       setReport(createUnifiedCoachReport({
         workouts: loadWorkoutHistory(),
-        nutritionPlan: loadActiveNutritionPlan(),
-        nutritionExecutions: loadNutritionExecutions(),
         healthSamples,
         bodyEntries,
       }));
@@ -39,14 +35,12 @@ export function useUnifiedCoachReport() {
 
     void load();
     const refresh = () => void load();
-    window.addEventListener('titan:nutrition-changed', refresh);
     window.addEventListener('titan:health-changed', refresh);
     window.addEventListener('titan:evolution-changed', refresh);
     window.addEventListener('storage', refresh);
 
     return () => {
       active = false;
-      window.removeEventListener('titan:nutrition-changed', refresh);
       window.removeEventListener('titan:health-changed', refresh);
       window.removeEventListener('titan:evolution-changed', refresh);
       window.removeEventListener('storage', refresh);
