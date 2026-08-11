@@ -20,6 +20,8 @@ class MainActivity : BridgeActivity() {
             return
         }
 
-        super.onBackPressed()
+        // No estado raiz, preserva a Activity e envia o TITAN para o plano de fundo.
+        // Isso evita que o botão Voltar destrua a sessão do aplicativo como se fosse um site comum.
+        moveTaskToBack(true)
     }
 }
