@@ -1,1 +1,1 @@
-release-v0.58.10-dashboard-programming-stable
+release-v0.58.11-workout-execution-stable
