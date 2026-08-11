@@ -1,4 +1,3 @@
-import { getCardioWeekSchedule, normalizeDay } from '../cardio/currentCardio';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanPlan } from '../plan/types';
 import type { NotificationPreferences } from './preferences';
@@ -6,7 +5,7 @@ import type { NotificationPreferences } from './preferences';
 const DAY = 86_400_000;
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
-export type SmartReminderKind = 'workout' | 'cardio';
+export type SmartReminderKind = 'workout';
 export type SmartReminder = {
   id: number;
   key: string;
@@ -37,15 +36,15 @@ export function buildSmartReminders(context: SmartReminderContext, now = new Dat
       if (workout?.exercises.length && !wasWorkoutCompleted(context.workoutHistory, workout.id, dateKey)) {
         const startTime = context.plan.project?.strengthStartTime ?? '20:00';
         const at = new Date(dateAtTime(date, startTime).getTime() - context.preferences.workoutLeadMinutes * 60_000);
-        if (at.getTime() > now.getTime()) reminders.push(createReminder(`workout:${dateKey}:${workout.id}`, 'workout', at, `Treino: ${workout.title}`, workout.focus ? `${context.preferences.workoutLeadMinutes} min para o treino · ${workout.focus}` : `${context.preferences.workoutLeadMinutes} min para o treino programado.`));
-      }
-    }
-
-    if (context.preferences.cardio && context.plan) {
-      const cardio = getCardioWeekSchedule(context.plan, date).find((item) => normalizeDay(item.day).includes(weekday));
-      if (cardio && !wasWorkoutCompleted(context.workoutHistory, cardio.id, dateKey)) {
-        const at = new Date(dateAtTime(date, cardio.startTime).getTime() - context.preferences.cardioLeadMinutes * 60_000);
-        if (at.getTime() > now.getTime()) reminders.push(createReminder(`cardio:${dateKey}:${cardio.id}`, 'cardio', at, `Cardio: ${cardio.title}`, `${context.preferences.cardioLeadMinutes} min para a sessão · previsto ${cardio.durationMinutes} min.`));
+        if (at.getTime() > now.getTime()) {
+          const cardioCount = workout.exercises.filter((exercise) => exercise.exerciseType === 'cardio' || exercise.exerciseType === 'distance').length;
+          const body = cardioCount > 0
+            ? `${context.preferences.workoutLeadMinutes} min para o treino · cardio integrado à sessão.`
+            : workout.focus
+              ? `${context.preferences.workoutLeadMinutes} min para o treino · ${workout.focus}`
+              : `${context.preferences.workoutLeadMinutes} min para o treino programado.`;
+          reminders.push(createReminder(`workout:${dateKey}:${workout.id}`, 'workout', at, `Treino: ${workout.title}`, body));
+        }
       }
     }
   }
@@ -69,6 +68,10 @@ function stableNotificationId(value: string) {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
   return Math.abs(hash % 2_000_000_000) + 1000;
+}
+
+function normalizeDay(value: string) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 function dateAtTime(date: Date, value: string) {
