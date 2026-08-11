@@ -1,1 +1,1 @@
-release-v0.58.6-smart-progression-stable
+release-v0.58.7-integrated-cardio-stable
