@@ -32,8 +32,8 @@ export function SmartReminderBanner({ plan }: { plan: TitanPlan | null }) {
     preferences,
   };
   const now = new Date();
-  const overdue = currentSmartAlerts(context, now)[0];
-  const upcoming = buildSmartReminders(context, now, 1).find((item) => item.at.getTime() - now.getTime() <= 60 * 60_000);
+  const overdue = currentSmartAlerts(context, now).find((item) => item.kind !== 'meal-overdue');
+  const upcoming = buildSmartReminders(context, now, 1).find((item) => item.kind !== 'meal-overdue' && item.at.getTime() - now.getTime() <= 60 * 60_000);
   const reminder = overdue ?? upcoming;
   if (!reminder) return null;
 
