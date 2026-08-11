@@ -1,4 +1,4 @@
-import { deleteRecord, putRecord } from '../../core/database/indexedDb';
+import { deleteRecord, getAllRecords, putRecord } from '../../core/database/indexedDb';
 import { STORE_NAMES } from '../../core/database/schema';
 import type { WorkoutExecution } from './types';
 
@@ -28,6 +28,39 @@ function readExecution(storage: Storage, storageKey: string): WorkoutExecution |
   } catch {
     return null;
   }
+}
+
+function timestamp(value?: string) {
+  const parsed = value ? Date.parse(value) : Number.NaN;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export async function restoreWorkoutExecutionsFromDatabase(): Promise<number> {
+  const records = await getAllRecords<WorkoutExecution>(STORE_NAMES.activeSessions);
+  let restored = 0;
+
+  for (const record of records) {
+    const stored = record.value;
+    if (!stored?.planId || !stored?.workoutId) continue;
+
+    const storageKey = key(stored.planId, stored.workoutId);
+    const local = readExecution(localStorage, storageKey);
+    if (local && timestamp(local.updatedAt) >= timestamp(stored.updatedAt)) continue;
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(stored));
+      restored += 1;
+    } catch {
+      try {
+        sessionStorage.setItem(fallbackKey(stored.planId, stored.workoutId), JSON.stringify(stored));
+        restored += 1;
+      } catch {
+        // Mantém a cópia segura no IndexedDB para uma próxima tentativa de recuperação.
+      }
+    }
+  }
+
+  return restored;
 }
 
 export function loadWorkoutExecution(planId: string, workoutId: string): WorkoutExecution | null {
