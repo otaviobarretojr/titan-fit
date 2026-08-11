@@ -2,6 +2,18 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.57.2 — Home nutricional e navegação definitiva
+- Home passa a exibir somente a próxima refeição futura em formato compacto.
+- Refeições atrasadas deixam de substituir a próxima refeição na Home.
+- Remoção do painel nutricional legado duplicado da tela Hoje.
+- Macros diários deixam de ocupar o dashboard e permanecem concentrados em Saúde.
+- Execução da refeição continua em tela própria, com quantidades, substituições e finalização.
+- Barra inferior reconstruída com uma única fonte de estilo.
+- Remoção dos imports de CSS legados que ainda definiam 5 colunas e safe-area conflitante.
+- Quatro áreas iguais para Hoje, Programação, Saúde e Ajustes, com ícones, texto, espaçamento e área de toque padronizados.
+- Ajuste definitivo do espaço reservado no rodapé para não cobrir conteúdo.
+- Preservação integral dos registros, projetos e histórico existentes.
+
 ## v0.57.1 — Polimento de navegação e nutrição
 - Home mais limpa, com próxima refeição em card compacto e execução da refeição em tela própria.
 - Programação nutricional reorganizada em visão semanal compacta, com detalhe diário ao toque.
