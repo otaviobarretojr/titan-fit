@@ -1,0 +1,89 @@
+name: Apply TITAN FIT v0.58.5 exercise media audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/v0585-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Apply exercise media corrections
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/features/workout/WorkoutExecutionView.tsx')
+          text = path.read_text()
+          text = text.replace(
+              "import { getExerciseVideo } from '../exercise-library/videos';",
+              "import { getExerciseVideo, type CuratedExerciseVideo } from '../exercise-library/videos';",
+          )
+
+          old = '''          <div className=\"exercise-video\"><iframe title={exerciseVideo.title} src={exerciseVideo.embedUrl} allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowFullScreen /></div>'''
+          new = '''          <WorkoutExerciseVideo video={exerciseVideo} exerciseName={activeExercise.name} />'''
+          if old not in text:
+              raise SystemExit('Workout raw video iframe not found')
+          text = text.replace(old, new)
+
+          marker = '''function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, onComplete }:'''
+          helper = '''function WorkoutExerciseVideo({ video, exerciseName }: { video: CuratedExerciseVideo; exerciseName: string }) {\n  if (video.provider === 'hosted' && video.videoUrl) {\n    return <div className=\"exercise-video\"><video src={video.videoUrl} controls playsInline preload=\"metadata\" aria-label={`Vídeo demonstrativo de ${exerciseName}`} /></div>;\n  }\n  const src = video.provider === 'youtube' && video.videoId\n    ? `https://www.youtube-nocookie.com/embed/${video.videoId}?rel=0&playsinline=1&hl=pt-BR&cc_lang_pref=pt`\n    : video.provider === 'vimeo' && video.videoId\n      ? `https://player.vimeo.com/video/${video.videoId}?dnt=1&playsinline=1&texttrack=pt`\n      : video.embedUrl;\n  return <div className=\"exercise-video\"><iframe title={video.title} src={src} loading=\"lazy\" referrerPolicy=\"strict-origin-when-cross-origin\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen\" allowFullScreen /></div>;\n}\n\n'''
+          if marker not in text:
+              raise SystemExit('SetEntry marker not found')
+          text = text.replace(marker, helper + marker)
+          path.write_text(text)
+
+          test = Path('tests/WorkoutExecutionView.test.tsx')
+          content = test.read_text()
+          content = content.replace(
+              "alternativeExercises: [{ id: 'bench-press', name: 'Supino reto com barra', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 5, maxReps: 10, targetRir: 2, restSeconds: 150 }],",
+              "technique: 'Técnica principal',\n        alternativeExercises: [{ id: 'bench-press', name: 'Supino reto com barra', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 5, maxReps: 10, targetRir: 2, restSeconds: 150, technique: 'Técnica da alternativa' }],",
+          )
+          needle = "    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();\n  });"
+          replacement = "    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();\n    expect(screen.getByText('Técnica da alternativa')).toBeInTheDocument();\n    expect(screen.queryByText('Técnica principal')).not.toBeInTheDocument();\n  });"
+          if needle not in content:
+              raise SystemExit('Alternative test assertion marker not found')
+          content = content.replace(needle, replacement, 1)
+          test.write_text(content)
+          PY
+
+      - name: Bump version and changelog
+        run: |
+          npm version 0.58.5 --no-git-tag-version
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('CHANGELOG.md')
+          text = path.read_text()
+          marker = 'Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.\n'
+          section = '''\n## v0.58.5 — Exercícios, vídeos e alternativas\n- Modo treino passa a respeitar corretamente o provedor do vídeo: YouTube, Vimeo ou mídia hospedada.\n- Reprodução no treino recebe configuração mobile com playsinline, carregamento lazy e preferências PT-BR quando suportadas pelo provedor.\n- Troca para exercício alternativo continua atualizando vídeo, técnica, prescrição e histórico do exercício realmente executado.\n- Teste de regressão reforçado para garantir que a técnica do exercício principal não permaneça após selecionar uma alternativa.\n- Preservação integral de sessões, cargas, PRs, descanso automático, cardio integrado e histórico.\n'''
+          if '## v0.58.5 — Exercícios, vídeos e alternativas' not in text:
+              text = text.replace(marker, marker + section)
+          path.write_text(text)
+          PY
+
+      - name: Validate locally
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm run validate
+
+      - name: Commit stable v0.58.5
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/workout/WorkoutExecutionView.tsx tests/WorkoutExecutionView.test.tsx package.json package-lock.json CHANGELOG.md
+          git commit -m "feat: align workout videos and alternatives v0.58.5"
+          git push
