@@ -1,1 +1,1 @@
-release-v0.58.0-audit-stable
+release-v0.58.1-navigation-stable
