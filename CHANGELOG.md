@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.10 — Dashboard e programação sincronizados
+- Dashboard detecta sessão ativa salva e troca a ação principal de Iniciar treino para Retomar treino.
+- Sessões em andamento passam a ficar visíveis também na Programação, evitando dúvida sobre o estado atual do treino.
+- Leitura contextual do Coach no Dashboard deixa de contar blocos de cardio como sessões separadas e passa a contar treinos com cardio.
+- Registros cardiovasculares antigos não inflam mais a contagem contextual de musculação.
+- Projeto ativo, treino do dia, sessão persistida e leitura semanal permanecem alinhados na mesma fonte de dados.
+
 ## v0.58.9 — Coach e relatórios unificados
 - Coach deixa de contar registros antigos exclusivamente cardiovasculares como frequência de musculação.
 - Treinos mistos continuam valendo como uma única sessão de musculação, com o cardio analisado dentro da mesma sessão.
