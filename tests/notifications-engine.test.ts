@@ -6,20 +6,30 @@ import type { TitanPlan } from '../src/features/plan/types';
 const now = new Date(2026, 7, 10, 10, 0, 0);
 const preferences = { ...DEFAULT_NOTIFICATION_PREFERENCES, enabled: true };
 const plan: TitanPlan = {
-  schemaVersion: 1, id: 'plan', name: 'Plano', createdAt: '2026-08-01T00:00:00',
-  project: { name: 'Projeto', objective: 'Teste', strengthStartTime: '19:00', cardioSchedule: [{ id: 'cardio-mon', day: 'Segunda-feira', startTime: '20:00', title: 'Zona 2', type: 'zone2', durationMinutes: 30 }] },
-  workouts: [{ id: 'workout-mon', day: 'Segunda-feira', title: 'Upper', exercises: [{ id: 'bench', name: 'Supino', muscleGroup: 'Peito' }] }],
+  schemaVersion: 1,
+  id: 'plan',
+  name: 'Plano',
+  createdAt: '2026-08-01T00:00:00',
+  project: { name: 'Projeto', objective: 'Teste', strengthStartTime: '19:00' },
+  workouts: [{
+    id: 'workout-mon',
+    day: 'Segunda-feira',
+    title: 'Upper + cardio',
+    exercises: [
+      { id: 'bench', name: 'Supino', muscleGroup: 'Peito' },
+      { id: 'cardio-mon', name: 'Zona 2', muscleGroup: 'Cardio', exerciseType: 'cardio', durationSeconds: 1800, cardioZone: 'Zona 2' },
+    ],
+  }],
 };
 
 describe('Notificações inteligentes', () => {
-  it('usa horários reais de musculação e cardio', () => {
+  it('agenda um único lembrete para o treino completo com cardio integrado', () => {
     const reminders = buildSmartReminders({ plan, workoutHistory: [], preferences }, now, 1);
-    const workout = reminders.find((item) => item.kind === 'workout');
-    const cardio = reminders.find((item) => item.kind === 'cardio');
-    expect(workout?.at.getHours()).toBe(18);
-    expect(workout?.at.getMinutes()).toBe(30);
-    expect(cardio?.at.getHours()).toBe(19);
-    expect(cardio?.at.getMinutes()).toBe(30);
+    expect(reminders).toHaveLength(1);
+    expect(reminders[0]?.kind).toBe('workout');
+    expect(reminders[0]?.at.getHours()).toBe(18);
+    expect(reminders[0]?.at.getMinutes()).toBe(30);
+    expect(reminders[0]?.body).toContain('cardio integrado');
   });
 
   it('não gera alertas internos obsoletos', () => {
