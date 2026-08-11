@@ -9,7 +9,6 @@ import { demoPlan, isDemoMode, loadFullDemo } from '../features/demo/fullDemo';
 import { HealthHubPage } from '../features/health/HealthHubPage';
 import { NotificationSettingsPanel } from '../features/notifications/NotificationSettingsPanel';
 import { syncSmartNotifications } from '../features/notifications/native';
-import { NutritionProgramPanel } from '../features/nutrition/NutritionProgramPanel';
 import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
 import { PlanViewer } from '../features/plan/PlanViewer';
@@ -53,12 +52,7 @@ export function App() {
     const updateConnection = () => setIsOnline(navigator.onLine);
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
     const clearTransientNavigation = () => { setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); };
-    const handlePopState = (event: PopStateEvent) => {
-      const nextTab = normalizeTabId(event.state?.titanTab);
-      setActiveTab(nextTab);
-      clearTransientNavigation();
-    };
-
+    const handlePopState = (event: PopStateEvent) => { setActiveTab(normalizeTabId(event.state?.titanTab)); clearTransientNavigation(); };
     const currentState = window.history.state ?? {};
     if (!currentState.titanRoot) {
       window.history.replaceState({ ...currentState, titanRoot: true, titanTab: 'today' }, '');
@@ -69,7 +63,6 @@ export function App() {
       if (normalizedTab !== currentState.titanTab) window.history.replaceState({ ...currentState, titanRoot: true, titanTab: normalizedTab }, '');
       setActiveTab(normalizedTab);
     }
-
     window.addEventListener('online', updateConnection);
     window.addEventListener('offline', updateConnection);
     window.addEventListener('beforeinstallprompt', captureInstallPrompt);
@@ -86,19 +79,15 @@ export function App() {
   useEffect(() => {
     const sync = () => void syncSmartNotifications(activePlan).catch((error) => console.warn('Não foi possível sincronizar os lembretes TITAN.', error));
     sync();
-    window.addEventListener('titan:nutrition-changed', sync);
     window.addEventListener('titan:notification-preferences-changed', sync);
-    return () => {
-      window.removeEventListener('titan:nutrition-changed', sync);
-      window.removeEventListener('titan:notification-preferences-changed', sync);
-    };
+    return () => window.removeEventListener('titan:notification-preferences-changed', sync);
   }, [activePlan, historyRefresh]);
 
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
   async function checkForUpdate() { try { if ('serviceWorker' in navigator) { const registration = await navigator.serviceWorker.getRegistration(); await registration?.update(); } } catch (error) { console.warn('Não foi possível verificar a atualização do PWA.', error); } finally { window.location.reload(); } }
   function navigate(tab: TabId, replace = false) { if (tab !== activeTab || directWorkoutId || showImporter || generationContext) { const state = { ...window.history.state, titanRoot: true, titanTab: tab }; if (replace) window.history.replaceState(state, ''); else window.history.pushState(state, ''); } setActiveTab(tab); if (tab !== 'settings') { setShowImporter(false); setGenerationContext(null); } if (tab !== 'workout') setDirectWorkoutId(null); }
   function importPlan(plan: TitanPlan) { saveActivePlan(plan); setActivePlan(plan); setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); setDemoMode(false); localStorage.removeItem('titan-fit:demo-mode'); navigate('today', true); }
-  function deletePlan() { const message = demoMode ? 'Remover apenas o projeto demonstrativo ativo? O histórico e as avaliações da demonstração continuarão salvos. Para apagar toda a demonstração, use “Remover dados da demonstração” em Configurações.' : 'Remover apenas o projeto ativo? Seu histórico de treinos, PRs, evolução corporal e fotos serão preservados.'; if (!window.confirm(message)) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); setGenerationContext(null); }
+  function deletePlan() { const message = demoMode ? 'Remover apenas o projeto demonstrativo ativo? O histórico e as avaliações da demonstração continuarão salvos.' : 'Remover apenas o projeto ativo? Seu histórico de treinos, PRs, evolução corporal e fotos serão preservados.'; if (!window.confirm(message)) return; removeActivePlan(); setActivePlan(null); setShowImporter(false); setGenerationContext(null); }
   function historyChanged() { setHistoryRefresh((value) => value + 1); navigate('today'); }
   function openTab(tab: NavigationTab) { navigate(tab); }
   function openProjectSettings() { setShowImporter(!activePlan); setGenerationContext(null); navigate('settings'); }
@@ -127,8 +116,8 @@ export function App() {
     navigate('today', true);
   }
 
-  async function loadDemoData() { if (!window.confirm('Ativar a demonstração completa? Os dados locais atuais serão substituídos por um projeto de exemplo e registros de treino e evolução corporal.')) return; await resetAllAppData(); await loadFullDemo(); setActivePlan(demoPlan); setDemoMode(true); setGenerationContext(null); setHistoryRefresh((value) => value + 1); window.alert('Modo Demonstração completo ativado. Todas as abas agora possuem dados de exemplo.'); navigate('today', true); }
-  async function removeDemoData() { if (!demoMode) return; if (!window.confirm('Remover todos os dados da demonstração? Projeto demo, histórico e avaliações corporais fictícias serão apagados.')) return; await resetAllAppData(); setActivePlan(null); setDemoMode(false); setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); setHistoryRefresh((value) => value + 1); window.alert('Dados da demonstração removidos. O TITAN FIT voltou ao estado inicial.'); navigate('today', true); }
+  async function loadDemoData() { if (!window.confirm('Ativar a demonstração completa? Os dados locais atuais serão substituídos por um projeto de exemplo e registros de treino e evolução corporal.')) return; await resetAllAppData(); await loadFullDemo(); setActivePlan(demoPlan); setDemoMode(true); setGenerationContext(null); setHistoryRefresh((value) => value + 1); window.alert('Modo Demonstração completo ativado.'); navigate('today', true); }
+  async function removeDemoData() { if (!demoMode) return; if (!window.confirm('Remover todos os dados da demonstração?')) return; await resetAllAppData(); setActivePlan(null); setDemoMode(false); setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); setHistoryRefresh((value) => value + 1); window.alert('Dados da demonstração removidos.'); navigate('today', true); }
   async function resetApp() { const confirmation = window.prompt('Esta ação apaga permanentemente TODOS os dados deste aparelho: projeto, treinos, histórico, evolução corporal, fotos e preferências. Digite RESETAR para confirmar.'); if (confirmation !== 'RESETAR') return; await resetAllAppData(); window.location.reload(); }
 
   return <div className="app-shell">
@@ -143,7 +132,6 @@ export function App() {
         <ProfileSettingsPanel />
         <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => void generateNewOptions()}>Gerar novas opções</button><small>Salve primeiro qualquer alteração em Perfil e objetivos. O TITAN usará os dados atuais para recalcular três propostas.</small><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Inserir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. O histórico e a evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar</button>}</div>}</section>
         <ProjectManagementPanel onPlanActivated={(plan) => { setActivePlan(plan); setShowImporter(false); setGenerationContext(null); setDemoMode(false); setHistoryRefresh((value) => value + 1); localStorage.removeItem('titan-fit:demo-mode'); }} />
-        <section className="settings-card" aria-label="Programação nutricional"><div><span className="info-label">Programação nutricional</span><strong>Plano alimentar</strong><small>Importe, troque ou remova sua dieta sem alterar o projeto de treino.</small></div><NutritionProgramPanel managementOnly /></section>
         <NotificationSettingsPanel plan={activePlan} />
         <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v{APP_VERSION}</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => void checkForUpdate()}>Verificar atualização</button></section>
         <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, histórico de treino, cargas e evolução corporal fictícios para testar as funções principais.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button>{demoMode && <button type="button" className="secondary-action" onClick={() => void removeDemoData()}>Remover dados da demonstração</button>}</section>
