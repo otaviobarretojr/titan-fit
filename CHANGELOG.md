@@ -2,6 +2,15 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.57.1 — Polimento de navegação e nutrição
+- Home mais limpa, com próxima refeição em card compacto e execução da refeição em tela própria.
+- Programação nutricional reorganizada em visão semanal compacta, com detalhe diário ao toque.
+- Score TITAN reduzido a indicador compacto na Home.
+- Unificação do espaçamento e alinhamento da navegação inferior.
+- Sincronização visual entre abas internas de Programação, Saúde, Relatórios e Nutrição.
+- Correção do cálculo de safe-area e do espaço reservado no rodapé em Android.
+- Preservação integral de histórico, projetos e compatibilidade com o schema nutricional atual.
+
 ## v0.57.0 — Notificações inteligentes
 - Motor de lembretes baseado nos horários reais do plano ativo.
 - Notificações locais no Android com `@capacitor/local-notifications`.
