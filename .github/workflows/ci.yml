@@ -22,13 +22,21 @@ jobs:
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           LOCK_VERSION=$(node -p "require('./package-lock.json').version")
+          NEEDS_SYNC=false
           if [ "$PACKAGE_VERSION" != "$LOCK_VERSION" ]; then
+            NEEDS_SYNC=true
+          elif ! npm ci --ignore-scripts --dry-run >/dev/null 2>&1; then
+            NEEDS_SYNC=true
+          fi
+          if [ "$NEEDS_SYNC" = true ]; then
             npm install --package-lock-only --ignore-scripts
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package-lock.json
-            git commit -m "chore: sync package-lock version to v${PACKAGE_VERSION}"
-            git push
+            if ! git diff --quiet -- package-lock.json; then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add package-lock.json
+              git commit -m "chore: sync package-lock metadata for v${PACKAGE_VERSION}"
+              git push
+            fi
           fi
       - run: npm ci
       - run: npm run lint
