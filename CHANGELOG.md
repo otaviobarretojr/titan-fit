@@ -2,6 +2,14 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.9 — Coach e relatórios unificados
+- Coach deixa de contar registros antigos exclusivamente cardiovasculares como frequência de musculação.
+- Treinos mistos continuam valendo como uma única sessão de musculação, com o cardio analisado dentro da mesma sessão.
+- Coach passa a exibir leitura cardiovascular integrada com sessões, duração, distância e frequência cardíaca quando disponível.
+- Relatórios passam a mostrar o cardio dentro do card de Treino, sem recriar módulo cardiovascular isolado.
+- Comparações de cardio usam treinos com cardio como unidade de sessão, preservando histórico antigo e evitando duplicidades.
+- Novos testes cobrem treino misto, cardio legado e consistência entre Coach e Relatórios.
+
 ## v0.58.8 — Histórico e evolução integrados
 - Histórico volta a ficar acessível dentro do hub Saúde, sem criar uma nova aba principal.
 - Detalhe do cardio no histórico passa a exibir ritmo, zona realizada, RPE, calorias e demais métricas registradas.
