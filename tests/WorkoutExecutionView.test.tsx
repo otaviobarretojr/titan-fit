@@ -39,7 +39,7 @@ describe('WorkoutExecutionView', () => {
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 RIR'), { target: { value: '1' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
 
-    expect(screen.getByText(/1\s*\/\s*2 concluídos · Tempo/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 séries feitas · 1\s*\/\s*2 resolvidas · Tempo/i)).toBeInTheDocument();
     expect(screen.queryByText(/Volume 720 kg/i)).not.toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     const saved = localStorage.getItem('titan-fit:execution:plan-1:push-a');
@@ -55,6 +55,22 @@ describe('WorkoutExecutionView', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();
     expect(screen.getByText('1:30')).toBeInTheDocument();
+  });
+
+  it('permite pular exercício sem criar volume ou PR falso', () => {
+    render(<WorkoutExecutionView planId="plan-skip" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    unlockVideoIfPresent();
+    fireEvent.click(screen.getByRole('button', { name: 'Pular exercício · sem tempo' }));
+
+    expect(screen.getByText('PULADO NESTA SESSÃO')).toBeInTheDocument();
+    expect(screen.getByText('Exercício pulado')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Concluir e salvar treino' })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Concluir e salvar treino' }));
+    expect(screen.getByText('TREINO CONCLUÍDO')).toBeInTheDocument();
+    const history = localStorage.getItem('titan-fit:history:v1');
+    expect(history).toContain('"totalVolumeKg":0');
+    expect(history).toContain('"exercises":[]');
   });
 
   it('troca para uma alternativa oficial e exibe o vídeo próprio dela', () => {
