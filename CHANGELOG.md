@@ -2,6 +2,19 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.2 — Persistência e retomada segura
+- Recuperação de sessões de treino em andamento a partir do IndexedDB antes da entrada no aplicativo.
+- O registro mais recente entre IndexedDB e armazenamento local passa a ser preservado durante a hidratação.
+- Recuperação do projeto ativo pelo banco principal passa a ocorrer antes da montagem do aplicativo, reduzindo inconsistências após atualização ou restauração.
+- Fallback seguro para abrir o app com o projeto local existente caso o IndexedDB esteja temporariamente indisponível.
+- Auditoria do fluxo de importação confirmou preservação de histórico e pausa automática do projeto anteriormente ativo ao criar um novo ciclo.
+- A ação de abandono parcial do treino passa a ser apresentada de forma simples como “Pular exercício”.
+
+## v0.58.1 — Navegação Android e barra inferior
+- Botão Voltar do Android passa a respeitar o histórico interno e enviar o TITAN FIT para segundo plano ao chegar à raiz, em vez de destruir a Activity.
+- Barra inferior refinada para comportamento e aparência mais próximos de um aplicativo Android nativo.
+- Preservação integral dos dados e da identidade de assinatura Android entre atualizações.
+
 ## v0.58.0 — Auditoria e estabilização pós-Nutrição
 - Auditoria geral iniciada sobre a base v0.57.12 após a remoção integral do módulo de Nutrição.
 - Correção da suíte de testes principal para validar explicitamente que abas, painéis e links de Nutrição não existem mais.
