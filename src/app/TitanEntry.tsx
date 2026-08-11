@@ -9,12 +9,13 @@ import { PlanImporter } from '../features/plan/PlanImporter';
 import { loadActivePlan, loadActivePlanFromDatabase, saveActivePlan } from '../features/plan/storage';
 import type { TitanPlan } from '../features/plan/types';
 import { linkPlanToProject } from '../features/project/repository';
+import { restoreWorkoutExecutionsFromDatabase } from '../features/workout/storage';
 import { App } from './App';
 
 type EntryState = 'loading' | 'onboarding' | 'import' | 'candidates' | 'app';
 
 export function TitanEntry() {
-  const [entryState, setEntryState] = useState<EntryState>(() => loadActivePlan() ? 'app' : 'loading');
+  const [entryState, setEntryState] = useState<EntryState>('loading');
   const [profile, setProfile] = useState<TitanProfile | null>(null);
   const [assessment, setAssessment] = useState<TitanTrainingAssessment | null>(null);
 
@@ -27,14 +28,14 @@ export function TitanEntry() {
 
   useEffect(() => {
     if (entryState !== 'loading') return;
-    void Promise.all([loadPlanningContext(), loadActivePlanFromDatabase()])
+    void Promise.all([loadPlanningContext(), loadActivePlanFromDatabase(), restoreWorkoutExecutionsFromDatabase()])
       .then(([context, storedPlan]) => {
         if (storedPlan) return setEntryState('app');
         if (!context.profile?.onboardingCompleted) return setEntryState('onboarding');
         if (context.assessment) return setEntryState('candidates');
         setEntryState('app');
       })
-      .catch(() => setEntryState('onboarding'));
+      .catch(() => setEntryState(loadActivePlan() ? 'app' : 'onboarding'));
   }, [entryState]);
 
   async function activateDemo() {
