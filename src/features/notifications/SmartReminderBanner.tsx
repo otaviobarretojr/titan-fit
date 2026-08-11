@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { TitanPlan } from '../plan/types';
 import { loadWorkoutHistory } from '../history/storage';
-import { loadNutritionExecutions } from '../nutrition/execution';
-import { loadActiveNutritionPlan } from '../nutrition/storage';
 import { buildSmartReminders, currentSmartAlerts, type SmartReminder } from './engine';
 import { loadNotificationPreferences } from './preferences';
 
@@ -12,11 +10,9 @@ export function SmartReminderBanner({ plan }: { plan: TitanPlan | null }) {
   useEffect(() => {
     const refresh = () => setRevision((value) => value + 1);
     const timer = window.setInterval(refresh, 60_000);
-    window.addEventListener('titan:nutrition-changed', refresh);
     window.addEventListener('titan:notification-preferences-changed', refresh);
     return () => {
       window.clearInterval(timer);
-      window.removeEventListener('titan:nutrition-changed', refresh);
       window.removeEventListener('titan:notification-preferences-changed', refresh);
     };
   }, []);
@@ -24,16 +20,10 @@ export function SmartReminderBanner({ plan }: { plan: TitanPlan | null }) {
   void revision;
   const preferences = loadNotificationPreferences();
   if (!preferences.enabled) return null;
-  const context = {
-    plan,
-    nutritionPlan: loadActiveNutritionPlan(),
-    nutritionExecutions: loadNutritionExecutions(),
-    workoutHistory: loadWorkoutHistory(),
-    preferences,
-  };
+  const context = { plan, workoutHistory: loadWorkoutHistory(), preferences };
   const now = new Date();
-  const overdue = currentSmartAlerts(context, now).find((item) => item.kind !== 'meal-overdue');
-  const upcoming = buildSmartReminders(context, now, 1).find((item) => item.kind !== 'meal-overdue' && item.at.getTime() - now.getTime() <= 60 * 60_000);
+  const overdue = currentSmartAlerts(context, now)[0];
+  const upcoming = buildSmartReminders(context, now, 1).find((item) => item.at.getTime() - now.getTime() <= 60 * 60_000);
   const reminder = overdue ?? upcoming;
   if (!reminder) return null;
 
