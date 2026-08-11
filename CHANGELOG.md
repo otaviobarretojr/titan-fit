@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.6 — Progressão inteligente
+- TITAN deixa de sugerir aumento de carga quando o RIR da sessão não foi registrado.
+- Aumento de carga passa a exigir que a própria maior carga da sessão alcance o topo da faixa prescrita, evitando progressão falsa baseada em séries mais leves.
+- Quando o topo é atingido sem RIR, o Coach orienta repetir a referência e registrar esforço antes de subir.
+- Novos testes cobrem ausência de RIR, séries com cargas mistas e progressão válida.
+
 ## v0.58.5 — Exercícios, vídeos e alternativas
 - Modo treino passa a respeitar corretamente o provedor do vídeo: YouTube, Vimeo ou mídia hospedada.
 - Reprodução no treino recebe configuração mobile com playsinline, carregamento lazy e preferências PT-BR quando suportadas pelo provedor.

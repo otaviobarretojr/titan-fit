@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateTitanEngineBlueprints, type TitanEngineAssessment, type TitanEngineExercise } from '../src/core/titan-engine';
+import { decideTitanProgression, generateTitanEngineBlueprints, type TitanEngineAssessment, type TitanEngineExercise } from '../src/core/titan-engine';
 
 const assessment: TitanEngineAssessment = {
   experience: 'intermediate',
@@ -18,6 +18,36 @@ const exercises: TitanEngineExercise[] = [
 ];
 
 const rule = { weeklySetsPerMuscle: [8, 14] as [number, number], maxExercisesPerSession: 6 };
+
+describe('Progressão TITAN', () => {
+  it('não aumenta carga sem RIR registrado mesmo no topo da faixa', () => {
+    const result = decideTitanProgression([
+      { sets: [{ weightKg: 80, repetitions: 12, rir: null }, { weightKg: 80, repetitions: 12, rir: null }] },
+      { sets: [{ weightKg: 80, repetitions: 11, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },
+    ], { minReps: 8, maxReps: 12, targetRir: 2 });
+    expect(result.status).toBe('maintain');
+    expect(result.title).toContain('Confirmar esforço');
+    expect(result.suggestedWeightKg).toBe(80);
+  });
+
+  it('não usa séries leves no topo para justificar aumento da maior carga', () => {
+    const result = decideTitanProgression([
+      { sets: [{ weightKg: 90, repetitions: 8, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }] },
+      { sets: [{ weightKg: 90, repetitions: 8, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },
+    ], { minReps: 8, maxReps: 12, targetRir: 2 });
+    expect(result.status).not.toBe('progress');
+    expect(result.suggestedWeightKg).toBe(90);
+  });
+
+  it('aumenta carga quando a maior carga também fecha o topo com RIR adequado', () => {
+    const result = decideTitanProgression([
+      { sets: [{ weightKg: 80, repetitions: 12, rir: 2 }, { weightKg: 80, repetitions: 12, rir: 2 }] },
+      { sets: [{ weightKg: 80, repetitions: 11, rir: 2 }, { weightKg: 80, repetitions: 11, rir: 2 }] },
+    ], { minReps: 8, maxReps: 12, targetRir: 2 });
+    expect(result.status).toBe('progress');
+    expect(result.suggestedWeightKg).toBeGreaterThan(80);
+  });
+});
 
 describe('TITAN Engine', () => {
   it('gera três candidatos determinísticos e explicáveis', () => {

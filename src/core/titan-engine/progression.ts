@@ -41,7 +41,9 @@ export function decideTitanProgression(
   const effortTooHigh = rirKnown && latest.averageRir! < Math.max(0, targetRir - 1);
   const belowRange = latest.minimumReps < minReps;
   const allAtTop = latest.minimumReps >= maxReps;
-  const rirAllowsLoad = !rirKnown || latest.averageRir! >= targetRir;
+  const latestTopLoadSets = sessionsDescending[0]?.sets.filter((set) => (set.weightKg ?? 0) === latest.maxWeightKg && (set.repetitions ?? 0) > 0) ?? [];
+  const topLoadReachedRangeTop = latestTopLoadSets.length > 0 && latestTopLoadSets.every((set) => (set.repetitions ?? 0) >= maxReps);
+  const rirAllowsLoad = rirKnown && latest.averageRir! >= targetRir;
   const repeatedStruggle = belowRange && effortTooHigh && third !== null && previous.minimumReps < minReps;
 
   if (repeatedStruggle) {
@@ -52,9 +54,12 @@ export function decideTitanProgression(
     const reason = belowRange ? `Houve série abaixo de ${minReps} reps.` : `O RIR médio ficou abaixo do alvo ${targetRir}.`;
     return decision('review', 'Não aumentar agora', `${reason} Mantenha ${formatWeight(latest.maxWeightKg)} e recupere a faixa antes de progredir.`, latest.maxWeightKg, minReps, performances.length >= 3 ? 'high' : 'medium', trend === 'declining' ? 'declining' : 'stable');
   }
-  if (allAtTop && rirAllowsLoad) {
+  if (allAtTop && topLoadReachedRangeTop && rirAllowsLoad) {
     const suggested = roundToIncrement(latest.maxWeightKg * (1 + increment), 0.5);
     return decision('progress', 'Subir carga', `Topo da faixa concluído com margem adequada. Próxima referência: ${formatWeight(suggested)}, retornando para ${minReps}–${Math.min(maxReps, minReps + 1)} reps.`, suggested, minReps, performances.length >= 3 ? 'high' : 'medium', 'improving');
+  }
+  if (allAtTop && !rirKnown) {
+    return decision('maintain', 'Confirmar esforço antes de subir', `Você chegou ao topo da faixa com ${formatWeight(latest.maxWeightKg)}, mas faltou registrar o RIR. Repita a carga e registre o esforço antes de aumentar.`, latest.maxWeightKg, maxReps, performances.length >= 3 ? 'high' : 'medium', trend);
   }
   if (latest.averageReps >= minReps && latest.averageReps < maxReps) {
     const nextRep = clampRep(Math.floor(latest.averageReps) + 1, minReps, maxReps);
