@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/v0588-migration.yml'
       - 'scripts/apply-v0588.mjs'
+      - 'eslint.config.js'
 
 permissions:
   contents: write
