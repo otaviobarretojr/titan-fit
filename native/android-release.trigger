@@ -1,1 +1,1 @@
-release-v0.58.1-navigation-stable
+release-v0.58.2-persistence-stable
