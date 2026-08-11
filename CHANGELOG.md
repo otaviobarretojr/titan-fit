@@ -2,6 +2,16 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.3 — Cardio integrado ao treino
+- Remoção definitiva da tela, agendador e gerador de cardio isolado.
+- Cardio passa a existir somente como exercício/etapa dentro dos treinos do Projeto TITAN.
+- Gerador interno passa a inserir prescrições cardiovasculares diretamente nas sessões de musculação, respeitando objetivo e nível cardiovascular informados.
+- Importador deixa de aceitar projetos `.titan-cardio` separados e exige um único projeto integrado.
+- Notificações de cardio isoladas são removidas; existe apenas o lembrete do treino completo, indicando quando a sessão contém cardio.
+- Registro cardiovascular dentro do treino continua suportando duração, distância, velocidade, ritmo, frequência cardíaca, calorias e observações, além da zona prescrita pelo projeto.
+- Painéis de evolução cardiovascular e histórico anterior são preservados e continuam lendo os registros já existentes.
+- Nenhum histórico antigo é apagado pela mudança de arquitetura.
+
 ## v0.58.2 — Persistência e retomada segura
 - Recuperação de sessões de treino em andamento a partir do IndexedDB antes da entrada no aplicativo.
 - O registro mais recente entre IndexedDB e armazenamento local passa a ser preservado durante a hidratação.
