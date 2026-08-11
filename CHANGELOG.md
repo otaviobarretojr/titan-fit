@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.13 — Menu inferior proporcional
+- Barra inferior reconstruída com quatro zonas exatamente iguais de 25% da largura da tela.
+- Removido o posicionamento por `left: 50%` e `transform`, eliminando deslocamento lateral percebido no Android.
+- Ícones aumentados para 30 px, com cápsula ativa maior e centralização rígida.
+- Altura, rótulos e espaçamento vertical reajustados para melhor proporção e padrão visual mobile.
+- Nova camada final de navegação bloqueia interferência de estilos legados.
+
 ## v0.58.12 — Menu inferior realinhado
 - Menu inferior recebe uma única camada final de estilos para evitar conflito entre regras antigas.
 - Ícones aumentados e centralizados, com distribuição uniforme entre as quatro abas.
