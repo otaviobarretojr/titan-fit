@@ -58,6 +58,7 @@ import './styles/home-compact-v058.css';
 import './styles/home-nutrition-next-v0572.css';
 import './styles/navigation-definitive-v0572.css';
 import './styles/home-nutrition-card-v0574.css';
+import './styles/home-harmony-v0578.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
