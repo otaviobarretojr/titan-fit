@@ -1,3 +1,4 @@
+import { buildCardioEvolution } from '../cardio/evolution';
 import type { CoachContext } from '../coach/types';
 
 const DAY = 86_400_000;
@@ -18,6 +19,11 @@ export type TitanReport = {
   training: {
     sessions: number;
     totalVolumeKg: number;
+    cardioSessions: number;
+    cardioDurationSeconds: number;
+    cardioDistanceMeters: number;
+    cardioAverageHeartRate: number | null;
+    cardioSessionsComparison: TitanReportComparison;
     sessionsComparison: TitanReportComparison;
     volumeComparison: TitanReportComparison;
   };
@@ -51,6 +57,9 @@ type ReportWindow = {
 export function buildTitanReport(context: CoachContext, periodDays: TitanReportPeriod, now = new Date()): TitanReport {
   const current = summarizeWindow(context, periodDays, now, 0);
   const previous = summarizeWindow(context, periodDays, now, periodDays);
+  const cardio = buildCardioEvolution(context.workouts, periodDays, now);
+  const previousNow = new Date(now.getTime() - periodDays * DAY);
+  const previousCardio = buildCardioEvolution(context.workouts, periodDays, previousNow);
   const weightChangeKg = current.latestWeightKg !== null && current.firstWeightKg !== null && current.bodyRecords > 1
     ? round1(current.latestWeightKg - current.firstWeightKg)
     : null;
@@ -60,6 +69,11 @@ export function buildTitanReport(context: CoachContext, periodDays: TitanReportP
     training: {
       sessions: current.trainingSessions,
       totalVolumeKg: Math.round(current.totalVolumeKg),
+      cardioSessions: cardio.sessions,
+      cardioDurationSeconds: cardio.totalDurationSeconds,
+      cardioDistanceMeters: cardio.totalDistanceMeters,
+      cardioAverageHeartRate: cardio.averageHeartRate,
+      cardioSessionsComparison: compare(cardio.sessions, previousCardio.sessions),
       sessionsComparison: compare(current.trainingSessions, previous.trainingSessions),
       volumeComparison: compare(Math.round(current.totalVolumeKg), Math.round(previous.totalVolumeKg)),
     },
@@ -89,7 +103,7 @@ function summarizeWindow(context: CoachContext, periodDays: TitanReportPeriod, n
     return time >= start && time < end;
   };
 
-  const workoutsInWindow = workouts.filter((item) => inWindow(item.completedAt) && item.exercises.some((exercise) => (exercise.exerciseType ?? 'strength') === 'strength'));
+  const workoutsInWindow = workouts.filter((item) => inWindow(item.completedAt) && (item.exercises.length === 0 || item.exercises.some((exercise) => exercise.exerciseType !== 'cardio' && exercise.exerciseType !== 'distance')));
   const totalVolumeKg = workoutsInWindow.reduce((sum, item) => sum + Math.max(0, item.totalVolumeKg || 0), 0);
 
   const sleep = healthSamples
