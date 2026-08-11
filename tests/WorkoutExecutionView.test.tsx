@@ -90,7 +90,8 @@ describe('WorkoutExecutionView', () => {
       exercises: [{
         ...workout.exercises[0],
         id: 'chest-press-machine',
-        alternativeExercises: [{ id: 'bench-press', name: 'Supino reto com barra', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 5, maxReps: 10, targetRir: 2, restSeconds: 150 }],
+        technique: 'Técnica principal',
+        alternativeExercises: [{ id: 'bench-press', name: 'Supino reto com barra', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 5, maxReps: 10, targetRir: 2, restSeconds: 150, technique: 'Técnica da alternativa' }],
       }],
     };
     render(<WorkoutExecutionView planId="plan-alt" planName="Plano A" workout={workoutWithAlternative} onBack={vi.fn()} onCompleted={vi.fn()} />);
@@ -100,6 +101,8 @@ describe('WorkoutExecutionView', () => {
     expect(screen.getByText('Alternativa selecionada · histórico próprio')).toBeInTheDocument();
     expect(screen.getByTitle('Supino reto com barra — execução')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();
+    expect(screen.getByText('Técnica da alternativa')).toBeInTheDocument();
+    expect(screen.queryByText('Técnica principal')).not.toBeInTheDocument();
   });
 
   it('salva o histórico e apresenta o resumo final', () => {

@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.5 — Exercícios, vídeos e alternativas
+- Modo treino passa a respeitar corretamente o provedor do vídeo: YouTube, Vimeo ou mídia hospedada.
+- Reprodução no treino recebe configuração mobile com playsinline, carregamento lazy e preferências PT-BR quando suportadas pelo provedor.
+- Troca para exercício alternativo continua atualizando vídeo, técnica, prescrição e histórico do exercício realmente executado.
+- Teste de regressão reforçado para garantir que a técnica do exercício principal não permaneça após selecionar uma alternativa.
+- Preservação integral de sessões, cargas, PRs, descanso automático, cardio integrado e histórico.
+
 ## v0.58.4 — Auditoria do modo treino
 - Revisão do fluxo principal de execução de treino após a integração definitiva do cardio ao projeto de musculação.
 - Correção da ação de pulo para exibir somente “Pular exercício”.

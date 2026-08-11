@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getExerciseVideo } from '../exercise-library/videos';
+import { getExerciseVideo, type CuratedExerciseVideo } from '../exercise-library/videos';
 import { getProgressionAdvice } from '../history/intelligence';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
@@ -175,7 +175,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
 
       {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
         {videoIsRequired ? <>
-          <div className="exercise-video"><iframe title={exerciseVideo.title} src={exerciseVideo.embedUrl} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div>
+          <WorkoutExerciseVideo video={exerciseVideo} exerciseName={activeExercise.name} />
           <div className="video-stage-meta"><strong>{exerciseVideo.title}</strong><small>{exerciseVideo.source}</small></div>
           <button type="button" className="primary-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Já assisti · começar séries</button>
           <button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Pular demonstração</button>
@@ -207,6 +207,18 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.resolved !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
   </div>;
+}
+
+function WorkoutExerciseVideo({ video, exerciseName }: { video: CuratedExerciseVideo; exerciseName: string }) {
+  if (video.provider === 'hosted' && video.videoUrl) {
+    return <div className="exercise-video"><video src={video.videoUrl} controls playsInline preload="metadata" aria-label={`Vídeo demonstrativo de ${exerciseName}`} /></div>;
+  }
+  const src = video.provider === 'youtube' && video.videoId
+    ? `https://www.youtube-nocookie.com/embed/${video.videoId}?rel=0&playsinline=1&hl=pt-BR&cc_lang_pref=pt`
+    : video.provider === 'vimeo' && video.videoId
+      ? `https://player.vimeo.com/video/${video.videoId}?dnt=1&playsinline=1&texttrack=pt`
+      : video.embedUrl;
+  return <div className="exercise-video"><iframe title={video.title} src={src} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen /></div>;
 }
 
 function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, onComplete }: { exercise: TitanExercise; exerciseType: ExerciseType; set: ExecutedSet; totalSets: number; onNumeric: (setNumber: number, field: NumericField, value: string) => void; onText: (field: 'averagePace' | 'notes', value: string) => void; onComplete: () => void }) {
