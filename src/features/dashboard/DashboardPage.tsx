@@ -2,6 +2,7 @@ import { useUnifiedCoachReport } from '../coach/useUnifiedCoachReport';
 import { getExerciseSessions, getProgressionAdvice } from '../history/intelligence';
 import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
+import { SmartReminderBanner } from '../notifications/SmartReminderBanner';
 import { NutritionTodayPanel } from '../nutrition/NutritionTodayPanel';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
@@ -51,6 +52,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   return <div className="dashboard-page dashboard-page-clean">
     <section className="dashboard-heading"><div><span className="eyebrow">{formatToday()}</span><h2>{getGreeting()}, Otávio</h2><p>{plan.project?.name ?? plan.name}</p></div></section>
 
+    <SmartReminderBanner plan={plan} />
     <NutritionTodayPanel />
 
     {hasWorkoutToday && dayPlan ? <section className="today-workout" aria-labelledby="today-workout-title">
