@@ -1,0 +1,142 @@
+/* TITAN FIT v0.57.8 — dashboard visual harmony */
+.dashboard-page-clean{
+  --home-eyebrow:.62rem;
+  --home-title:1rem;
+  --home-body:.72rem;
+  --home-meta:.66rem;
+  --home-button:.76rem;
+  gap:12px!important;
+}
+.dashboard-page-clean .dashboard-heading{
+  padding:6px 2px 6px!important;
+}
+.dashboard-page-clean .dashboard-heading .eyebrow{
+  font-size:var(--home-eyebrow)!important;
+  letter-spacing:.05em!important;
+  font-weight:800!important;
+}
+.dashboard-page-clean .dashboard-heading h2{
+  margin:4px 0 2px!important;
+  font-size:1.32rem!important;
+  line-height:1.15!important;
+  letter-spacing:-.02em!important;
+}
+.dashboard-page-clean .dashboard-heading p{
+  font-size:var(--home-body)!important;
+  line-height:1.35!important;
+}
+
+.dashboard-page-clean .nutrition-today-card,
+.dashboard-page-clean .today-workout,
+.dashboard-page-clean .dashboard-coach-card,
+.dashboard-page-clean .smart-reminder-banner,
+.dashboard-page-clean .today-rest-card{
+  padding:14px!important;
+  border-radius:18px!important;
+}
+
+.dashboard-page-clean .nutrition-today-head .eyebrow,
+.dashboard-page-clean .today-workout-topline .eyebrow,
+.dashboard-page-clean .dashboard-coach-topline .eyebrow,
+.dashboard-page-clean .today-rest-card .eyebrow{
+  font-size:var(--home-eyebrow)!important;
+  line-height:1.2!important;
+  letter-spacing:.045em!important;
+  font-weight:800!important;
+}
+
+.dashboard-page-clean .nutrition-today-head h3,
+.dashboard-page-clean .today-workout h3,
+.dashboard-page-clean .dashboard-coach-card>strong,
+.dashboard-page-clean .today-rest-card h3{
+  font-size:var(--home-title)!important;
+  line-height:1.25!important;
+  letter-spacing:-.01em!important;
+  font-weight:800!important;
+}
+
+.dashboard-page-clean .nutrition-next-meal strong,
+.dashboard-page-clean .smart-reminder-banner strong{
+  font-size:.82rem!important;
+  line-height:1.3!important;
+  font-weight:800!important;
+}
+
+.dashboard-page-clean .today-workout p,
+.dashboard-page-clean .dashboard-coach-card>p,
+.dashboard-page-clean .smart-reminder-banner p,
+.dashboard-page-clean .today-rest-card p{
+  font-size:var(--home-body)!important;
+  line-height:1.4!important;
+}
+
+.dashboard-page-clean .nutrition-next-meal small,
+.dashboard-page-clean .today-workout-metrics,
+.dashboard-page-clean .today-workout-day,
+.dashboard-page-clean .coach-context{
+  font-size:var(--home-meta)!important;
+  line-height:1.25!important;
+}
+
+.dashboard-page-clean .nutrition-next-meal{
+  padding:11px 12px!important;
+  border-radius:14px!important;
+  gap:10px!important;
+}
+.dashboard-page-clean .nutrition-next-time{
+  font-size:.92rem!important;
+  line-height:1!important;
+  font-weight:850!important;
+}
+.dashboard-page-clean .today-workout-metrics{
+  margin:10px 0!important;
+  gap:12px!important;
+  flex-wrap:wrap!important;
+}
+.dashboard-page-clean .today-workout-topline,
+.dashboard-page-clean .dashboard-coach-topline{
+  gap:10px!important;
+}
+
+.dashboard-page-clean .primary-action,
+.dashboard-page-clean .nutrition-today-card>.primary-action,
+.dashboard-page-clean .today-workout .primary-action{
+  min-height:44px!important;
+  padding:10px 14px!important;
+  border-radius:13px!important;
+  font-size:var(--home-button)!important;
+  font-weight:800!important;
+  line-height:1!important;
+}
+
+.dashboard-page-clean .smart-reminder-banner{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:12px!important;
+}
+.dashboard-page-clean .smart-reminder-time{
+  font-size:var(--home-meta)!important;
+  padding:6px 9px!important;
+}
+
+.dashboard-page-clean .dashboard-coach-card>p{
+  margin:5px 0 0!important;
+  -webkit-line-clamp:2!important;
+}
+
+@media(max-width:380px){
+  .dashboard-page-clean{
+    --home-eyebrow:.59rem;
+    --home-title:.96rem;
+    --home-body:.69rem;
+    --home-meta:.63rem;
+    --home-button:.73rem;
+    gap:10px!important;
+  }
+  .dashboard-page-clean .nutrition-today-card,
+  .dashboard-page-clean .today-workout,
+  .dashboard-page-clean .dashboard-coach-card,
+  .dashboard-page-clean .smart-reminder-banner,
+  .dashboard-page-clean .today-rest-card{
+    padding:12px!important;
+  }
+}
