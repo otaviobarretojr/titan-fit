@@ -1,14 +1,12 @@
 import { getCardioWeekSchedule, normalizeDay } from '../cardio/currentCardio';
 import type { WorkoutHistoryRecord } from '../history/types';
-import type { NutritionMealExecution } from '../nutrition/execution';
-import type { TitanNutritionPlan } from '../nutrition/types';
 import type { TitanPlan } from '../plan/types';
 import type { NotificationPreferences } from './preferences';
 
 const DAY = 86_400_000;
 const WEEKDAYS = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
-export type SmartReminderKind = 'meal' | 'meal-overdue' | 'workout' | 'cardio';
+export type SmartReminderKind = 'workout' | 'cardio';
 export type SmartReminder = {
   id: number;
   key: string;
@@ -20,8 +18,6 @@ export type SmartReminder = {
 
 export type SmartReminderContext = {
   plan: TitanPlan | null;
-  nutritionPlan: TitanNutritionPlan | null;
-  nutritionExecutions: NutritionMealExecution[];
   workoutHistory: WorkoutHistoryRecord[];
   preferences: NotificationPreferences;
 };
@@ -35,24 +31,6 @@ export function buildSmartReminders(context: SmartReminderContext, now = new Dat
     const date = new Date(start.getTime() + offset * DAY);
     const dateKey = localDateKey(date);
     const weekday = WEEKDAYS[date.getDay()];
-
-    if (context.preferences.nutrition && context.nutritionPlan) {
-      const day = context.nutritionPlan.days.find((item) => normalizeDay(item.day).includes(weekday));
-      const completed = new Set(context.nutritionExecutions.filter((item) => item.date === dateKey).map((item) => item.mealId));
-      for (const meal of day?.meals ?? []) {
-        if (completed.has(meal.id)) continue;
-        const mealAt = dateAtTime(date, meal.plannedTime);
-        if (mealAt.getTime() > now.getTime()) {
-          reminders.push(createReminder(`meal:${dateKey}:${meal.id}`, 'meal', mealAt, meal.name, `Horário planejado: ${meal.plannedTime}. Registre sua refeição no TITAN FIT.`));
-        }
-        if (context.preferences.overdueMeals) {
-          const overdueAt = new Date(mealAt.getTime() + context.preferences.overdueMealMinutes * 60_000);
-          if (overdueAt.getTime() > now.getTime()) {
-            reminders.push(createReminder(`meal-overdue:${dateKey}:${meal.id}`, 'meal-overdue', overdueAt, `${meal.name} pendente`, 'A refeição ainda não foi registrada. Confirme se consumiu, substituiu, pulou ou ajuste o registro.'));
-          }
-        }
-      }
-    }
 
     if (context.preferences.workout && context.plan) {
       const workout = context.plan.workouts.find((item) => normalizeDay(item.day).includes(weekday));
@@ -75,22 +53,8 @@ export function buildSmartReminders(context: SmartReminderContext, now = new Dat
   return reminders.sort((a, b) => a.at.getTime() - b.at.getTime());
 }
 
-export function currentSmartAlerts(context: SmartReminderContext, now = new Date()) {
-  const alerts: SmartReminder[] = [];
-  if (!context.preferences.enabled) return alerts;
-  const dateKey = localDateKey(now);
-  const weekday = WEEKDAYS[now.getDay()];
-
-  if (context.preferences.nutrition && context.nutritionPlan) {
-    const day = context.nutritionPlan.days.find((item) => normalizeDay(item.day).includes(weekday));
-    const completed = new Set(context.nutritionExecutions.filter((item) => item.date === dateKey).map((item) => item.mealId));
-    for (const meal of day?.meals ?? []) {
-      if (completed.has(meal.id)) continue;
-      const overdueAt = new Date(dateAtTime(now, meal.plannedTime).getTime() + context.preferences.overdueMealMinutes * 60_000);
-      if (overdueAt.getTime() <= now.getTime()) alerts.push(createReminder(`current-overdue:${dateKey}:${meal.id}`, 'meal-overdue', now, `${meal.name} pendente`, `Planejada para ${meal.plannedTime}. Registre o que aconteceu com essa refeição.`));
-    }
-  }
-  return alerts.sort((a, b) => a.title.localeCompare(b.title));
+export function currentSmartAlerts(_context: SmartReminderContext, _now = new Date()): SmartReminder[] {
+  return [];
 }
 
 function wasWorkoutCompleted(records: WorkoutHistoryRecord[], workoutId: string, dateKey: string) {
