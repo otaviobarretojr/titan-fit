@@ -18,8 +18,12 @@ export function NutritionTodayPanel() {
 
   useEffect(() => {
     const refresh = () => setRevision((value) => value + 1);
+    const timer = window.setInterval(refresh, 60_000);
     window.addEventListener('titan:nutrition-changed', refresh);
-    return () => window.removeEventListener('titan:nutrition-changed', refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('titan:nutrition-changed', refresh);
+    };
   }, []);
 
   useEffect(() => {
@@ -88,20 +92,32 @@ export function NutritionTodayPanel() {
     setRevision((value) => value + 1);
   }
 
-  if (!next && !activeMeal) return null;
-
   return <>
-    {next && <section className="nutrition-next-compact" aria-label="Próxima refeição">
-      <button type="button" className="nutrition-next-compact-action" onClick={() => openMeal(next)}>
-        <span className="nutrition-next-compact-label">Próxima refeição</span>
-        <span className="nutrition-next-compact-time">{next.plannedTime}</span>
-        <span className="nutrition-next-compact-copy">
-          <strong>{next.name}</strong>
-          <small>{Math.round(next.macros.caloriesKcal)} kcal · P {round1(next.macros.proteinG)} · C {round1(next.macros.carbohydrateG)} · G {round1(next.macros.fatG)}</small>
-        </span>
-        <span className="nutrition-next-compact-cta">Consumir ›</span>
-      </button>
-    </section>}
+    <section className={`nutrition-home-card ${next ? 'is-active' : 'is-done'}`} aria-label="Próxima refeição">
+      <div className="nutrition-home-topline">
+        <span className="eyebrow">NUTRIÇÃO DO PROJETO{next ? ` · ${next.plannedTime}` : ''}</span>
+        <span className="nutrition-home-day">{day?.day ?? 'Hoje'}</span>
+      </div>
+      {next ? <>
+        <h3>{next.name}</h3>
+        <p>Próxima refeição programada para hoje.</p>
+        <div className="nutrition-home-metrics">
+          <span><strong>{Math.round(next.macros.caloriesKcal)}</strong> kcal</span>
+          <span><strong>{round1(next.macros.proteinG)}</strong> g proteína</span>
+          <span><strong>{round1(next.macros.carbohydrateG)}</strong> g carbo</span>
+        </div>
+        <button type="button" className="primary-action" onClick={() => openMeal(next)}>Iniciar refeição</button>
+      </> : <>
+        <h3>Alimentação de hoje encerrada</h3>
+        <p>Não há mais refeições futuras programadas para hoje.</p>
+        <div className="nutrition-home-metrics nutrition-home-zero">
+          <span><strong>0</strong> kcal</span>
+          <span><strong>0</strong> g proteína</span>
+          <span><strong>0</strong> g carbo</span>
+        </div>
+        <button type="button" className="primary-action" disabled>Próxima refeição amanhã</button>
+      </>}
+    </section>
 
     {activeMeal && <MealExecutionPage
       meal={activeMeal}
