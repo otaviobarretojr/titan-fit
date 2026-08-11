@@ -4,6 +4,7 @@ import { getExerciseSessions, getProgressionAdvice } from '../history/intelligen
 import { loadWorkoutHistory } from '../history/storage';
 import type { WorkoutHistoryRecord } from '../history/types';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
+import { loadWorkoutExecution } from '../workout/storage';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
 import { buildWeeklyCoachSummary } from './weeklyCoach';
 
@@ -39,6 +40,7 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const strengthStart = plan.project?.strengthStartTime ?? '20:00';
   const history = loadWorkoutHistory();
   const workoutCompletedToday = dayPlan ? wasWorkoutCompletedToday(history, plan.id, dayPlan.id) : false;
+  const activeExecution = dayPlan && !workoutCompletedToday ? loadWorkoutExecution(plan.id, dayPlan.id) : null;
   const workoutCoach = getTodayCoachPriority(dayPlan);
   const weeklyCoach = buildWeeklyCoachSummary(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
@@ -58,7 +60,8 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       <h3 id="today-workout-title">{dayPlan.title}</h3>
       <p>{dayPlan.focus ?? 'Siga o projeto e registre cada etapa.'}</p>
       <div className="today-workout-metrics"><span><strong>{exercises.length}</strong> etapas</span>{setCount > 0 && <span><strong>{setCount}</strong> séries</span>}<span><strong>{compositionLabel}</strong></span></div>
-      {workoutCompletedToday ? <span className="today-rest-badge">✓ TREINO CONCLUÍDO</span> : <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>}
+      {workoutCompletedToday ? <span className="today-rest-badge">✓ TREINO CONCLUÍDO</span> : <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>{activeExecution ? 'Retomar treino' : 'Iniciar treino'}</button>}
+      {activeExecution && <small className="coach-context">Sessão iniciada e salva neste aparelho.</small>}
     </section> : <section className="today-rest-card" aria-label="Recuperação"><span className="eyebrow">PROJETO TITAN</span><h3>Dia de recuperação</h3><p>Hoje não há sessão programada no projeto ativo.</p><span className="today-rest-badge">RECUPERAÇÃO</span></section>}
 
     <section className={`dashboard-coach-card status-${coachStatus}`} aria-label="Prioridade do Coach TITAN"><div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN 1.0</span><span>{coachBadge}</span></div><strong>{coachTitle}</strong><p>{coachMessage}</p>{unifiedCoach ? <small className="coach-context">{unifiedCoach.availablePillars}/3 pilares · confiança {confidenceName(unifiedCoach.score.dataConfidence)}</small> : workoutCoach.context && <small className="coach-context">{workoutCoach.context}</small>}<div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}><div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div><div className="coach-weekly-metrics"><span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span><span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span><span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span><span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span></div><p>{weeklyCoach.message}</p></div>{workoutCoach.detail && <details><summary>Ver orientação do treino de hoje</summary><p>{workoutCoach.detail}</p></details>}</section>
@@ -84,5 +87,5 @@ function getTodayCoachPriority(workout: TitanWorkoutDay | null): CoachPriority {
   return {status:'maintain',badge:'MANTER',title:`${selected.exercise.name} · ${selected.advice.title}`,message:compactCoachMessage(selected.advice.message),detail:selected.advice.message,context:buildContext(records)};
 }
 function isStagnant(sessions: ReturnType<typeof getExerciseSessions>) { if (sessions.length < 3) return false; const performance=sessions.slice(0,3).map(({exercise})=>{const valid=(exercise.sets??[]).filter((set)=>(set.weightKg??0)>0&&(set.repetitions??0)>0);return {maxWeight:valid.length?Math.max(...valid.map((set)=>set.weightKg??0)):0,totalReps:valid.reduce((sum,set)=>sum+(set.repetitions??0),0)}}); if(performance.some((item)=>item.maxWeight<=0||item.totalReps<=0))return false; const sameLoad=performance.every((item)=>item.maxWeight===performance[0].maxWeight); const repSpread=Math.max(...performance.map((item)=>item.totalReps))-Math.min(...performance.map((item)=>item.totalReps)); return sameLoad&&repSpread<=1; }
-function buildContext(records: WorkoutHistoryRecord[]) { const last30=records.filter((record)=>Date.now()-new Date(record.completedAt).getTime()<=30*24*60*60*1000); const sessions=last30.length; const cardios=last30.flatMap((record)=>record.exercises).filter((exercise)=>exercise.exerciseType==='cardio'||exercise.exerciseType==='distance').length; if(!sessions)return undefined; return `${sessions} treino${sessions===1?'':'s'} · ${cardios} cardio${cardios===1?'':'s'} nos últimos 30 dias`; }
+function buildContext(records: WorkoutHistoryRecord[]) { const last30=records.filter((record)=>Date.now()-new Date(record.completedAt).getTime()<=30*24*60*60*1000); const strengthSessions=last30.filter((record)=>record.exercises.some((exercise)=>(exercise.exerciseType??'strength')==='strength')).length; const cardioSessions=last30.filter((record)=>record.exercises.some((exercise)=>exercise.exerciseType==='cardio'||exercise.exerciseType==='distance')).length; if(!strengthSessions&&!cardioSessions)return undefined; return `${strengthSessions} treino${strengthSessions===1?'':'s'} de musculação · ${cardioSessions} treino${cardioSessions===1?'':'s'} com cardio nos últimos 30 dias`; }
 function compactCoachMessage(message:string){const first=message.split('. ')[0];return first.endsWith('.')?first:`${first}.`;}
