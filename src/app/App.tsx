@@ -7,6 +7,8 @@ import { resetAllAppData } from '../core/database/resetAppData';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { demoPlan, isDemoMode, loadFullDemo } from '../features/demo/fullDemo';
 import { HealthHubPage } from '../features/health/HealthHubPage';
+import { NotificationSettingsPanel } from '../features/notifications/NotificationSettingsPanel';
+import { syncSmartNotifications } from '../features/notifications/native';
 import { NutritionProgramPanel } from '../features/nutrition/NutritionProgramPanel';
 import { PlanCandidatesPage } from '../features/plan/PlanCandidatesPage';
 import { PlanImporter } from '../features/plan/PlanImporter';
@@ -81,6 +83,17 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const sync = () => void syncSmartNotifications(activePlan).catch((error) => console.warn('Não foi possível sincronizar os lembretes TITAN.', error));
+    sync();
+    window.addEventListener('titan:nutrition-changed', sync);
+    window.addEventListener('titan:notification-preferences-changed', sync);
+    return () => {
+      window.removeEventListener('titan:nutrition-changed', sync);
+      window.removeEventListener('titan:notification-preferences-changed', sync);
+    };
+  }, [activePlan, historyRefresh]);
+
   async function installApp() { if (!installPrompt) return; await installPrompt.prompt(); const choice = await installPrompt.userChoice; if (choice.outcome === 'accepted') setInstallPrompt(null); }
   async function checkForUpdate() { try { if ('serviceWorker' in navigator) { const registration = await navigator.serviceWorker.getRegistration(); await registration?.update(); } } catch (error) { console.warn('Não foi possível verificar a atualização do PWA.', error); } finally { window.location.reload(); } }
   function navigate(tab: TabId, replace = false) { if (tab !== activeTab || directWorkoutId || showImporter || generationContext) { const state = { ...window.history.state, titanRoot: true, titanTab: tab }; if (replace) window.history.replaceState(state, ''); else window.history.pushState(state, ''); } setActiveTab(tab); if (tab !== 'settings') { setShowImporter(false); setGenerationContext(null); } if (tab !== 'workout') setDirectWorkoutId(null); }
@@ -131,6 +144,7 @@ export function App() {
         <section className="settings-card project-settings-card" aria-label="Projeto ativo"><div><span className="info-label">Projeto ativo</span><strong>{activePlan?.project?.name ?? activePlan?.name ?? 'Nenhum projeto importado'}</strong>{activePlan && <small>{activePlan.workouts.length} treinos programados · {activePlan.project?.objective ?? 'Plano de treino ativo'}</small>}</div>{activePlan && !showImporter && <><button type="button" className="secondary-action" onClick={() => void generateNewOptions()}>Gerar novas opções</button><small>Salve primeiro qualquer alteração em Perfil e objetivos. O TITAN usará os dados atuais para recalcular três propostas.</small><button type="button" className="secondary-action" onClick={() => setShowImporter(true)}>Inserir projeto</button><div><button type="button" className="text-action settings-remove-plan" onClick={deletePlan}>Remover projeto ativo</button><small>Remove somente a programação atual. O histórico e a evolução corporal são preservados.</small></div></>}{(!activePlan || showImporter) && <div className="settings-importer"><PlanImporter onImport={importPlan} />{activePlan && <button type="button" className="text-action" onClick={() => setShowImporter(false)}>Cancelar</button>}</div>}</section>
         <ProjectManagementPanel onPlanActivated={(plan) => { setActivePlan(plan); setShowImporter(false); setGenerationContext(null); setDemoMode(false); setHistoryRefresh((value) => value + 1); localStorage.removeItem('titan-fit:demo-mode'); }} />
         <section className="settings-card" aria-label="Programação nutricional"><div><span className="info-label">Programação nutricional</span><strong>Plano alimentar</strong><small>Importe, troque ou remova sua dieta sem alterar o projeto de treino.</small></div><NutritionProgramPanel managementOnly /></section>
+        <NotificationSettingsPanel plan={activePlan} />
         <section className="settings-card" aria-label="Aplicativo"><div><span className="info-label">Versão</span><strong>v{APP_VERSION}</strong></div><div><span className="info-label">Engine de dados</span><strong>{dataEngineStatus === 'ready' ? 'Pronta' : dataEngineStatus === 'starting' ? 'Iniciando' : 'Indisponível'}</strong></div><div><span className="info-label">Conexão</span><strong>{isOnline ? 'Online' : 'Offline'}</strong></div><button type="button" className="secondary-action" onClick={installApp} disabled={!installPrompt}>{installPrompt ? 'Instalar aplicativo' : 'Instalação indisponível'}</button><button type="button" className="secondary-action" onClick={() => void checkForUpdate()}>Verificar atualização</button></section>
         <section className="settings-card settings-data-card" aria-label="Dados e testes"><div><span className="info-label">Modo Demonstração</span><strong>{demoMode ? 'Demonstração ativa' : 'Explorar aplicativo completo'}</strong><small>Carrega projeto, histórico de treino, cargas e evolução corporal fictícios para testar as funções principais.</small></div><button type="button" className="secondary-action" onClick={() => void loadDemoData()}>{demoMode ? 'Recarregar demonstração' : 'Ativar demonstração completa'}</button>{demoMode && <button type="button" className="secondary-action" onClick={() => void removeDemoData()}>Remover dados da demonstração</button>}</section>
         <BackupPanel />
