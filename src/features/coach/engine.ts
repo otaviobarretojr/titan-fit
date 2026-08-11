@@ -1,10 +1,8 @@
 import { analyzeMuscleTrends } from '../history/trends';
 import type { WorkoutHistoryRecord } from '../history/types';
-import type { NutritionMacroTotals } from '../nutrition/types';
 import type { CoachContext, CoachInsight, CoachReport } from './types';
 
 const DAY = 86_400_000;
-const ZERO_MACROS: NutritionMacroTotals = { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 };
 
 function daysSince(date: string, now: Date) { return Math.max(0, Math.floor((now.getTime() - new Date(date).getTime()) / DAY)); }
 function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(value))); }
@@ -15,7 +13,7 @@ export function createCoachReport(workouts: WorkoutHistoryRecord[], now = new Da
 }
 
 export function createUnifiedCoachReport(context: CoachContext, now = new Date()): CoachReport {
-  const { workouts, nutritionPlan, nutritionExecutions = [], healthSamples = [], bodyEntries = [] } = context;
+  const { workouts, healthSamples = [], bodyEntries = [] } = context;
   const recentWorkouts = workouts.filter((item) => daysSince(item.completedAt, now) <= 7);
   const trainingScore = clamp((recentWorkouts.length / 4) * 100);
   const insights: CoachInsight[] = [];
@@ -40,8 +38,6 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
     else if (trend.status === 'progressing') insights.push({ id: `muscle-progress:${trend.muscleGroup}`, pillar: 'training', severity: 'positive', title: `Progressão · ${trend.muscleGroup}`, message: trend.message });
   }
 
-  const nutrition = analyzeNutrition(nutritionPlan ?? null, nutritionExecutions, now);
-  if (nutrition.insight) insights.push(nutrition.insight);
   const recovery = analyzeRecovery(healthSamples, now);
   if (recovery.insight) insights.push(recovery.insight);
   const evolution = analyzeEvolution(bodyEntries, now);
@@ -49,18 +45,16 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
 
   const availableScores = [
     ...(workouts.length ? [trainingScore] : []),
-    nutrition.score,
     recovery.score,
     evolution.score,
   ].filter((value): value is number => value !== null);
   const availablePillars = availableScores.length;
   const total = clamp(average(availableScores));
-  const confidencePoints = Math.min(2, workouts.length / 4) + (nutrition.score !== null ? 1 : 0) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
-  const dataConfidence = confidencePoints >= 4 ? 'high' : confidencePoints >= 2 ? 'medium' : 'low';
+  const confidencePoints = Math.min(2, workouts.length / 4) + (recovery.score !== null ? 1 : 0) + (evolution.score !== null ? 1 : 0);
+  const dataConfidence = confidencePoints >= 3 ? 'high' : confidencePoints >= 2 ? 'medium' : 'low';
 
   const pillarScores = {
     training: workouts.length ? trainingScore : null,
-    nutrition: nutrition.score,
     recovery: recovery.score,
     evolution: evolution.score,
   };
@@ -71,40 +65,15 @@ export function createUnifiedCoachReport(context: CoachContext, now = new Date()
   const priority = insights.find((item) => item.id.startsWith('muscle-fatigue:'))
     ?? attentionByLowestScore
     ?? insights.find((item) => item.severity === 'positive')
-    ?? { id: 'priority-start', severity: 'neutral' as const, title: 'Continue registrando', message: 'O Coach melhora conforme treino, nutrição, saúde e evolução acumulam dados.' };
+    ?? { id: 'priority-start', severity: 'neutral' as const, title: 'Continue registrando', message: 'O Coach melhora conforme treino, saúde, recuperação e evolução acumulam dados.' };
 
   return {
-    score: { total, training: trainingScore, nutrition: nutrition.score, recovery: recovery.score, evolution: evolution.score, dataConfidence },
+    score: { total, training: trainingScore, recovery: recovery.score, evolution: evolution.score, dataConfidence },
     priority,
     insights,
     availablePillars,
     generatedAt: now.toISOString(),
   };
-}
-
-function analyzeNutrition(plan: CoachContext['nutritionPlan'], executions: NonNullable<CoachContext['nutritionExecutions']>, now: Date) {
-  if (!plan) return { score: null, insight: { id: 'nutrition-plan-missing', pillar: 'nutrition', severity: 'neutral', title: 'Nutrição sem referência', message: 'Ative um plano alimentar para o Coach comparar o consumo real com suas metas.' } satisfies CoachInsight };
-  const recent = executions.filter((item) => daysSince(`${item.date}T12:00:00`, now) <= 6);
-  if (!recent.length) return { score: null, insight: { id: 'nutrition-data-missing', pillar: 'nutrition', severity: 'neutral', title: 'Nutrição ainda sem registros', message: 'Conclua ou marque suas refeições para liberar a análise de aderência nutricional.' } satisfies CoachInsight };
-
-  const byDate = new Map<string, NutritionMacroTotals>();
-  for (const item of recent) {
-    const totals = byDate.get(item.date) ?? { ...ZERO_MACROS };
-    totals.caloriesKcal += item.macros.caloriesKcal;
-    totals.proteinG += item.macros.proteinG;
-    totals.carbohydrateG += item.macros.carbohydrateG;
-    totals.fatG += item.macros.fatG;
-    byDate.set(item.date, totals);
-  }
-  const target = plan.defaultTarget;
-  const days = [...byDate.values()];
-  const calorieAdherence = average(days.map((day) => target.caloriesKcal > 0 ? Math.max(0, 1 - Math.abs(day.caloriesKcal - target.caloriesKcal) / target.caloriesKcal) : 1));
-  const proteinAdherence = average(days.map((day) => target.proteinG > 0 ? Math.min(1, day.proteinG / target.proteinG) : 1));
-  const score = clamp((calorieAdherence * 0.55 + proteinAdherence * 0.45) * 100);
-  const insight: CoachInsight = score >= 85
-    ? { id: 'nutrition-on-track', pillar: 'nutrition', severity: 'positive', title: 'Nutrição consistente', message: `A aderência combinada de calorias e proteína está em ${score}% nos dias registrados.` }
-    : { id: 'nutrition-review', pillar: 'nutrition', severity: 'attention', title: 'Ajuste nutricional prioritário', message: `A aderência combinada está em ${score}%. Revise principalmente refeições pendentes, parciais ou fora da meta.` };
-  return { score, insight };
 }
 
 function analyzeRecovery(samples: NonNullable<CoachContext['healthSamples']>, now: Date) {
