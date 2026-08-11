@@ -1,1 +1,1 @@
-release-v0.57.7-android-back-navigation
+release-v0.57.8-navigation-dashboard-harmony
