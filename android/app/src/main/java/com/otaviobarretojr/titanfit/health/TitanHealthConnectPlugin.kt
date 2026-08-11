@@ -9,6 +9,7 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.NutritionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.request.ReadRecordsRequest
@@ -20,6 +21,8 @@ import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -109,6 +112,57 @@ class TitanHealthConnectPlugin : Plugin() {
     }
 
     @PluginMethod
+    fun readDailyNutritionSummary(call: PluginCall) {
+        val hc = client ?: run {
+            call.resolve(emptyNutritionSummary())
+            return
+        }
+        val zone = ZoneId.systemDefault()
+        val now = ZonedDateTime.now(zone)
+        val start = now.toLocalDate().atStartOfDay(zone).toInstant()
+        val end = now.plusDays(1).toLocalDate().atStartOfDay(zone).toInstant()
+
+        scope.launch {
+            try {
+                val records = hc.readRecords(
+                    ReadRecordsRequest(NutritionRecord::class, TimeRangeFilter.between(start, end))
+                ).records
+                var calories = 0.0
+                var protein = 0.0
+                var carbohydrate = 0.0
+                var fat = 0.0
+                var fiber = 0.0
+                val sources = linkedSetOf<String>()
+
+                records.forEach { record ->
+                    calories += record.energy?.inKilocalories ?: 0.0
+                    protein += record.protein?.inGrams ?: 0.0
+                    carbohydrate += record.totalCarbohydrate?.inGrams ?: 0.0
+                    fat += record.totalFat?.inGrams ?: 0.0
+                    fiber += record.dietaryFiber?.inGrams ?: 0.0
+                    val source = record.metadata.dataOrigin.packageName
+                    if (source.isNotBlank()) sources.add(source)
+                }
+
+                call.resolve(
+                    JSObject()
+                        .put("date", now.toLocalDate().toString())
+                        .put("calories", calories)
+                        .put("proteinGrams", protein)
+                        .put("carbohydrateGrams", carbohydrate)
+                        .put("fatGrams", fat)
+                        .put("fiberGrams", fiber)
+                        .put("records", records.size)
+                        .put("sources", JSArray(sources.toList()))
+                        .put("source", "health-connect")
+                )
+            } catch (error: Exception) {
+                call.reject("Falha ao ler nutrição do Health Connect.", error)
+            }
+        }
+    }
+
+    @PluginMethod
     fun diagnoseHealthData(call: PluginCall) {
         val hc = client ?: run {
             call.resolve(
@@ -156,6 +210,17 @@ class TitanHealthConnectPlugin : Plugin() {
         }
     }
 
+    private fun emptyNutritionSummary(): JSObject = JSObject()
+        .put("date", ZonedDateTime.now(ZoneId.systemDefault()).toLocalDate().toString())
+        .put("calories", 0)
+        .put("proteinGrams", 0)
+        .put("carbohydrateGrams", 0)
+        .put("fatGrams", 0)
+        .put("fiberGrams", 0)
+        .put("records", 0)
+        .put("sources", JSArray())
+        .put("source", "health-connect")
+
     private fun stringValues(values: JSArray): List<String> {
         val result = mutableListOf<String>()
         for (index in 0 until values.length()) {
@@ -174,6 +239,7 @@ class TitanHealthConnectPlugin : Plugin() {
             "exercise" -> HealthPermission.getReadPermission(ExerciseSessionRecord::class)
             "distance" -> HealthPermission.getReadPermission(DistanceRecord::class)
             "body-composition" -> HealthPermission.getReadPermission(BodyFatRecord::class)
+            "nutrition" -> HealthPermission.getReadPermission(NutritionRecord::class)
             else -> null
         }
     }.toSet()
@@ -187,6 +253,7 @@ class TitanHealthConnectPlugin : Plugin() {
             "exercise" -> readExercise(client, start, end, output)
             "distance" -> readDistance(client, start, end, output)
             "body-composition" -> readBodyFat(client, start, end, output)
+            "nutrition" -> readNutrition(client, start, end, output)
         }
     }
 
@@ -257,6 +324,21 @@ class TitanHealthConnectPlugin : Plugin() {
     private suspend fun readBodyFat(client: HealthConnectClient, start: Instant, end: Instant, output: JSArray) {
         client.readRecords(ReadRecordsRequest(BodyFatRecord::class, TimeRangeFilter.between(start, end))).records.forEach { record ->
             output.put(sample("body-composition", record.metadata.id, record.time, null, record.percentage.value, "%", record.metadata.dataOrigin.packageName))
+        }
+    }
+
+    private suspend fun readNutrition(client: HealthConnectClient, start: Instant, end: Instant, output: JSArray) {
+        client.readRecords(ReadRecordsRequest(NutritionRecord::class, TimeRangeFilter.between(start, end))).records.forEach { record ->
+            output.put(
+                sample("nutrition", record.metadata.id, record.startTime, record.endTime, record.energy?.inKilocalories ?: 0.0, "kcal", record.metadata.dataOrigin.packageName)
+                    .put("metadata", JSObject()
+                        .put("proteinGrams", record.protein?.inGrams ?: 0.0)
+                        .put("carbohydrateGrams", record.totalCarbohydrate?.inGrams ?: 0.0)
+                        .put("fatGrams", record.totalFat?.inGrams ?: 0.0)
+                        .put("fiberGrams", record.dietaryFiber?.inGrams ?: 0.0)
+                        .put("mealName", record.name)
+                    )
+            )
         }
     }
 
