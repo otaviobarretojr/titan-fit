@@ -1,1 +1,1 @@
-release-v0.57.6-dashboard-workout-completed
+release-v0.57.7-android-back-navigation
