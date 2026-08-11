@@ -7,7 +7,6 @@ import { NutritionTodayPanel } from '../nutrition/NutritionTodayPanel';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { WorkoutMuscleArt } from './WorkoutMuscleArt';
 import { buildWeeklyCoachSummary } from './weeklyCoach';
-import { buildTitanScore } from './titanScore';
 
 type DashboardPageProps = { plan: TitanPlan | null; onOpenPlan: () => void; onStartWorkout: (workoutId: string) => void; };
 type CoachStatus = 'insufficient' | 'maintain' | 'progress' | 'review' | 'stagnant';
@@ -40,7 +39,6 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
   const history = loadWorkoutHistory();
   const workoutCoach = getTodayCoachPriority(dayPlan);
   const weeklyCoach = buildWeeklyCoachSummary(plan, history);
-  const titanScore = buildTitanScore(plan, history);
   const visual = getWorkoutVisual(dayPlan?.title, dayPlan?.focus);
   const compositionLabel = workoutComposition(strengthExercises.length, cardioExercises.length);
   const coachPriority = unifiedCoach?.priority;
@@ -63,8 +61,6 @@ export function DashboardPage({ plan, onOpenPlan, onStartWorkout }: DashboardPag
       <div className="today-workout-metrics"><span><strong>{exercises.length}</strong> etapas</span>{setCount > 0 && <span><strong>{setCount}</strong> séries</span>}<span><strong>{compositionLabel}</strong></span></div>
       <button type="button" className="primary-action" onClick={() => onStartWorkout(dayPlan.id)}>Iniciar treino</button>
     </section> : <section className="today-rest-card" aria-label="Recuperação"><span className="eyebrow">PROJETO TITAN</span><h3>Dia de recuperação</h3><p>Hoje não há sessão programada no projeto ativo.</p><span className="today-rest-badge">RECUPERAÇÃO</span></section>}
-
-    <section className={`titan-score-card status-${titanScore.status}`} aria-label="Score TITAN"><div className="titan-score-main"><div><span className="eyebrow">SCORE TITAN</span><strong>{titanScore.label}</strong><p>{titanScore.message}</p></div><div className="titan-score-value">{titanScore.score ?? '—'}<small>{titanScore.score === null ? 'BASE' : '/100'}</small></div></div>{titanScore.score !== null && <div className="titan-score-pillars"><span><small>Musculação</small><strong>{titanScore.strengthScore}/35</strong></span><span><small>Cardio</small><strong>{titanScore.cardioScore}/30</strong></span><span><small>Progressão</small><strong>{titanScore.performanceScore}/20</strong></span><span><small>Consistência</small><strong>{titanScore.consistencyScore}/15</strong></span></div>}</section>
 
     <section className={`dashboard-coach-card status-${coachStatus}`} aria-label="Prioridade do Coach TITAN"><div className="dashboard-coach-topline"><span className="eyebrow">COACH TITAN 1.0</span><span>{coachBadge}</span></div><strong>{coachTitle}</strong><p>{coachMessage}</p>{unifiedCoach ? <small className="coach-context">{unifiedCoach.availablePillars}/4 pilares · confiança {confidenceName(unifiedCoach.score.dataConfidence)}</small> : workoutCoach.context && <small className="coach-context">{workoutCoach.context}</small>}<div className={`coach-weekly-snapshot status-${weeklyCoach.status}`}><div className="coach-weekly-head"><span>LEITURA DA SEMANA</span><strong>{weeklyCoach.headline}</strong></div><div className="coach-weekly-metrics"><span><small>Musculação</small><strong>{weeklyCoach.strengthSessions}</strong></span><span><small>Cardios</small><strong>{weeklyCoach.cardioSessions}</strong></span><span><small>PRs</small><strong>{weeklyCoach.prEvents}</strong></span><span><small>Progredir</small><strong>{weeklyCoach.progressSignals}</strong></span></div><p>{weeklyCoach.message}</p></div>{workoutCoach.detail && <details><summary>Ver orientação do treino de hoje</summary><p>{workoutCoach.detail}</p></details>}</section>
   </div>;
