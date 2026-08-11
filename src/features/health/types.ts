@@ -1,4 +1,4 @@
-export type HealthMetricType = 'sleep' | 'heart-rate' | 'steps' | 'active-calories' | 'exercise' | 'distance' | 'body-composition' | 'nutrition';
+export type HealthMetricType = 'sleep' | 'heart-rate' | 'steps' | 'active-calories' | 'exercise' | 'distance' | 'body-composition';
 
 export type HealthSample = {
   id: string;
@@ -19,18 +19,6 @@ export type DailyActivitySummary = {
   distanceMeters: number;
   activeMinutesSource?: 'exercise-duration' | 'activity-summary';
   source?: 'health-connect-aggregate' | 'samsung-health';
-};
-
-export type DailyNutritionSummary = {
-  date: string;
-  calories: number;
-  proteinGrams: number;
-  carbohydrateGrams: number;
-  fatGrams: number;
-  fiberGrams: number;
-  records: number;
-  sources: string[];
-  source: 'health-connect';
 };
 
 export type HealthMetricDiagnostic = {
@@ -63,6 +51,5 @@ export type TitanHealthConnectBridge = {
   requestPermissions: (types: HealthMetricType[]) => Promise<boolean>;
   readSamples: (types: HealthMetricType[], since?: string) => Promise<HealthSample[]>;
   readDailyActivitySummary?: () => Promise<DailyActivitySummary>;
-  readDailyNutritionSummary?: () => Promise<DailyNutritionSummary>;
   diagnoseHealthData?: (types: HealthMetricType[], since?: string) => Promise<HealthDiagnostics>;
 };
