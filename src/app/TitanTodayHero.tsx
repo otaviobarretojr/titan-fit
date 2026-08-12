@@ -116,13 +116,16 @@ export function TitanTodayHero() {
     <article className="titan-water-card" onClick={() => setWaterOpen(true)}>
       <div className="titan-water-icon"><span style={{ height: `${waterProgress * 100}%` }}/><b>💧</b></div>
       <div className="titan-water-copy"><small>HIDRATAÇÃO</small><strong>{(waterMl / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L <span>/ {(water.goalMl / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L</span></strong><div><i style={{ width: `${waterProgress * 100}%` }}/></div><p>{Math.max(0, water.goalMl - waterMl).toLocaleString('pt-BR')} ml restantes</p></div>
-      <button onClick={(event) => { event.stopPropagation(); registerWater(500); }}>+ 500 ml</button>
+      <div className="titan-water-card-actions">
+        <button onClick={(event) => { event.stopPropagation(); registerWater(300); }}>+ 300 ml</button>
+        <button onClick={(event) => { event.stopPropagation(); registerWater(500); }}>+ 500 ml</button>
+      </div>
     </article>
 
     {waterOpen && <div className="titan-water-modal" role="dialog" aria-modal="true" onClick={() => setWaterOpen(false)}><section onClick={(event) => event.stopPropagation()}>
       <header><div><span>HIDRATAÇÃO</span><h2>Registrar água</h2></div><button onClick={() => setWaterOpen(false)}>×</button></header>
       <div className="titan-water-total"><small>Consumido hoje</small><strong>{waterMl.toLocaleString('pt-BR')} ml</strong><span>{Math.round(waterProgress * 100)}% da meta</span></div>
-      <div className="titan-water-quick">{[250, 350, 500, 750].map((amount) => <button key={amount} onClick={() => registerWater(amount)}>+ {amount} ml</button>)}</div>
+      <div className="titan-water-quick">{[300, 500].map((amount) => <button key={amount} onClick={() => registerWater(amount)}>+ {amount} ml</button>)}</div>
       <label className="titan-water-custom"><span>Outra quantidade</span><div><input inputMode="numeric" value={customMl} onChange={(event) => setCustomMl(event.target.value.replace(/\D/g, ''))} placeholder="Ex.: 600"/><button onClick={() => registerWater(Number(customMl))}>Adicionar</button></div></label>
       <div className="titan-water-goal"><span>Meta diária</span><div>{[4000, 4250, 4500].map((goal) => <button className={water.goalMl === goal ? 'is-active' : ''} key={goal} onClick={() => setWater(setHydrationGoal(goal))}>{(goal / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L</button>)}</div></div>
       <footer><button onClick={() => setWater(undoLastHydration())} disabled={!water.entries.length}>Desfazer último registro</button></footer>
