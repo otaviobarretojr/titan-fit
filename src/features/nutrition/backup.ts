@@ -17,15 +17,36 @@ export function createNutritionBackup(): TitanNutritionBackup {
   return { schemaVersion: 1, exportedAt: new Date().toISOString(), data };
 }
 
-export function downloadNutritionBackup() {
+export async function downloadNutritionBackup(): Promise<'shared' | 'downloaded'> {
   const backup = createNutritionBackup();
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const contents = JSON.stringify(backup, null, 2);
+  const filename = `titan-nutrition-backup-${backup.exportedAt.slice(0, 10)}.json`;
+  const file = new File([contents], filename, { type: 'application/json' });
+
+  try {
+    if (typeof navigator.share === 'function' && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({
+        title: 'Backup TITAN Nutrition',
+        text: 'Backup dos dados do TITAN Nutrition.',
+        files: [file],
+      });
+      return 'shared';
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+  }
+
+  const blob = new Blob([contents], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `titan-nutrition-backup-${backup.exportedAt.slice(0, 10)}.json`;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return 'downloaded';
 }
 
 export function restoreNutritionBackupText(text: string) {
