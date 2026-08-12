@@ -84,7 +84,7 @@ export function NutritionEntry() {
   const todayMacros = useMemo(() => formatMacros(sumMacros(meals.filter((meal) => meal.status === 'completed').flatMap((meal) => meal.items))), [meals]);
   const plannedMacros = useMemo(() => formatMacros(sumMacros(meals.flatMap((meal) => meal.items.map((item) => ({ ...item, actualAmount: item.plannedAmount }))))), [meals]);
   const shoppingList = useMemo(() => buildWeeklyShoppingList(weeklyPlans), [weeklyPlans]);
-  const history = useMemo(() => readRecentNutritionHistory(7), [meals]);
+  const history = readRecentNutritionHistory(7);
   const expenditure = estimateEnergyExpenditure(activity?.activeCalories ?? 0);
 
   function persist(next: PlannedMeal[]) { setMeals(next); void saveDailyMeals(next); }
@@ -159,7 +159,7 @@ export function NutritionEntry() {
     return <main className="nutrition-app nutrition-meal-mode">
       <BackHeader eyebrow={`REFEIÇÃO • ${activeMeal.time}`} title={activeMeal.name} onBack={() => { setActiveMealId(null); setShowFoodPicker(false); setReplaceItemId(null); }} />
       <section className="nutrition-meal-compare"><div><small>PLANEJADO</small><strong>{planned.caloriesKcal} kcal</strong><span>P {planned.proteinG} • C {planned.carbohydrateG} • G {planned.fatG}</span></div><div><small>CONSUMO ATUAL</small><strong>{macros.caloriesKcal} kcal</strong><span>P {macros.proteinG} • C {macros.carbohydrateG} • G {macros.fatG}</span></div></section>
-      <div className="nutrition-meal-tools"><button className="nutrition-primary nutrition-meal-add" onClick={() => { setReplaceItemId(null); setShowFoodPicker(true); }}>+ Biblioteca</button><button className="nutrition-secondary" onClick={() => setView('recipes')}>Preparações</button></div>
+      <div className="nutrition-meal-tools"><button className="nutrition-primary nutrition-meal-add" onClick={() => { setReplaceItemId(null); setShowFoodPicker(true); }}>+ Biblioteca</button><button className="nutrition-secondary" onClick={() => { setActiveMealId(null); setView('recipes'); }}>Preparações</button></div>
       <section className="nutrition-recipe-quick">{TITAN_RECIPES.slice(0, 3).map((recipe) => <button key={recipe.id} onClick={() => addRecipe(recipe.id)}>+ {recipe.name}</button>)}</section>
       <section className="nutrition-items">{activeMeal.items.map((item) => {
         const food = getFoodById(item.foodId); if (!food) return null;
