@@ -24,8 +24,14 @@ test = test.replace("expect(screen.queryByLabelText('Supino máquina série 1 re
 test = test.replace("fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);\n    expect(screen.getByText('DESCANSO AUTOMÁTICO'))", "fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);\n    expect(screen.getByText('DESCANSO AUTOMÁTICO'))");
 test = test.replace("fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 2 carga'), { target: { value: '82.5' } });", "fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });\n    fireEvent.change(screen.getByLabelText('Supino máquina série 2 carga'), { target: { value: '82.5' } });");
 test = test.replace("expect(screen.getByText('0 kg')).toBeInTheDocument();", "expect(screen.getByText('1.460 kg')).toBeInTheDocument();");
-test = test.replace("expect(history).toContain('\"totalVolumeKg\":0');", "expect(history).toContain('\"totalVolumeKg\":1460');", 1);
+// Keep skipped workout at zero; change only final completed workout assertion.
+test = test.replace("expect(history).toContain('\"workoutTitle\":\"Push A\"');\n    expect(history).toContain('\"totalVolumeKg\":0');", "expect(history).toContain('\"workoutTitle\":\"Push A\"');\n    expect(history).toContain('\"totalVolumeKg\":1460');");
 fs.writeFileSync('tests/WorkoutExecutionView.test.tsx', test);
+
+let rirTest = fs.readFileSync('src/features/workout/WorkoutExecutionView.rir.test.tsx', 'utf8');
+rirTest = rirTest.replace("asks only for the weight in each strength set", "asks for repetitions and weight without RIR");
+rirTest = rirTest.replace("expect(screen.queryByText('Repetições')).not.toBeInTheDocument();", "expect(screen.getByText('Repetições')).toBeInTheDocument();");
+fs.writeFileSync('src/features/workout/WorkoutExecutionView.rir.test.tsx', rirTest);
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = '0.58.17'; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8')); lock.version = '0.58.17'; lock.packages[''].version = '0.58.17'; fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
