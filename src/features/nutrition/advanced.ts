@@ -1,5 +1,6 @@
 import { calculateFoodMacros, formatMacros, sumMacros } from './engine';
 import { getFoodById } from './foodRepository';
+import { loadCustomRecipes } from './recipeStorage';
 import type { Food, MacroTotals, PlannedMeal } from './types';
 
 export const TITAN_BMR_KCAL = 1988;
@@ -11,12 +12,19 @@ export type RecipeDefinition = {
   ingredients: Array<{ foodId: string; amount: number }>;
 };
 
-export const TITAN_RECIPES: RecipeDefinition[] = [
+export const BASE_TITAN_RECIPES: RecipeDefinition[] = [
   { id: 'vit-banana', name: 'Vitaminada Banana', description: 'Base tradicional', ingredients: [{ foodId: 'water', amount: 300 }, { foodId: 'milk-powder', amount: 30 }, { foodId: 'oats', amount: 50 }, { foodId: 'banana-medium', amount: 1 }] },
   { id: 'vit-cocoa', name: 'Vitaminada Banana & Cacau', description: 'Variação com cacau 100%', ingredients: [{ foodId: 'water', amount: 300 }, { foodId: 'milk-powder', amount: 30 }, { foodId: 'oats', amount: 40 }, { foodId: 'banana-medium', amount: 1 }, { foodId: 'cocoa-powder', amount: 10 }] },
   { id: 'vit-coffee', name: 'Vitaminada Café & Canela', description: 'Variação para dias de treino', ingredients: [{ foodId: 'water', amount: 300 }, { foodId: 'milk-powder', amount: 30 }, { foodId: 'oats', amount: 50 }, { foodId: 'banana-medium', amount: 1 }, { foodId: 'instant-coffee', amount: 5 }, { foodId: 'cinnamon', amount: 5 }] },
   { id: 'rap10-chicken', name: 'Rap10 com frango', description: 'Lanche econômico rico em proteína', ingredients: [{ foodId: 'rap10', amount: 1 }, { foodId: 'chicken-shredded', amount: 80 }] },
 ];
+
+export const TITAN_RECIPES: RecipeDefinition[] = [...BASE_TITAN_RECIPES, ...loadCustomRecipes()];
+
+export function reloadTitanRecipes() {
+  TITAN_RECIPES.splice(0, TITAN_RECIPES.length, ...BASE_TITAN_RECIPES, ...loadCustomRecipes());
+  return TITAN_RECIPES;
+}
 
 export function recipeMacros(recipe: RecipeDefinition): MacroTotals {
   const totals = recipe.ingredients.map((ingredient) => calculateFoodMacros(ingredient.foodId, ingredient.amount));
@@ -48,6 +56,8 @@ export type DayHistory = {
   date: string;
   calories: number;
   protein: number;
+  carbs: number;
+  fat: number;
   completedMeals: number;
   skippedMeals: number;
 };
@@ -63,7 +73,7 @@ export function readRecentNutritionHistory(days = 7): DayHistory[] {
       const meals = JSON.parse(raw) as PlannedMeal[];
       const completed = meals.filter((meal) => meal.status === 'completed');
       const macros = formatMacros(sumMacros(completed.flatMap((meal) => meal.items)));
-      result.push({ date: key, calories: macros.caloriesKcal, protein: macros.proteinG, completedMeals: completed.length, skippedMeals: meals.filter((meal) => meal.status === 'skipped').length });
+      result.push({ date: key, calories: macros.caloriesKcal, protein: macros.proteinG, carbs: macros.carbohydrateG, fat: macros.fatG, completedMeals: completed.length, skippedMeals: meals.filter((meal) => meal.status === 'skipped').length });
     } catch { /* histórico local inválido é ignorado */ }
   }
   return result;
