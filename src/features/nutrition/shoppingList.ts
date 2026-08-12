@@ -19,13 +19,13 @@ export function buildWeeklyShoppingList(): ShoppingListItem[] {
     }
   }
 
-  return [...totals.entries()]
-    .map(([foodId, amount]) => {
-      const food = getFood(foodId);
-      if (!food) return null;
-      return { foodId, name: food.name, amount: Math.round(amount * 10) / 10, unit: food.unit };
-    })
-    .filter((item): item is ShoppingListItem => item !== null)
-    .filter((item) => item.foodId !== 'water')
-    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  const result: ShoppingListItem[] = [];
+  for (const [foodId, amount] of totals.entries()) {
+    if (foodId === 'water') continue;
+    const food = getFood(foodId);
+    if (!food) continue;
+    result.push({ foodId, name: food.name, amount: Math.round(amount * 10) / 10, unit: food.unit });
+  }
+
+  return result.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 }
