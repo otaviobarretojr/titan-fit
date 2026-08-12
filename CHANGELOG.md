@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.17 — Repetições + Peso
+- Cada série de musculação mantém sua identificação no cabeçalho (Série 1 de N, Série 2 de N...).
+- Os dois campos de preenchimento passam a ser Repetições e Peso (kg).
+- RIR continua removido do preenchimento manual.
+- Registro da série exige repetições válidas e peso informado, restaurando volume e PR por repetição/carga.
+
 ## v0.58.16 — Série + Peso
 - Registro de musculação mostra explicitamente a Série e o Peso em cada linha.
 - REP/Repetições permanece removido do preenchimento manual.

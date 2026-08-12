@@ -28,13 +28,15 @@ describe('WorkoutExecutionView', () => {
     expect(screen.queryByLabelText('Supino máquina série 1 carga')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Já assisti · começar séries' }));
     expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
-    expect(screen.getAllByText('Série').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Supino máquina série 1 repetições')).toBeInTheDocument();
+    expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
   });
 
-  it('registra somente o peso mantendo o cabeçalho compacto', () => {
+  it('registra repetições e peso por série', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     unlockVideoIfPresent();
 
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
 
@@ -43,7 +45,7 @@ describe('WorkoutExecutionView', () => {
     expect(screen.getByText('50%')).toBeInTheDocument();
     const saved = localStorage.getItem('titan-fit:execution:plan-1:push-a');
     expect(saved).toContain('"weightKg":80');
-    expect(saved).toContain('"repetitions":null');
+    expect(saved).toContain('"repetitions":9');
     expect(saved).toContain('"rir":null');
     expect(saved).toContain('"completed":true');
   });
@@ -53,15 +55,18 @@ describe('WorkoutExecutionView', () => {
     unlockVideoIfPresent();
     const register = screen.getAllByRole('button', { name: 'Registrar série' })[0];
     expect(screen.queryByLabelText('Supino máquina série 1 RIR')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText('Supino máquina série 1 repetições')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Supino máquina série 1 repetições')).toBeInTheDocument();
     expect(register).toBeDisabled();
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
+    expect(register).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '8' } });
     expect(register).toBeEnabled();
   });
 
   it('inicia o descanso automático ao registrar uma série válida', () => {
     render(<WorkoutExecutionView planId="plan-rest" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     unlockVideoIfPresent();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     expect(screen.getByText('DESCANSO AUTOMÁTICO')).toBeInTheDocument();
@@ -126,7 +131,9 @@ describe('WorkoutExecutionView', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);
     unlockVideoIfPresent();
 
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 2 carga'), { target: { value: '82.5' } });
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
@@ -134,12 +141,12 @@ describe('WorkoutExecutionView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Concluir e salvar treino' }));
 
     expect(screen.getByText('TREINO CONCLUÍDO')).toBeInTheDocument();
-    expect(screen.getByText('0 kg')).toBeInTheDocument();
+    expect(screen.getByText('1.460 kg')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
 
     const history = localStorage.getItem('titan-fit:history:v1');
     expect(history).toContain('"workoutTitle":"Push A"');
-    expect(history).toContain('"totalVolumeKg":0');
+    expect(history).toContain('"totalVolumeKg":1460');
     expect(history).toContain('"bestWeightKg":82.5');
     expect(localStorage.getItem('titan-fit:execution:plan-1:push-a')).toBeNull();
 
