@@ -26,14 +26,14 @@ jobs:
           text = plan.read_text()
           text = text.replace(
             "type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onDirectStartHandled?: () => void };",
-            "type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onExitWorkout: () => void; onDirectStartHandled?: () => void };"
+            "type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onExitWorkout?: () => void; onDirectStartHandled?: () => void };"
           )
           text = text.replace(
             "export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, onHistoryChange, onDirectStartHandled }: Props) {",
             "export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, onHistoryChange, onExitWorkout, onDirectStartHandled }: Props) {"
           )
           old = "if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => { setExecutingWorkoutId(null); onDirectStartHandled?.(); }} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onHistoryChange(); }} />;"
-          new = "if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onExitWorkout(); }} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onHistoryChange(); }} />;"
+          new = "if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onExitWorkout?.(); }} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onHistoryChange(); }} />;"
           if old not in text:
             raise SystemExit('PlanViewer workout callback marker not found')
           plan.write_text(text.replace(old, new))
@@ -81,7 +81,6 @@ jobs:
             it('aciona retorno à Home em vez de exibir Projeto completo', () => {
               const onExitWorkout = vi.fn();
               render(<PlanViewer plan={plan} initialWorkoutId="workout-test" onImportAnother={vi.fn()} onRemove={vi.fn()} onHistoryChange={vi.fn()} onExitWorkout={onExitWorkout} />);
-
               const exit = screen.queryByRole('button', { name: /sair|voltar/i });
               expect(exit).not.toBeNull();
               fireEvent.click(exit!);
