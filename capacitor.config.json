@@ -1,6 +1,6 @@
 {
-  "appId": "com.otaviobarretojr.titanfit",
-  "appName": "TITAN FIT",
+  "appId": "com.otaviobarretojr.titannutrition",
+  "appName": "TITAN Nutrition",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
