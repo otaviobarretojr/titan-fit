@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import '../../styles/nutrition-library.css';
 import { getAllFoods } from './foodRepository';
 import type { Food } from './types';
 
