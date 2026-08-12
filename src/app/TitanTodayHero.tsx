@@ -4,6 +4,8 @@ import type { DailyActivitySummary } from '../features/health/types';
 import { estimateEnergyExpenditure } from '../features/nutrition/advanced';
 import { formatMacros, sumMacros } from '../features/nutrition/engine';
 import { addHydration, hydrationPace, hydrationTotal, loadTodayHydration, readHydrationHistory, setHydrationGoal, undoLastHydration, type HydrationDay } from '../features/nutrition/hydration';
+import { syncNutritionNotifications } from '../features/nutrition/notifications';
+import { saveEnergySnapshot } from '../features/nutrition/progress';
 import { loadNutritionSettings, saveNutritionSettings, type NutritionSettings } from '../features/nutrition/settings';
 import { loadDailyMeals } from '../features/nutrition/storage';
 import type { PlannedMeal } from '../features/nutrition/types';
@@ -80,16 +82,37 @@ export function TitanTodayHero() {
   const pace = hydrationPace(water, settings.wakeTime, settings.sleepTime);
   const waterHistory = readHydrationHistory(7);
 
+  useEffect(() => {
+    saveEnergySnapshot({ consumedKcal: consumed.caloriesKcal, expenditureKcal: expenditure.totalElapsed, balanceKcal: currentBalance, projectedBalanceKcal: projectedBalance });
+  }, [consumed.caloriesKcal, expenditure.totalElapsed, currentBalance, projectedBalance]);
+
+  async function resyncNotifications(nextWater?: HydrationDay) {
+    const currentSettings = loadNutritionSettings();
+    if (!currentSettings.notificationsEnabled) return;
+    if (nextWater) setWater(nextWater);
+    await syncNutritionNotifications(currentSettings, await loadDailyMeals());
+  }
+
   function registerWater(amount: number) {
     if (!amount) return;
-    setWater(addHydration(amount));
+    const next = addHydration(amount);
+    setWater(next);
     setCustomMl('');
+    void resyncNotifications(next);
+  }
+
+  function undoWater() {
+    const next = undoLastHydration();
+    setWater(next);
+    void resyncNotifications(next);
   }
 
   function changeWaterGoal(goal: number) {
     const nextSettings = saveNutritionSettings({ ...settings, hydrationGoalMl: goal });
     setSettings(nextSettings);
-    setWater(setHydrationGoal(goal));
+    const nextWater = setHydrationGoal(goal);
+    setWater(nextWater);
+    void resyncNotifications(nextWater);
   }
 
   const macros = [
@@ -115,6 +138,6 @@ export function TitanTodayHero() {
 
     <article className={`titan-water-card hydration-${pace.state}`} onClick={() => setWaterOpen(true)}><div className="titan-water-icon"><span style={{ height: `${waterProgress * 100}%` }}/><b>💧</b></div><div className="titan-water-copy"><small>HIDRATAÇÃO • {pace.label.toUpperCase()}</small><strong>{(waterMl / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L <span>/ {(water.goalMl / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L</span></strong><div><i style={{ width: `${waterProgress * 100}%` }}/></div><p>{pace.deltaMl >= 0 ? `${pace.deltaMl.toLocaleString('pt-BR')} ml à frente do ritmo` : `${Math.abs(pace.deltaMl).toLocaleString('pt-BR')} ml atrás do ritmo`}</p></div><div className="titan-water-card-actions"><button onClick={(event) => { event.stopPropagation(); registerWater(300); }}>+ 300 ml</button><button onClick={(event) => { event.stopPropagation(); registerWater(500); }}>+ 500 ml</button></div></article>
 
-    {waterOpen && <div className="titan-water-modal" role="dialog" aria-modal="true" onClick={() => setWaterOpen(false)}><section onClick={(event) => event.stopPropagation()}><header><div><span>HIDRATAÇÃO</span><h2>Registrar água</h2></div><button onClick={() => setWaterOpen(false)}>×</button></header><div className="titan-water-total"><small>Consumido hoje</small><strong>{waterMl.toLocaleString('pt-BR')} ml</strong><span>{Math.round(waterProgress * 100)}% da meta • {pace.label}</span></div><div className="titan-water-quick">{[300, 500].map((amount) => <button key={amount} onClick={() => registerWater(amount)}>+ {amount} ml</button>)}</div><label className="titan-water-custom"><span>Outra quantidade</span><div><input inputMode="numeric" value={customMl} onChange={(event) => setCustomMl(event.target.value.replace(/\D/g, ''))} placeholder="Ex.: 600"/><button onClick={() => registerWater(Number(customMl))}>Adicionar</button></div></label><div className="titan-water-goal"><span>Meta diária</span><div>{[4000, 4250, 4500].map((goal) => <button className={water.goalMl === goal ? 'is-active' : ''} key={goal} onClick={() => changeWaterGoal(goal)}>{(goal / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L</button>)}</div></div><div className="titan-water-timeline"><span>Registros de hoje</span>{water.entries.length ? water.entries.slice().reverse().map((entry) => <div key={entry.id}><strong>+{entry.amountMl} ml</strong><small>{new Date(entry.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small></div>) : <small>Nenhum registro ainda.</small>}</div><div className="titan-water-history"><span>Últimos 7 dias</span>{waterHistory.map((day) => { const total = hydrationTotal(day); return <div key={day.date}><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' })}</small><i><b style={{ width: `${clamp(total / Math.max(1, day.goalMl)) * 100}%` }}/></i><strong>{(total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} L</strong></div>; })}</div><footer><button onClick={() => setWater(undoLastHydration())} disabled={!water.entries.length}>Desfazer último registro</button></footer></section></div>}
+    {waterOpen && <div className="titan-water-modal" role="dialog" aria-modal="true" onClick={() => setWaterOpen(false)}><section onClick={(event) => event.stopPropagation()}><header><div><span>HIDRATAÇÃO</span><h2>Registrar água</h2></div><button onClick={() => setWaterOpen(false)}>×</button></header><div className="titan-water-total"><small>Consumido hoje</small><strong>{waterMl.toLocaleString('pt-BR')} ml</strong><span>{Math.round(waterProgress * 100)}% da meta • {pace.label}</span></div><div className="titan-water-quick">{[300, 500].map((amount) => <button key={amount} onClick={() => registerWater(amount)}>+ {amount} ml</button>)}</div><label className="titan-water-custom"><span>Outra quantidade</span><div><input inputMode="numeric" value={customMl} onChange={(event) => setCustomMl(event.target.value.replace(/\D/g, ''))} placeholder="Ex.: 600"/><button onClick={() => registerWater(Number(customMl))}>Adicionar</button></div></label><div className="titan-water-goal"><span>Meta diária</span><div>{[4000, 4250, 4500].map((goal) => <button className={water.goalMl === goal ? 'is-active' : ''} key={goal} onClick={() => changeWaterGoal(goal)}>{(goal / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} L</button>)}</div></div><div className="titan-water-timeline"><span>Registros de hoje</span>{water.entries.length ? water.entries.slice().reverse().map((entry) => <div key={entry.id}><strong>+{entry.amountMl} ml</strong><small>{new Date(entry.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small></div>) : <small>Nenhum registro ainda.</small>}</div><div className="titan-water-history"><span>Últimos 7 dias</span>{waterHistory.map((day) => { const total = hydrationTotal(day); return <div key={day.date}><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' })}</small><i><b style={{ width: `${clamp(total / Math.max(1, day.goalMl)) * 100}%` }}/></i><strong>{(total / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} L</strong></div>; })}</div><footer><button onClick={undoWater} disabled={!water.entries.length}>Desfazer último registro</button></footer></section></div>}
   </section>;
 }
