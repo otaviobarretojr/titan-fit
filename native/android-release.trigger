@@ -1,1 +1,1 @@
-release-v0.58.14-workout-exit-home-stable
+release-v0.58.15-strength-weight-only-stable
