@@ -9,6 +9,9 @@ import { getFoodById } from '../features/nutrition/foodRepository';
 import { readRecentNutritionHistory, buildCoachMessage } from '../features/nutrition/advanced';
 import { downloadNutritionBackup, restoreNutritionBackupText } from '../features/nutrition/backup';
 import { RecipeLibraryView } from '../features/nutrition/RecipeLibraryView';
+import { NutritionSettingsView } from '../features/nutrition/NutritionSettingsView';
+import { hydrationTotal, readHydrationHistory } from '../features/nutrition/hydration';
+import { loadNutritionSettings } from '../features/nutrition/settings';
 
 type Tab = 'today' | 'diet' | 'library' | 'progress' | 'more';
 
@@ -35,23 +38,31 @@ function DietView() {
 }
 
 function ProgressView() {
+  const settings = loadNutritionSettings();
   const history = readRecentNutritionHistory(30);
   const recent = history.slice(-7);
+  const hydration = readHydrationHistory(7);
+  const hydrationDays = hydration.filter((day) => hydrationTotal(day) > 0);
+  const avgWater = hydrationDays.length ? Math.round(hydrationDays.reduce((sum, day) => sum + hydrationTotal(day), 0) / hydrationDays.length) : 0;
   const avgCalories = history.length ? Math.round(history.reduce((sum, day) => sum + day.calories, 0) / history.length) : 0;
   const avgProtein = history.length ? Math.round(history.reduce((sum, day) => sum + day.protein, 0) / history.length) : 0;
   const maxCalories = Math.max(1, ...recent.map((day) => day.calories));
-  const coach = buildCoachMessage(history.slice(-14), 2900, 195);
-  return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">30 DIAS</span><h1>Evolução</h1><p>Médias, aderência e tendência nutricional.</p></header><section className="nutrition-insight-grid"><article><small>Média kcal</small><strong>{avgCalories || '—'}</strong></article><article><small>Média proteína</small><strong>{avgProtein ? `${avgProtein} g` : '—'}</strong></article><article><small>Dias registrados</small><strong>{history.length}</strong></article></section><section className="nutrition-coach-card"><span className="nutrition-eyebrow">COACH TITAN</span><p>{coach}</p></section><section className="nutrition-trend-card"><h3>Últimos 7 dias</h3><div className="nutrition-mini-chart">{recent.map((day) => <div key={day.date}><span style={{ height: `${Math.max(4, day.calories / maxCalories * 100)}%` }} /><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'narrow' })}</small></div>)}</div></section></main>;
+  let projectedBalance: number | undefined;
+  try { projectedBalance = (JSON.parse(localStorage.getItem('titan-nutrition:energy-today:v1') ?? '{}') as { projectedBalance?: number }).projectedBalance; } catch { projectedBalance = undefined; }
+  const coach = buildCoachMessage(history.slice(-14), settings.calorieTarget, settings.proteinTarget, { projectedBalance, balanceMin: settings.balanceMin, balanceMax: settings.balanceMax, hydrationAverageMl: avgWater, hydrationGoalMl: settings.hydrationGoalMl });
+  return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">30 DIAS</span><h1>Evolução</h1><p>Médias, aderência, hidratação e leitura do Coach.</p></header><section className="nutrition-insight-grid"><article><small>Média kcal</small><strong>{avgCalories || '—'}</strong></article><article><small>Média proteína</small><strong>{avgProtein ? `${avgProtein} g` : '—'}</strong></article><article><small>Média água · 7d</small><strong>{avgWater ? `${(avgWater / 1000).toFixed(1).replace('.', ',')} L` : '—'}</strong></article><article><small>Saldo alvo</small><strong>{settings.balanceMin} a {settings.balanceMax}</strong></article></section><section className="nutrition-coach-card"><span className="nutrition-eyebrow">COACH TITAN V3</span><p>{coach}</p></section><section className="nutrition-trend-card"><h3>Calorias · últimos 7 dias</h3><div className="nutrition-mini-chart">{recent.map((day) => <div key={day.date}><span style={{ height: `${Math.max(4, day.calories / maxCalories * 100)}%` }} /><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'narrow' })}</small></div>)}</div></section><section className="nutrition-hydration-history-card"><h3>Hidratação · últimos 7 dias</h3>{hydration.map((day) => { const total = hydrationTotal(day); return <div key={day.date}><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' })}</small><span><i style={{ width: `${Math.min(100, total / Math.max(1, day.goalMl) * 100)}%` }}/></span><strong>{(total / 1000).toFixed(1).replace('.', ',')} L</strong></div>; })}</section></main>;
 }
 
 function MoreView() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('');
   const [shoppingOpen, setShoppingOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [shoppingChecked, setShoppingChecked] = useState<Record<string, boolean>>(() => {
     try { return JSON.parse(localStorage.getItem('titan-nutrition:shopping-checked:v1') ?? '{}') as Record<string, boolean>; } catch { return {}; }
   });
   const shopping = useMemo(() => buildWeeklyShoppingList(loadWeeklyPlan()), []);
+  const settings = loadNutritionSettings();
 
   function toggleShopping(foodId: string) {
     const next = { ...shoppingChecked, [foodId]: !shoppingChecked[foodId] };
@@ -75,9 +86,10 @@ function MoreView() {
     try { restoreNutritionBackupText(await file.text()); setMessage('Backup restaurado. Feche e abra o app para recarregar todos os dados.'); } catch { setMessage('Não foi possível restaurar esse arquivo.'); }
   }
 
+  if (settingsOpen) return <NutritionSettingsView onBack={() => setSettingsOpen(false)} />;
   if (shoppingOpen) return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><button className="nutrition-back" onClick={() => setShoppingOpen(false)}>←</button><span className="nutrition-eyebrow">SEMANA</span><h1>Lista de compras</h1><p>{shopping.length} itens calculados a partir da sua dieta.</p></header><section className="nutrition-shopping-list">{shopping.map((item) => <button key={item.foodId} className={`nutrition-shopping-row${shoppingChecked[item.foodId] ? ' is-checked' : ''}`} onClick={() => toggleShopping(item.foodId)}><span className="nutrition-shopping-check">{shoppingChecked[item.foodId] ? '✓' : ''}</span><div><strong>{item.name}</strong><small>{item.amount} {item.unit}</small></div></button>)}</section></main>;
 
-  return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">FERRAMENTAS</span><h1>Mais</h1><p>Compras, dados e configurações.</p></header><section className="nutrition-more-list"><button className="nutrition-more-action" onClick={() => setShoppingOpen(true)}><div><strong>Lista de compras</strong><small>{shopping.length} itens calculados para a semana</small></div><span>›</span></button><article><div><strong>Dados e backup</strong><small>Proteja sua biblioteca, receitas, dieta e histórico.</small></div></article><div className="nutrition-backup-actions"><button className="nutrition-primary" onClick={() => void exportBackup()}>Exportar backup</button><button className="nutrition-secondary" onClick={() => fileRef.current?.click()}>Restaurar backup</button><input ref={fileRef} type="file" accept="application/json" hidden onChange={(event) => void restore(event.target.files?.[0])}/>{message && <small>{message}</small>}</div><article><div><strong>Integração com relógio</strong><small>Samsung Health / Health Connect é gerenciado na tela Hoje.</small></div></article><article><div><strong>Sobre o TITAN Nutrition</strong><small>Dados locais, biblioteca e planejamento alimentar.</small></div></article></section></main>;
+  return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">FERRAMENTAS</span><h1>Mais</h1><p>Metas, notificações, compras, dados e integrações.</p></header><section className="nutrition-more-list"><button className="nutrition-more-action" onClick={() => setSettingsOpen(true)}><div><strong>Metas e notificações</strong><small>{settings.calorieTarget} kcal • saldo {settings.balanceMin} a {settings.balanceMax} • água {(settings.hydrationGoalMl / 1000).toLocaleString('pt-BR')} L</small></div><span>›</span></button><button className="nutrition-more-action" onClick={() => setShoppingOpen(true)}><div><strong>Lista de compras</strong><small>{shopping.length} itens calculados para a semana</small></div><span>›</span></button><article><div><strong>Dados e backup</strong><small>Proteja sua biblioteca, receitas, dieta, metas e histórico.</small></div></article><div className="nutrition-backup-actions"><button className="nutrition-primary" onClick={() => void exportBackup()}>Exportar backup</button><button className="nutrition-secondary" onClick={() => fileRef.current?.click()}>Restaurar backup</button><input ref={fileRef} type="file" accept="application/json" hidden onChange={(event) => void restore(event.target.files?.[0])}/>{message && <small>{message}</small>}</div><article><div><strong>Integração com relógio</strong><small>Samsung Health / Health Connect é gerenciado na tela Hoje.</small></div></article><article><div><strong>Sobre o TITAN Nutrition</strong><small>Dados locais, biblioteca e planejamento alimentar.</small></div></article></section></main>;
 }
 
 export function NutritionShell() {
