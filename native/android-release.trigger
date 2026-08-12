@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.17-dedicated-food-create-1
+release-titan-nutrition-v0.58.17-nutrition-v2-suite-1
