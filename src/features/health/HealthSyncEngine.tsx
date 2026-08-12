@@ -23,11 +23,8 @@ function incrementalSince(lastSyncAt?: string) {
  */
 export function HealthSyncEngine() {
   const runningRef = useRef(false);
-  const mountedRef = useRef(true);
 
   useEffect(() => {
-    mountedRef.current = true;
-
     const sync = async (reason: 'startup' | 'resume' | 'interval' | 'online') => {
       if (runningRef.current || document.visibilityState === 'hidden') return;
       runningRef.current = true;
@@ -78,7 +75,6 @@ export function HealthSyncEngine() {
     window.addEventListener('online', onOnline);
 
     return () => {
-      mountedRef.current = false;
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('focus', onFocus);
