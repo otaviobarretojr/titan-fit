@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { NutritionShell } from './app/NutritionShell';
+import { NutritionNotificationBridge } from './app/NutritionNotificationBridge';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/nutrition.css';
@@ -14,6 +15,7 @@ import './styles/nutrition-v6.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
+    <NutritionNotificationBridge />
     <NutritionShell />
   </React.StrictMode>
 );
