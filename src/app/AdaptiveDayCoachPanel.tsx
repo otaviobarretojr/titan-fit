@@ -69,8 +69,11 @@ export function AdaptiveDayCoachPanel() {
           <div className="adaptive-day-meals">
             {adaptive.mealTargets.map((target, index) => <article key={target.mealId} className="adaptive-day-meal-card">
               <div className="adaptive-day-meal-head"><div><small>{target.time}</small><strong>{target.mealName}</strong></div>{index === 0 && <span>PRÓXIMA</span>}</div>
-              <div className="adaptive-day-meal-energy"><strong>{target.caloriesKcal} <small>kcal</small></strong><span>P {target.proteinG} g · C {target.carbohydrateG} g · G {target.fatG} g</span></div>
-              {adaptive.status === 'over' && target.proteinG > 0 && <p>Priorize proteína magra e vegetais. A meta calórica do dia já foi alcançada, então evite concentrar carboidratos e gorduras extras.</p>}
+              <div className="adaptive-day-meal-energy">
+                <strong>{adaptive.status === 'over' ? 'Saldo 0' : target.caloriesKcal} <small>{adaptive.status === 'over' ? 'kcal livres' : 'kcal'}</small></strong>
+                <span>P {target.proteinG} g · C {target.carbohydrateG} g · G {target.fatG} g</span>
+              </div>
+              {adaptive.status === 'over' && target.proteinG > 0 && <p>Se ainda houver fome ou necessidade de completar proteína, priorize proteína magra e vegetais. Não há saldo calórico planejado para redistribuir hoje.</p>}
               {adaptive.status !== 'over' && <p>Use esta faixa como referência; o Coach recalcula novamente após o próximo registro.</p>}
             </article>)}
           </div>
