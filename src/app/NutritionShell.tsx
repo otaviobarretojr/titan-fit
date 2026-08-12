@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { NutritionEntry } from './NutritionEntry';
+import { TitanTodayHero } from './TitanTodayHero';
 import { NutritionLibraryView } from '../features/nutrition/NutritionLibraryView';
 import { buildWeeklyShoppingList } from '../features/nutrition/shoppingList';
 import { loadWeeklyPlan } from '../features/nutrition/weeklyPlanStorage';
@@ -83,7 +84,7 @@ export function NutritionShell() {
   const [tab, setTab] = useState<Tab>('today');
   const [libraryMode, setLibraryMode] = useState<'foods' | 'recipes'>('foods');
   let content;
-  if (tab === 'today') content = <NutritionEntry />;
+  if (tab === 'today') content = <div className="titan-today-v4"><TitanTodayHero/><NutritionEntry /></div>;
   else if (tab === 'diet') content = <DietView />;
   else if (tab === 'library') content = <main className="nutrition-library-shell"><div className="nutrition-library-segment"><button className={libraryMode === 'foods' ? 'is-active' : ''} onClick={() => setLibraryMode('foods')}>Alimentos</button><button className={libraryMode === 'recipes' ? 'is-active' : ''} onClick={() => setLibraryMode('recipes')}>Receitas</button></div>{libraryMode === 'foods' ? <NutritionLibraryView onBack={() => setTab('today')} /> : <RecipeLibraryView />}</main>;
   else if (tab === 'progress') content = <ProgressView />;
