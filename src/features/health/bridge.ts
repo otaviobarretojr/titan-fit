@@ -18,6 +18,7 @@ type NativeSamsungHealthPlugin = {
   isAvailable: () => Promise<{ available?: boolean; granted?: boolean; message?: string }>;
   requestSamsungHealthPermissions: () => Promise<{ granted?: boolean; message?: string }>;
   readDailyActivitySummary: () => Promise<DailyActivitySummary>;
+  readRecentSignals?: () => Promise<{ samples?: HealthSample[] } | HealthSample[]>;
 };
 
 declare global {
@@ -100,6 +101,19 @@ export async function readHealthSamples(types = DEFAULT_HEALTH_METRICS, since?: 
   const bridge = getHealthConnectBridge();
   if (!bridge) return [];
   return bridge.readSamples(types, since);
+}
+
+export async function readSamsungHealthSignals(): Promise<HealthSample[]> {
+  const plugin = samsungPlugin();
+  if (!plugin?.readRecentSignals) return [];
+  try {
+    const status = await plugin.isAvailable();
+    if (!status.available || !status.granted) return [];
+    const result = await plugin.readRecentSignals();
+    return Array.isArray(result) ? result : result.samples ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function readDailyActivitySummary(): Promise<DailyActivitySummary | null> {
