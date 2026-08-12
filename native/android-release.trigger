@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.17-goals-notifications-balance-hydration-coach-v3-1
+release-titan-nutrition-v0.58.17-smart-notifications-coach-v4-progress-suite-1
