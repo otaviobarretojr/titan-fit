@@ -37,6 +37,10 @@ function writeFallback(meals: PlannedMeal[], date = new Date()) {
   }
 }
 
+function emitMealsChanged() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('titan-nutrition-meals-changed'));
+}
+
 function openNutritionDatabase(): Promise<IDBDatabase> {
   if (typeof indexedDB === 'undefined') return Promise.reject(new Error('IndexedDB indisponível'));
   return new Promise((resolve, reject) => {
@@ -84,4 +88,5 @@ export async function saveDailyMeals(meals: PlannedMeal[], date = new Date()): P
   } catch {
     // O fallback em localStorage já preservou a alteração.
   }
+  emitMealsChanged();
 }
