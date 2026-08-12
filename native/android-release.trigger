@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.18-coach-v5-adaptive-day-1
+release-titan-nutrition-v0.58.19-adaptive-meal-targets-1
