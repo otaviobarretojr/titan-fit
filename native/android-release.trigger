@@ -1,1 +1,1 @@
-release-v0.58.17-repetitions-weight-stable
+release-titan-nutrition-v0.58.17-foundation-1
