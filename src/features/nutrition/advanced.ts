@@ -83,18 +83,37 @@ export function readRecentNutritionHistory(days = 7): DayHistory[] {
   return result;
 }
 
-export function buildCoachMessage(history: DayHistory[], calorieTarget: number, proteinTarget: number) {
+export type CoachContext = {
+  projectedBalance?: number;
+  balanceMin?: number;
+  balanceMax?: number;
+  hydrationAverageMl?: number;
+  hydrationGoalMl?: number;
+};
+
+export function buildCoachMessage(history: DayHistory[], calorieTarget: number, proteinTarget: number, context: CoachContext = {}) {
   if (history.length < 2) return 'Registre pelo menos 2 dias completos para o Coach TITAN avaliar sua aderência.';
   const avgCalories = Math.round(history.reduce((sum, day) => sum + day.calories, 0) / history.length);
   const avgProtein = Math.round(history.reduce((sum, day) => sum + day.protein, 0) / history.length);
   const skipped = history.reduce((sum, day) => sum + day.skippedMeals, 0);
   const calorieDelta = avgCalories - calorieTarget;
   const adherence = calorieTarget > 0 ? avgCalories / calorieTarget : 0;
+
   if (avgProtein < proteinTarget * 0.9) return `Proteína média em ${avgProtein} g/dia. Prioridade: aproximar de ${proteinTarget} g sem aumentar demais as calorias.`;
-  if (adherence < 0.88) return `A ingestão média está em ${Math.round(adherence * 100)}% da meta. Antes de subir a meta, melhore a aderência ao planejamento atual.`;
+  if (adherence < 0.88) return `A ingestão média está em ${Math.round(adherence * 100)}% da meta. Antes de alterar a meta, melhore a aderência ao planejamento atual.`;
+
+  if (typeof context.projectedBalance === 'number' && typeof context.balanceMin === 'number' && typeof context.balanceMax === 'number') {
+    if (context.projectedBalance < context.balanceMin - 150) return `A projeção de hoje está em ${context.projectedBalance} kcal, abaixo da faixa alvo de ${context.balanceMin} a ${context.balanceMax} kcal. Déficit excessivo pode comprometer recuperação e desempenho.`;
+    if (context.projectedBalance > context.balanceMax + 150) return `A projeção de hoje está em ${context.projectedBalance >= 0 ? '+' : ''}${context.projectedBalance} kcal, acima da faixa alvo. Confira consumo e gasto antes de encerrar o dia.`;
+  }
+
+  if (context.hydrationAverageMl && context.hydrationGoalMl && context.hydrationAverageMl < context.hydrationGoalMl * 0.8) {
+    return `Hidratação média em ${(context.hydrationAverageMl / 1000).toFixed(1).replace('.', ',')} L/dia, abaixo de 80% da meta. Priorize distribuir água ao longo do dia.`;
+  }
+
   if (Math.abs(calorieDelta) > 180) return `Média de ${avgCalories} kcal/dia (${calorieDelta > 0 ? '+' : ''}${calorieDelta} kcal vs meta). Observe peso, cintura e desempenho antes de ajustar a meta.`;
-  if (skipped >= 3) return `${skipped} refeições foram puladas no período. Aderência e distribuição estão mais importantes que subir calorias agora.`;
-  return `Aderência consistente: média de ${avgCalories} kcal e ${avgProtein} g de proteína. Mantenha o plano e use peso, cintura e desempenho para decidir qualquer ajuste.`;
+  if (skipped >= 3) return `${skipped} refeições foram puladas no período. Aderência e distribuição estão mais importantes que alterar calorias agora.`;
+  return `Aderência consistente: média de ${avgCalories} kcal e ${avgProtein} g de proteína. Mantenha a faixa energética planejada e acompanhe peso, cintura, treino e recuperação.`;
 }
 
 export function foodLabel(foodId: string) {
