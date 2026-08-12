@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import '../../styles/nutrition-library.css';
 import { getAllFoods } from './foodRepository';
 import { loadFoodFavorites, loadRecentFoods, markFoodRecent } from './foodPreferences';
@@ -11,16 +11,14 @@ export function MealFoodPicker({ onAdd, onClose, replaceFoodId, replaceAmount }:
   const [amount, setAmount] = useState('');
   const favorites = loadFoodFavorites();
   const recents = loadRecentFoods();
-  const foods = useMemo(() => {
-    const term = search.trim().toLocaleLowerCase('pt-BR');
-    return getAllFoods().filter((food) => food.id !== replaceFoodId && (!term || `${food.name} ${food.brand ?? ''}`.toLocaleLowerCase('pt-BR').includes(term))).sort((a, b) => {
-      const fav = Number(favorites.includes(b.id)) - Number(favorites.includes(a.id));
-      if (fav) return fav;
-      const ai = recents.indexOf(a.id); const bi = recents.indexOf(b.id);
-      if (ai >= 0 || bi >= 0) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-      return a.name.localeCompare(b.name, 'pt-BR');
-    }).slice(0, 60);
-  }, [search, replaceFoodId, favorites.join('|'), recents.join('|')]);
+  const term = search.trim().toLocaleLowerCase('pt-BR');
+  const foods = getAllFoods().filter((food) => food.id !== replaceFoodId && (!term || `${food.name} ${food.brand ?? ''}`.toLocaleLowerCase('pt-BR').includes(term))).sort((a, b) => {
+    const fav = Number(favorites.includes(b.id)) - Number(favorites.includes(a.id));
+    if (fav) return fav;
+    const ai = recents.indexOf(a.id); const bi = recents.indexOf(b.id);
+    if (ai >= 0 || bi >= 0) return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+    return a.name.localeCompare(b.name, 'pt-BR');
+  }).slice(0, 60);
 
   function choose(food: Food) {
     setSelected(food);
