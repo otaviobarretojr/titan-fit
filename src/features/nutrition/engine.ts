@@ -1,10 +1,10 @@
-import { getFood } from './foodLibrary';
+import { getFoodById } from './foodRepository';
 import type { MacroTotals, MealItem, PlannedMeal } from './types';
 
 export const EMPTY_MACROS: MacroTotals = { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 };
 
 export function calculateFoodMacros(foodId: string, amount: number): MacroTotals {
-  const food = getFood(foodId);
+  const food = getFoodById(foodId);
   if (!food || amount <= 0) return EMPTY_MACROS;
   const factor = amount / food.referenceAmount;
   return {
