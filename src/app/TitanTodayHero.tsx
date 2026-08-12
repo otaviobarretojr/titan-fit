@@ -7,9 +7,12 @@ import { addHydration, hydrationTotal, loadTodayHydration, setHydrationGoal, und
 import { loadDailyMeals } from '../features/nutrition/storage';
 import type { PlannedMeal } from '../features/nutrition/types';
 
-const SURPLUS_TARGET = 300;
+const ENERGY_BALANCE_TARGET = -300;
+const ENERGY_BALANCE_TOLERANCE = 100;
 
 function clamp(value: number) { return Math.max(0, Math.min(1, value)); }
+
+function signed(value: number) { return `${value > 0 ? '+' : ''}${value}`; }
 
 function sourceLabel(activity: DailyActivitySummary | null) {
   if (!activity) return 'Conectar relógio';
@@ -19,12 +22,12 @@ function sourceLabel(activity: DailyActivitySummary | null) {
 }
 
 function balanceState(balance: number) {
-  const delta = balance - SURPLUS_TARGET;
-  if (Math.abs(delta) <= 100) return { label: 'Na faixa', className: 'is-range' };
-  if (delta < -450) return { label: 'Déficit maior', className: 'is-low' };
-  if (delta < -100) return { label: 'Déficit leve', className: 'is-soft-low' };
-  if (delta > 500) return { label: 'Superávit maior', className: 'is-high' };
-  return { label: 'Superávit leve', className: 'is-soft-high' };
+  const delta = balance - ENERGY_BALANCE_TARGET;
+  if (Math.abs(delta) <= ENERGY_BALANCE_TOLERANCE) return { label: 'Na meta', detail: 'Déficit dentro da faixa-alvo', className: 'is-range' };
+  if (delta < -400) return { label: 'Déficit alto', detail: 'Gasto muito acima do consumo', className: 'is-low' };
+  if (delta < -ENERGY_BALANCE_TOLERANCE) return { label: 'Abaixo da meta', detail: 'Déficit maior que o planejado', className: 'is-soft-low' };
+  if (balance > 0) return { label: 'Superávit', detail: 'Consumo acima do gasto', className: 'is-high' };
+  return { label: 'Acima da meta', detail: 'Déficit menor que o planejado', className: 'is-soft-high' };
 }
 
 export function TitanTodayHero() {
@@ -69,6 +72,7 @@ export function TitanTodayHero() {
   const currentBalance = Math.round(consumed.caloriesKcal - expenditure.totalElapsed);
   const projectedBalance = Math.round(planned.caloriesKcal - expenditure.projectedTotalDay);
   const state = balanceState(projectedBalance);
+  const targetDelta = projectedBalance - ENERGY_BALANCE_TARGET;
   const intakeProgress = clamp(consumed.caloriesKcal / Math.max(1, planned.caloriesKcal));
   const burnProgress = clamp(expenditure.totalElapsed / Math.max(1, expenditure.projectedTotalDay));
   const circumference = 100;
@@ -94,7 +98,7 @@ export function TitanTodayHero() {
     </header>
 
     <article className={`titan-metabolic-card ${state.className}`}>
-      <div className="titan-metabolic-title"><div><span>BALANÇO ENERGÉTICO</span><small>Consumo × gasto em tempo real</small></div><div className="titan-surplus-target"><small>Meta do dia</small><strong>+{SURPLUS_TARGET} kcal</strong></div></div>
+      <div className="titan-metabolic-title"><div><span>BALANÇO ENERGÉTICO</span><small>Consumo × gasto em tempo real</small></div><div className="titan-surplus-target"><small>Saldo alvo</small><strong>{signed(ENERGY_BALANCE_TARGET)} kcal</strong></div></div>
       <div className="titan-metabolic-core">
         <div className="titan-side-stat is-intake"><small>CONSUMIDO</small><strong>{consumed.caloriesKcal.toLocaleString('pt-BR')}</strong><span>kcal</span></div>
         <div className="titan-dual-ring">
@@ -104,11 +108,11 @@ export function TitanTodayHero() {
             <circle className="titan-ring-intake" cx="70" cy="70" r="58" pathLength={circumference} strokeDasharray={circumference} strokeDashoffset={circumference - intakeProgress * circumference}/>
             <circle className="titan-ring-burn" cx="70" cy="70" r="47" pathLength={circumference} strokeDasharray={circumference} strokeDashoffset={circumference - burnProgress * circumference}/>
           </svg>
-          <div className="titan-ring-center"><strong>{currentBalance >= 0 ? '+' : ''}{currentBalance}</strong><span>kcal</span><small>saldo atual</small></div>
+          <div className="titan-ring-center"><strong>{signed(currentBalance)}</strong><span>kcal</span><small>saldo atual</small></div>
         </div>
         <div className="titan-side-stat is-burn"><small>GASTO</small><strong>{expenditure.totalElapsed.toLocaleString('pt-BR')}</strong><span>kcal</span></div>
       </div>
-      <div className="titan-balance-status"><i/><strong>{state.label}</strong><span>Projeção: {projectedBalance >= 0 ? '+' : ''}{projectedBalance} kcal</span></div>
+      <div className="titan-balance-status"><i/><strong>{state.label}</strong><span>Projeção: {signed(projectedBalance)} kcal • alvo {signed(ENERGY_BALANCE_TARGET)} • {state.detail}{Math.abs(targetDelta) <= ENERGY_BALANCE_TOLERANCE ? '' : ` (${Math.abs(targetDelta)} kcal de diferença)`}</span></div>
       <div className="titan-macro-cards">{macros.map((macro) => <div key={macro.label}><small>{macro.label}</small><strong>{macro.value} <span>/ {macro.target} {macro.unit}</span></strong><div><i style={{ width: `${clamp(macro.value / Math.max(1, macro.target)) * 100}%` }}/></div></div>)}</div>
       <div className="titan-energy-detail"><div><small>Basal até agora</small><strong>{expenditure.basalElapsed} kcal</strong></div><div><small>Atividade</small><strong>{expenditure.activeCalories} kcal</strong></div><div><small>Passos</small><strong>{Math.round(activity?.steps ?? 0).toLocaleString('pt-BR')}</strong></div><div><small>Tempo ativo</small><strong>{Math.round(activity?.activeMinutes ?? 0)} min</strong></div></div>
     </article>
