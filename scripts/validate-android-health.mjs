@@ -43,9 +43,12 @@ const pkg = JSON.parse(packageText);
 const lock = JSON.parse(lockText);
 const minSdkMatch = androidGradle.match(/minSdkVersion\s+(\d+)/);
 const minSdk = minSdkMatch ? Number(minSdkMatch[1]) : 0;
+const isNutrition = pkg.name === 'titan-nutrition';
+const expectedAppId = isNutrition ? 'com.otaviobarretojr.titannutrition' : 'com.otaviobarretojr.titanfit';
+const expectedAppName = isNutrition ? 'TITAN Nutrition' : 'TITAN FIT';
 
-assert(config.appId === 'com.otaviobarretojr.titanfit', 'Capacitor deve manter o appId oficial do TITAN FIT');
-assert(config.appName === 'TITAN FIT', 'Capacitor deve manter o nome oficial do aplicativo');
+assert(config.appId === expectedAppId, `Capacitor deve manter o appId oficial de ${expectedAppName}`);
+assert(config.appName === expectedAppName, `Capacitor deve manter o nome oficial de ${expectedAppName}`);
 assert(config.webDir === 'dist', 'Capacitor deve empacotar o build Vite em dist');
 assert(lock.version === pkg.version && lock.packages?.['']?.version === pkg.version, 'package-lock deve usar a mesma versão do package.json');
 assert(
@@ -60,7 +63,7 @@ assert(minSdk >= 29, 'Samsung Health Data SDK exige minSdk Android 29 ou superio
 
 assert(pkg.scripts?.['build:android']?.includes('vite build --mode android'), 'package.json deve manter build Android dedicado');
 assert(viteConfig.includes("mode === 'android'"), 'Vite deve distinguir o alvo Android');
-assert(viteConfig.includes("base: isAndroid ? './' : '/titan-fit/'"), 'Build Android deve usar assets relativos e Pages deve manter /titan-fit/');
+assert(viteConfig.includes("base: isAndroid ? './' : '/titan-fit/'"), 'Build Android deve usar assets relativos e Pages deve manter /titan-fit/ enquanto a cópia vive neste repositório');
 assert(viteConfig.includes('disable: isAndroid'), 'Plugin PWA deve permanecer disponível para resolver o helper virtual, mas ficar desativado no APK');
 assert(bootstrapWorkflow.includes('npm run build:android'), 'Bootstrap Android deve usar o build nativo');
 assert(releaseWorkflow.includes('npm run build:android'), 'Release Android deve usar o build nativo');
@@ -68,7 +71,7 @@ assert(releaseWorkflow.includes('Guard Android bundle paths'), 'Release Android 
 assert(releaseWorkflow.includes('TITAN_ANDROID_KEYSTORE_B64') && releaseWorkflow.includes('TITAN_ANDROID_KEYSTORE_PASSWORD'), 'Release Android deve exigir os segredos da chave permanente');
 assert(releaseWorkflow.includes('assembleRelease') && !releaseWorkflow.includes('assembleDebug'), 'Release oficial Android deve compilar build release, não debug');
 assert(releaseWorkflow.includes('Verify APK signature') && releaseWorkflow.includes('apksigner'), 'Release Android deve verificar a assinatura antes de publicar');
-assert(androidGradle.includes("keyAlias 'titanfit'") && androidGradle.includes('signingConfig signingConfigs.titanRelease'), 'Gradle deve usar a identidade permanente titanfit');
+assert(androidGradle.includes("keyAlias 'titanfit'") && androidGradle.includes('signingConfig signingConfigs.titanRelease'), 'Gradle deve usar a identidade permanente de assinatura TITAN');
 
 assert(plugin.includes('@CapacitorPlugin(name = "TitanHealthConnect")'), 'Plugin nativo TitanHealthConnect deve existir');
 for (const record of ['SleepSessionRecord', 'HeartRateRecord', 'StepsRecord', 'ActiveCaloriesBurnedRecord', 'ExerciseSessionRecord', 'DistanceRecord', 'BodyFatRecord']) {
@@ -84,7 +87,7 @@ assert(
   healthPage.includes('HEALTH CONNECT') &&
   healthPage.includes('Treinos da semana') &&
   healthPage.includes('Atividade diária'),
-  'Interface deve expor painel de saúde e diagnóstico Health Connect'
+  'Interface legada deve continuar compilando com o painel Health Connect durante a extração do TITAN Nutrition'
 );
 assert(healthPage.includes('samples.length === 0') && healthPage.includes('needsBackfill ? undefined : status.lastSyncAt'), 'Primeira sincronização vazia deve fazer backfill de 30 dias em vez de ficar presa ao lastSyncAt');
 assert(healthPage.includes('incoming.length > 0 ? now : status.lastSyncAt'), 'Sincronização vazia não deve avançar o cursor de dados');
@@ -107,4 +110,4 @@ if (failures.length) {
   console.error('Validação Android/Health Connect falhou:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`Validação Android/Health Connect v${pkg.version} concluída com sucesso.`);
+console.log(`Validação Android/Health Connect v${pkg.version} concluída com sucesso para ${expectedAppName}.`);
