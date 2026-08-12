@@ -33,12 +33,16 @@ export function recipeMacros(recipe: RecipeDefinition): MacroTotals {
 
 export function estimateEnergyExpenditure(activeCalories: number, now = new Date()) {
   const minutes = now.getHours() * 60 + now.getMinutes();
-  const basalElapsed = TITAN_BMR_KCAL * (minutes / 1440);
+  const dayFraction = Math.max(0, Math.min(1, minutes / 1440));
+  const basalElapsed = TITAN_BMR_KCAL * dayFraction;
+  const safeActive = Math.max(0, activeCalories);
   return {
     basalElapsed: Math.round(basalElapsed),
-    activeCalories: Math.round(activeCalories),
-    totalElapsed: Math.round(basalElapsed + activeCalories),
+    activeCalories: Math.round(safeActive),
+    totalElapsed: Math.round(basalElapsed + safeActive),
     projectedBasalDay: TITAN_BMR_KCAL,
+    projectedTotalDay: Math.round(TITAN_BMR_KCAL + safeActive),
+    dayFraction,
   };
 }
 
@@ -85,10 +89,12 @@ export function buildCoachMessage(history: DayHistory[], calorieTarget: number, 
   const avgProtein = Math.round(history.reduce((sum, day) => sum + day.protein, 0) / history.length);
   const skipped = history.reduce((sum, day) => sum + day.skippedMeals, 0);
   const calorieDelta = avgCalories - calorieTarget;
+  const adherence = calorieTarget > 0 ? avgCalories / calorieTarget : 0;
   if (avgProtein < proteinTarget * 0.9) return `Proteína média em ${avgProtein} g/dia. Prioridade: aproximar de ${proteinTarget} g sem aumentar demais as calorias.`;
+  if (adherence < 0.88) return `A ingestão média está em ${Math.round(adherence * 100)}% da meta. Antes de subir a meta, melhore a aderência ao planejamento atual.`;
   if (Math.abs(calorieDelta) > 180) return `Média de ${avgCalories} kcal/dia (${calorieDelta > 0 ? '+' : ''}${calorieDelta} kcal vs meta). Observe peso, cintura e desempenho antes de ajustar a meta.`;
   if (skipped >= 3) return `${skipped} refeições foram puladas no período. Aderência e distribuição estão mais importantes que subir calorias agora.`;
-  return `Aderência consistente: média de ${avgCalories} kcal e ${avgProtein} g de proteína. Mantenha o plano e acompanhe peso, cintura e desempenho.`;
+  return `Aderência consistente: média de ${avgCalories} kcal e ${avgProtein} g de proteína. Mantenha o plano e use peso, cintura e desempenho para decidir qualquer ajuste.`;
 }
 
 export function foodLabel(foodId: string) {
