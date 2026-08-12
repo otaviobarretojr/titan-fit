@@ -6,6 +6,8 @@ export type MacroTotals = {
 };
 
 export type FoodUnit = 'g' | 'ml' | 'unit';
+export type FoodCategory = 'Proteínas' | 'Carboidratos' | 'Frutas' | 'Laticínios' | 'Bebidas' | 'Verduras e legumes' | 'Gorduras' | 'Lanches e doces' | 'Temperos' | 'Outros';
+export type FoodSource = 'TBCA/TACO' | 'USDA/referência' | 'Rótulo' | 'Genérico';
 
 export type Food = {
   id: string;
@@ -13,6 +15,9 @@ export type Food = {
   unit: FoodUnit;
   referenceAmount: number;
   macrosPerReference: MacroTotals;
+  category?: FoodCategory;
+  source?: FoodSource;
+  brand?: string;
   notes?: string;
 };
 
