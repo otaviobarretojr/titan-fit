@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { readRecentNutritionHistory } from './advanced';
 import { hydrationTotal, readHydrationHistory } from './hydration';
 import { addBodyMetric, buildDynamicCalorieSuggestion, deleteBodyMetric, loadBodyMetrics, readEnergyHistory } from './progress';
@@ -42,7 +42,7 @@ export function ProgressDashboard() {
   const [waist, setWaist] = useState('');
   const [note, setNote] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const suggestion = useMemo(() => buildDynamicCalorieSuggestion(), [body, energy.length]);
+  const suggestion = buildDynamicCalorieSuggestion();
   const avgCalories = nutrition.length ? Math.round(nutrition.reduce((sum, day) => sum + day.calories, 0) / nutrition.length) : 0;
   const avgProtein = nutrition.length ? Math.round(nutrition.reduce((sum, day) => sum + day.protein, 0) / nutrition.length) : 0;
   const avgBalance = energy.length ? Math.round(energy.slice(-14).reduce((sum, day) => sum + day.balanceKcal, 0) / energy.slice(-14).length) : 0;
