@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { WorkoutExecutionView } from '../workout/WorkoutExecutionView';
 import type { ExerciseType, TitanExercise, TitanPlan, TitanWorkoutDay } from './types';
 
-type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onDirectStartHandled?: () => void };
+type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onExitWorkout?: () => void; onDirectStartHandled?: () => void };
 
-export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, onHistoryChange, onDirectStartHandled }: Props) {
+export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, onHistoryChange, onExitWorkout, onDirectStartHandled }: Props) {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   const [executingWorkoutId, setExecutingWorkoutId] = useState<string | null>(() => initialWorkoutId ?? null);
@@ -12,7 +12,7 @@ export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, 
   const selectedExercise = selectedWorkout?.exercises.find((exercise) => exercise.id === selectedExerciseId) ?? null;
   const executingWorkout = plan.workouts.find((workout) => workout.id === executingWorkoutId) ?? null;
 
-  if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => { setExecutingWorkoutId(null); onDirectStartHandled?.(); }} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onHistoryChange(); }} />;
+  if (executingWorkout) return <WorkoutExecutionView planId={plan.id} planName={plan.name} workout={executingWorkout} onBack={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onExitWorkout?.(); }} onCompleted={() => { setExecutingWorkoutId(null); setSelectedWorkoutId(null); onDirectStartHandled?.(); onHistoryChange(); }} />;
   if (selectedWorkout && selectedExercise) return <ExerciseDetail exercise={selectedExercise} workout={selectedWorkout} onBack={() => setSelectedExerciseId(null)} />;
   if (selectedWorkout) return <WorkoutDetail workout={selectedWorkout} onBack={() => setSelectedWorkoutId(null)} onSelectExercise={setSelectedExerciseId} onStart={() => setExecutingWorkoutId(selectedWorkout.id)} />;
 

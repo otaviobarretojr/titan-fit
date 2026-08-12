@@ -126,7 +126,7 @@ export function App() {
       {activeTab === 'today' && <DashboardPage plan={activePlan} onOpenPlan={openProjectSettings} onStartWorkout={startWorkout} />}
       {activeTab === 'programming' && <ProgrammingPage plan={activePlan} />}
       {activeTab === 'health' && <HealthHubPage refreshKey={historyRefresh} />}
-      {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); setGenerationContext(null); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} />}
+      {activeTab === 'workout' && activePlan && <PlanViewer key={`${activePlan.id}:${directWorkoutId ?? 'browse'}`} plan={activePlan} initialWorkoutId={directWorkoutId} onDirectStartHandled={() => setDirectWorkoutId(null)} onImportAnother={() => { setShowImporter(true); setGenerationContext(null); navigate('settings'); }} onRemove={deletePlan} onHistoryChange={historyChanged} onExitWorkout={() => navigate('today', true)} />}
       {activeTab === 'settings' && generationContext && <PlanCandidatesPage profile={generationContext.profile} assessment={generationContext.assessment} onActivate={finishNewPlanActivation} onCancel={() => setGenerationContext(null)} />}
       {activeTab === 'settings' && !generationContext && <><EmptyPage title="Configurações" body="Projeto, perfil, dados, backup, instalação e manutenção do TITAN FIT." />
         <ProfileSettingsPanel />

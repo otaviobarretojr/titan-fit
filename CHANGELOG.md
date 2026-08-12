@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.14 — Saída do treino retorna à Home
+- Sair manualmente do modo treino agora retorna diretamente ao Dashboard/Home.
+- A tela intermediária “Projeto completo” deixa de aparecer ao sair de uma sessão em andamento.
+- Sessão não concluída continua preservada para retomada posterior.
+- Conclusão normal do treino mantém atualização de histórico e retorno ao Dashboard.
+
 ## v0.58.13 — Menu inferior proporcional
 - Barra inferior reconstruída com quatro zonas exatamente iguais de 25% da largura da tela.
 - Removido o posicionamento por `left: 50%` e `transform`, eliminando deslocamento lateral percebido no Android.
