@@ -54,6 +54,11 @@ export function NutritionLibraryView({ onBack }: { onBack: () => void }) {
     setName(''); setBrand(''); setUnit('g'); setReferenceAmount('100'); setCalories(''); setProtein(''); setCarbs(''); setFat(''); setFoodCategory('Outros');
   }
 
+  function closeForm() {
+    resetForm();
+    setShowForm(false);
+  }
+
   function saveFood() {
     if (!name.trim() || numberFromInput(referenceAmount) <= 0) return;
     const nextFood: Food = {
@@ -75,16 +80,27 @@ export function NutritionLibraryView({ onBack }: { onBack: () => void }) {
     const next = [nextFood, ...loadCustomFoods()];
     saveCustomFoods(next);
     setCustomFoods(next);
-    resetForm();
-    setShowForm(false);
+    closeForm();
   }
 
+  if (showForm) return <main className="nutrition-app nutrition-food-create-screen">
+    <header className="nutrition-header nutrition-create-header"><button className="nutrition-back" onClick={closeForm}>←</button><div><span className="nutrition-eyebrow">BIBLIOTECA</span><h1>Adicionar alimento</h1></div></header>
+    <section className="nutrition-create-intro"><strong>Dados do rótulo</strong><p>Cadastre os valores exatamente como aparecem na porção informada pelo fabricante.</p></section>
+    <section className="nutrition-food-form nutrition-food-form-fullscreen">
+      <label>Nome do alimento<input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Leite Ninho Integral" /></label>
+      <label>Marca<input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Opcional" /></label>
+      <div className="nutrition-form-grid"><label>Unidade<select value={unit} onChange={(e) => setUnit(e.target.value as FoodUnit)}><option value="g">g</option><option value="ml">ml</option><option value="unit">unidade</option></select></label><label>Porção de referência<input inputMode="decimal" value={referenceAmount} onChange={(e) => setReferenceAmount(e.target.value)} /></label></div>
+      <label>Categoria<select value={foodCategory} onChange={(e) => setFoodCategory(e.target.value as FoodCategory)}>{CATEGORIES.filter((x) => x !== 'Todos').map((x) => <option key={x}>{x}</option>)}</select></label>
+      <div className="nutrition-create-macro-title"><span className="nutrition-eyebrow">MACROS DA PORÇÃO</span></div>
+      <div className="nutrition-form-grid nutrition-form-grid-4"><label>kcal<input inputMode="decimal" value={calories} onChange={(e) => setCalories(e.target.value)} /></label><label>Proteína (g)<input inputMode="decimal" value={protein} onChange={(e) => setProtein(e.target.value)} /></label><label>Carbo (g)<input inputMode="decimal" value={carbs} onChange={(e) => setCarbs(e.target.value)} /></label><label>Gordura (g)<input inputMode="decimal" value={fat} onChange={(e) => setFat(e.target.value)} /></label></div>
+    </section>
+    <footer className="nutrition-create-actions"><button className="nutrition-secondary" onClick={closeForm}>Cancelar</button><button className="nutrition-primary" onClick={saveFood}>Salvar alimento</button></footer>
+  </main>;
+
   return <main className="nutrition-app">
-    <header className="nutrition-header"><button className="nutrition-back" onClick={onBack}>←</button><div><span className="nutrition-eyebrow">BASE NUTRICIONAL</span><h1>Biblioteca</h1></div></header>
+    <header className="nutrition-header nutrition-library-header"><button className="nutrition-back" onClick={onBack}>←</button><div className="nutrition-library-title"><span className="nutrition-eyebrow">BASE NUTRICIONAL</span><h1>Biblioteca</h1></div><button className="nutrition-add-food-top" onClick={() => setShowForm(true)}>+ Adicionar</button></header>
     <input className="nutrition-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar alimento ou marca…" />
     <div className="nutrition-library-toolbar">{CATEGORIES.map((item) => <button key={item} className={`nutrition-filter-chip${category === item ? ' is-active' : ''}`} onClick={() => setCategory(item)}>{item}</button>)}</div>
     <section className="nutrition-library-list">{foods.map((food) => <article className="nutrition-library-card" key={food.id}><div><strong>{food.name}</strong>{food.brand && <small>{food.brand}</small>}<small>Referência: {food.referenceAmount} {food.unit}</small><small className="nutrition-source-badge">{food.source ?? (food.notes?.includes('genérica') ? 'Genérico' : 'Base nutricional')}</small></div><div className="nutrition-library-macros"><b>{food.macrosPerReference.caloriesKcal} kcal</b><span>P {food.macrosPerReference.proteinG} • C {food.macrosPerReference.carbohydrateG} • G {food.macrosPerReference.fatG}</span></div></article>)}</section>
-    {!showForm && <button className="nutrition-primary nutrition-add-food" onClick={() => setShowForm(true)}>+ Adicionar alimento</button>}
-    {showForm && <section className="nutrition-food-form"><div className="nutrition-food-form-head"><div><span className="nutrition-eyebrow">RÓTULO DO PRODUTO</span><h2>Novo alimento</h2></div><button className="nutrition-secondary" onClick={() => setShowForm(false)}>Cancelar</button></div><label>Nome<input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Leite Ninho Integral" /></label><label>Marca<input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Opcional" /></label><div className="nutrition-form-grid"><label>Unidade<select value={unit} onChange={(e) => setUnit(e.target.value as FoodUnit)}><option value="g">g</option><option value="ml">ml</option><option value="unit">unidade</option></select></label><label>Porção<input inputMode="decimal" value={referenceAmount} onChange={(e) => setReferenceAmount(e.target.value)} /></label></div><label>Categoria<select value={foodCategory} onChange={(e) => setFoodCategory(e.target.value as FoodCategory)}>{CATEGORIES.filter((x) => x !== 'Todos').map((x) => <option key={x}>{x}</option>)}</select></label><div className="nutrition-form-grid nutrition-form-grid-4"><label>kcal<input inputMode="decimal" value={calories} onChange={(e) => setCalories(e.target.value)} /></label><label>Proteína<input inputMode="decimal" value={protein} onChange={(e) => setProtein(e.target.value)} /></label><label>Carbo<input inputMode="decimal" value={carbs} onChange={(e) => setCarbs(e.target.value)} /></label><label>Gordura<input inputMode="decimal" value={fat} onChange={(e) => setFat(e.target.value)} /></label></div><button className="nutrition-primary" onClick={saveFood}>Salvar na Biblioteca</button></section>}
   </main>;
 }
