@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { DEFAULT_HEALTH_METRICS, healthConnectAvailable, readDailyActivitySummary, readHealthSamples } from './bridge';
+import { DEFAULT_HEALTH_METRICS, healthConnectAvailable, readDailyActivitySummary, readHealthSamples, readSamsungHealthSignals } from './bridge';
 import { loadHealthSyncStatus, mergeHealthSamples, saveHealthSyncStatus } from './repository';
 
 const FOREGROUND_SYNC_INTERVAL_MS = 30_000;
@@ -16,10 +16,9 @@ function incrementalSince(lastSyncAt?: string) {
 /**
  * TITAN Sync Engine v2.
  *
- * Mantém a base local próxima do estado do Health Connect/Samsung Health enquanto
- * o aplicativo está ativo. A janela de sobreposição evita perder registros que
- * chegam com pequeno atraso ao telefone; a deduplicação acontece por id no
- * repositório local.
+ * Prioriza sinais recentes lidos diretamente do Samsung Health e usa o Health
+ * Connect como camada complementar/fallback. Enquanto o app está ativo, faz
+ * sincronização incremental frequente e também reage a retomada/foco/rede.
  */
 export function HealthSyncEngine() {
   const runningRef = useRef(false);
@@ -29,12 +28,14 @@ export function HealthSyncEngine() {
       if (runningRef.current || document.visibilityState === 'hidden') return;
       runningRef.current = true;
       try {
-        const available = await healthConnectAvailable();
         const previous = await loadHealthSyncStatus().catch(() => null);
-        if (!available || !previous?.permissionGranted) return;
-
-        const since = incrementalSince(previous.lastSyncAt);
-        const incoming = await readHealthSamples(DEFAULT_HEALTH_METRICS, since);
+        const available = await healthConnectAvailable();
+        const samsungSignals = await readSamsungHealthSignals();
+        const since = incrementalSince(previous?.lastSyncAt);
+        const connectSignals = available && previous?.permissionGranted
+          ? await readHealthSamples(DEFAULT_HEALTH_METRICS, since)
+          : [];
+        const incoming = [...connectSignals, ...samsungSignals];
         if (incoming.length > 0) await mergeHealthSamples(incoming);
 
         const summary = await readDailyActivitySummary().catch(() => null);
@@ -43,11 +44,11 @@ export function HealthSyncEngine() {
           window.dispatchEvent(new CustomEvent('titan:health-summary-changed', { detail: summary }));
         }
 
+        if (!previous) return;
         const now = new Date().toISOString();
         await saveHealthSyncStatus({
           ...previous,
-          bridgeAvailable: true,
-          permissionGranted: true,
+          bridgeAvailable: available,
           lastSyncAt: now,
           lastSyncCount: incoming.length,
           message: incoming.length > 0
