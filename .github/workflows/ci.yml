@@ -3,7 +3,7 @@ name: Validate TITAN FIT
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, agent/titan-nutrition-foundation]
 
 permissions:
   contents: write
@@ -18,7 +18,7 @@ jobs:
           node-version: 24
           cache: npm
       - name: Synchronize package-lock metadata
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push'
         run: |
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           LOCK_VERSION=$(node -p "require('./package-lock.json').version")
