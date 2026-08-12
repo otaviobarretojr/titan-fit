@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import '../../styles/nutrition-library-create.css';
 import { createCustomFoodId, loadCustomFoods, saveCustomFoods } from './customFoodStorage';
 import { getAllFoods } from './foodRepository';
 import type { Food, FoodCategory, FoodUnit } from './types';
