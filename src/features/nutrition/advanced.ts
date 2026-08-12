@@ -66,11 +66,32 @@ export type DayHistory = {
   skippedMeals: number;
 };
 
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function plannedMealMacros(meal: PlannedMeal): MacroTotals {
+  return formatMacros(sumMacros(meal.items.map((item) => ({ ...item, actualAmount: item.plannedAmount }))));
+}
+
+function completedMealMacros(meal: PlannedMeal): MacroTotals {
+  return formatMacros(sumMacros(meal.items));
+}
+
+function safeRemaining(target: MacroTotals, consumed: MacroTotals): MacroTotals {
+  return formatMacros({
+    caloriesKcal: Math.max(0, target.caloriesKcal - consumed.caloriesKcal),
+    proteinG: Math.max(0, target.proteinG - consumed.proteinG),
+    carbohydrateG: Math.max(0, target.carbohydrateG - consumed.carbohydrateG),
+    fatG: Math.max(0, target.fatG - consumed.fatG),
+  });
+}
+
 export function readRecentNutritionHistory(days = 7): DayHistory[] {
   const result: DayHistory[] = [];
   for (let offset = days - 1; offset >= 0; offset -= 1) {
     const date = new Date(); date.setDate(date.getDate() - offset);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const key = localDateKey(date);
     try {
       const raw = localStorage.getItem(`titan-nutrition:meals:v2:${key}`);
       if (!raw) continue;
@@ -83,6 +104,115 @@ export function readRecentNutritionHistory(days = 7): DayHistory[] {
   return result;
 }
 
+export type AdaptiveDayStatus = 'on-track' | 'under' | 'over' | 'skipped' | 'finished' | 'no-data';
+
+export type AdaptiveMealTarget = {
+  mealId: string;
+  mealName: string;
+  time: string;
+  caloriesKcal: number;
+  proteinG: number;
+  carbohydrateG: number;
+  fatG: number;
+};
+
+export type AdaptiveDayPlan = {
+  status: AdaptiveDayStatus;
+  title: string;
+  message: string;
+  consumed: MacroTotals;
+  target: MacroTotals;
+  remaining: MacroTotals;
+  remainingMeals: number;
+  skippedMeals: number;
+  overCalories: number;
+  perMeal: MacroTotals;
+  mealTargets: AdaptiveMealTarget[];
+};
+
+export function buildAdaptiveDayPlan(meals: PlannedMeal[], now = new Date()): AdaptiveDayPlan {
+  if (!meals.length) {
+    const zero = formatMacros({ caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 });
+    return { status: 'no-data', title: 'Dia ainda sem planejamento', message: 'Adicione refeições ao dia para o Coach adaptar sua distribuição.', consumed: zero, target: zero, remaining: zero, remainingMeals: 0, skippedMeals: 0, overCalories: 0, perMeal: zero, mealTargets: [] };
+  }
+
+  const target = formatMacros(meals.reduce((acc, meal) => {
+    const macros = plannedMealMacros(meal);
+    return { caloriesKcal: acc.caloriesKcal + macros.caloriesKcal, proteinG: acc.proteinG + macros.proteinG, carbohydrateG: acc.carbohydrateG + macros.carbohydrateG, fatG: acc.fatG + macros.fatG };
+  }, { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 }));
+  const completed = meals.filter((meal) => meal.status === 'completed');
+  const consumed = formatMacros(completed.reduce((acc, meal) => {
+    const macros = completedMealMacros(meal);
+    return { caloriesKcal: acc.caloriesKcal + macros.caloriesKcal, proteinG: acc.proteinG + macros.proteinG, carbohydrateG: acc.carbohydrateG + macros.carbohydrateG, fatG: acc.fatG + macros.fatG };
+  }, { caloriesKcal: 0, proteinG: 0, carbohydrateG: 0, fatG: 0 }));
+  const skippedMeals = meals.filter((meal) => meal.status === 'skipped').length;
+  const remainingCandidates = meals.filter((meal) => meal.status !== 'completed' && meal.status !== 'skipped');
+  const remaining = safeRemaining(target, consumed);
+  const overCalories = Math.max(0, consumed.caloriesKcal - target.caloriesKcal);
+  const remainingMeals = remainingCandidates.length;
+  const perMeal = formatMacros({
+    caloriesKcal: remainingMeals ? remaining.caloriesKcal / remainingMeals : 0,
+    proteinG: remainingMeals ? remaining.proteinG / remainingMeals : 0,
+    carbohydrateG: remainingMeals ? remaining.carbohydrateG / remainingMeals : 0,
+    fatG: remainingMeals ? remaining.fatG / remainingMeals : 0,
+  });
+
+  const plannedRemainingCalories = remainingCandidates.reduce((sum, meal) => sum + plannedMealMacros(meal).caloriesKcal, 0);
+  const scale = plannedRemainingCalories > 0 ? remaining.caloriesKcal / plannedRemainingCalories : 0;
+  const mealTargets = remainingCandidates.map((meal) => {
+    const planned = plannedMealMacros(meal);
+    const calorieShare = plannedRemainingCalories > 0 ? planned.caloriesKcal / plannedRemainingCalories : 1 / Math.max(1, remainingMeals);
+    const proteinShare = remainingCandidates.reduce((sum, candidate) => sum + plannedMealMacros(candidate).proteinG, 0);
+    const carbShare = remainingCandidates.reduce((sum, candidate) => sum + plannedMealMacros(candidate).carbohydrateG, 0);
+    const fatShare = remainingCandidates.reduce((sum, candidate) => sum + plannedMealMacros(candidate).fatG, 0);
+    return {
+      mealId: meal.id,
+      mealName: meal.name,
+      time: meal.time,
+      caloriesKcal: Math.max(0, Math.round(planned.caloriesKcal * scale)),
+      proteinG: Math.max(0, Math.round((proteinShare > 0 ? planned.proteinG / proteinShare : calorieShare) * remaining.proteinG)),
+      carbohydrateG: Math.max(0, Math.round((carbShare > 0 ? planned.carbohydrateG / carbShare : calorieShare) * remaining.carbohydrateG)),
+      fatG: Math.max(0, Math.round((fatShare > 0 ? planned.fatG / fatShare : calorieShare) * remaining.fatG)),
+    };
+  });
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const lateUnfinished = remainingCandidates.filter((meal) => {
+    const [hour, minute] = meal.time.split(':').map(Number);
+    return Number.isFinite(hour) && Number.isFinite(minute) && hour * 60 + minute < currentMinutes;
+  }).length;
+
+  if (!remainingMeals) {
+    const delta = consumed.caloriesKcal - target.caloriesKcal;
+    if (delta > 120) return { status: 'over', title: 'Dia encerrado acima da meta', message: `Você fechou o dia ${delta} kcal acima do planejado. Não precisa compensar com cardio ou restrição agressiva amanhã; retome o plano normal e observe a média semanal.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories: delta, perMeal, mealTargets };
+    if (delta < -180) return { status: 'under', title: 'Dia encerrado abaixo da meta', message: `Você fechou o dia ${Math.abs(delta)} kcal abaixo do planejado. Evite transformar isso em padrão; amanhã retome a distribuição normal, priorizando proteína e refeições completas.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+    return { status: 'finished', title: 'Dia fechado dentro da faixa', message: 'Consumo do dia ficou próximo do planejado. Mantenha o plano normal amanhã; não há necessidade de compensação.', consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+  }
+
+  const calorieRatio = target.caloriesKcal > 0 ? consumed.caloriesKcal / target.caloriesKcal : 0;
+  if (overCalories > 0) {
+    return { status: 'over', title: 'Meta calórica já ultrapassada', message: `Você já passou ${overCalories} kcal da meta. Nas ${remainingMeals} refeição(ões) restantes, preserve principalmente proteína e vegetais/fibras e reduza extras energéticos. Não use cardio como punição para compensar comida.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+  }
+  if (skippedMeals > 0 || lateUnfinished > 0) {
+    const reason = skippedMeals > 0 ? `${skippedMeals} refeição(ões) pulada(s)` : `${lateUnfinished} refeição(ões) atrasada(s)`;
+    return { status: 'skipped', title: 'Adaptive Day recalculado', message: `${reason}. Restam ${remaining.caloriesKcal} kcal e ${remaining.proteinG} g de proteína para ${remainingMeals} refeição(ões). Referência média: ~${perMeal.caloriesKcal} kcal e ${perMeal.proteinG} g de proteína por refeição restante.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+  }
+  if (calorieRatio < 0.25 && currentMinutes > 12 * 60) {
+    return { status: 'under', title: 'Consumo abaixo do ritmo do dia', message: `Até agora foram ${consumed.caloriesKcal} kcal. Para chegar perto da meta sem concentrar tudo no fim do dia, distribua as ${remaining.caloriesKcal} kcal restantes pelas próximas ${remainingMeals} refeições.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+  }
+  return { status: 'on-track', title: 'Dia sob controle', message: `Restam ${remaining.caloriesKcal} kcal, ${remaining.proteinG} g de proteína, ${remaining.carbohydrateG} g de carbo e ${remaining.fatG} g de gordura em ${remainingMeals} refeição(ões). Continue o plano e ajuste apenas se o consumo real mudar.`, consumed, target, remaining, remainingMeals, skippedMeals, overCalories, perMeal, mealTargets };
+}
+
+export function readAdaptiveDayPlan(now = new Date()): AdaptiveDayPlan | null {
+  try {
+    const raw = localStorage.getItem(`titan-nutrition:meals:v2:${localDateKey(now)}`);
+    if (!raw) return null;
+    return buildAdaptiveDayPlan(JSON.parse(raw) as PlannedMeal[], now);
+  } catch {
+    return null;
+  }
+}
+
 export type CoachContext = {
   projectedBalance?: number;
   balanceMin?: number;
@@ -92,6 +222,8 @@ export type CoachContext = {
 };
 
 export function buildCoachMessage(history: DayHistory[], calorieTarget: number, proteinTarget: number, context: CoachContext = {}) {
+  const adaptive = readAdaptiveDayPlan();
+  if (adaptive && adaptive.status !== 'no-data') return `${adaptive.title}: ${adaptive.message}`;
   if (history.length < 2) return 'Registre pelo menos 2 dias completos para o Coach TITAN avaliar sua aderência.';
   const avgCalories = Math.round(history.reduce((sum, day) => sum + day.calories, 0) / history.length);
   const avgProtein = Math.round(history.reduce((sum, day) => sum + day.protein, 0) / history.length);
