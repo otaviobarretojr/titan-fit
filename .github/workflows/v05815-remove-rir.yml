@@ -1,0 +1,62 @@
+name: "TITAN FIT v0.58.15 Remove RIR Entry"
+on:
+  push:
+    paths:
+      - '.github/workflows/v05815-remove-rir.yml'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Apply simplified strength set entry
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/features/workout/WorkoutExecutionView.tsx')
+          s=p.read_text()
+          s=s.replace("{exerciseType === 'strength' && <>{numeric('weightKg', 'Carga (kg)', '0.5')}{numeric('repetitions', 'Repetições')}{numeric('rir', 'RIR')}</>}", "{exerciseType === 'strength' && <>{numeric('weightKg', 'Carga (kg)', '0.5')}{numeric('repetitions', 'Repetições')}</>}")
+          s=s.replace('Carga, repetições, RIR, histórico, PR e progressão ficam vinculados ao exercício realmente executado.', 'Carga, repetições, histórico, PR e progressão ficam vinculados ao exercício realmente executado.')
+          p.write_text(s)
+          PY
+      - name: Add regression test
+        run: |
+          cat > src/features/workout/WorkoutExecutionView.rir.test.tsx <<'EOF'
+          import { render, screen } from '@testing-library/react';
+          import { describe, expect, it } from 'vitest';
+          import { WorkoutExecutionView } from './WorkoutExecutionView';
+          import type { TitanWorkoutDay } from '../plan/types';
+          describe('strength set entry', () => {
+            it('does not ask the user to enter RIR', () => {
+              const workout = { id:'rir-test', dayOfWeek:1, title:'Teste', muscleGroups:['Peito'], exercises:[{ id:'bench-test', name:'Supino teste', muscleGroup:'Peito', exerciseType:'strength', sets:1, minReps:8, maxReps:12, restSeconds:60 }] } as TitanWorkoutDay;
+              render(<WorkoutExecutionView planId="test-plan" planName="Teste" workout={workout} onBack={() => {}} onCompleted={() => {}} />);
+              expect(screen.queryByText(/^RIR$/i)).not.toBeInTheDocument();
+              expect(screen.getByText('Carga (kg)')).toBeInTheDocument();
+              expect(screen.getByText('Repetições')).toBeInTheDocument();
+            });
+          });
+          EOF
+      - name: Bump version
+        run: |
+          npm version 0.58.15 --no-git-tag-version
+          sed -i '1i## v0.58.15\n- Registro de séries simplificado: removido o campo manual de RIR; permanecem carga e repetições.\n' CHANGELOG.md
+      - name: Validate
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm test -- --run
+          npm run build
+          npm run validate
+      - name: Commit v0.58.15
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/workout/WorkoutExecutionView.tsx src/features/workout/WorkoutExecutionView.rir.test.tsx package.json package-lock.json CHANGELOG.md
+          git commit -m "feat: simplify strength set entry without RIR"
+          git push
