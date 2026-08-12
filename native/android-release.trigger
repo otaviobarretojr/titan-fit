@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.17-weekly-library-shopping-1
+release-titan-nutrition-v0.58.17-interactive-library-1
