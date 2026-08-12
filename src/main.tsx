@@ -12,6 +12,7 @@ import './styles/nutrition-shell.css';
 import './styles/nutrition-v4.css';
 import './styles/nutrition-v5.css';
 import './styles/nutrition-v6.css';
+import './styles/nutrition-v7.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
