@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { AdaptiveDayCoachPanel } from './app/AdaptiveDayCoachPanel';
 import { NutritionShell } from './app/NutritionShell';
 import { NutritionNotificationBridge } from './app/NutritionNotificationBridge';
+import { HealthSyncEngine } from './features/health/HealthSyncEngine';
 import './styles/tokens.css';
 import './styles/global.css';
 import './styles/nutrition.css';
@@ -19,6 +20,7 @@ import './styles/nutrition-v8.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <NutritionNotificationBridge />
+    <HealthSyncEngine />
     <NutritionShell />
     <AdaptiveDayCoachPanel />
   </React.StrictMode>
