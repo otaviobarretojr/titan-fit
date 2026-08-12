@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.17-smart-notifications-coach-v4-progress-suite-1
+release-titan-nutrition-v0.58.18-coach-v5-adaptive-day-1
