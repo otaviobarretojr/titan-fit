@@ -46,3 +46,10 @@
   .workout-mode .active-exercise-card { padding-inline: 10px; }
   .workout-mode .video-stage.expanded { padding: 6px; }
 }
+
+/* v0.58.16 — Série + Peso explícitos */
+.strength-series-field{display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:58px;padding:10px 14px;border:1px solid rgba(15,23,42,.10);border-radius:14px;background:#f7f9fc;box-sizing:border-box}
+.strength-series-field span{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7b8796}
+.strength-series-field strong{font-size:1.15rem;line-height:1;color:#172033}
+.set-entry-fields.typed-fields:has(.strength-series-field){display:grid;grid-template-columns:minmax(92px,.72fr) minmax(0,1.28fr);gap:10px;align-items:stretch}
+@media(max-width:380px){.set-entry-fields.typed-fields:has(.strength-series-field){grid-template-columns:88px minmax(0,1fr)}}

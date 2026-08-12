@@ -2,6 +2,11 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.16 — Série + Peso
+- Registro de musculação mostra explicitamente a Série e o Peso em cada linha.
+- REP/Repetições permanece removido do preenchimento manual.
+- Fluxo continua individual por série, com registro de carga e descanso automático.
+
 ## v0.58.15 — Registro de séries simplificado
 - Cada série de musculação pede somente o peso/carga executado.
 - Campos manuais de repetições e RIR foram removidos do modo treino.

@@ -28,6 +28,7 @@ describe('WorkoutExecutionView', () => {
     expect(screen.queryByLabelText('Supino máquina série 1 carga')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Já assisti · começar séries' }));
     expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
+    expect(screen.getAllByText('Série').length).toBeGreaterThan(0);
   });
 
   it('registra somente o peso mantendo o cabeçalho compacto', () => {

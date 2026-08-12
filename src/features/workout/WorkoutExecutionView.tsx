@@ -225,7 +225,7 @@ function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, o
   const label = ['cardio', 'mobility'].includes(exerciseType) ? typeLabel(exerciseType) : `Série ${set.setNumber} de ${totalSets}`;
   const numeric = (field: NumericField, title: string, step = '1') => <label>{title}<input aria-label={`${exercise.name} série ${set.setNumber} ${ariaField(field)}`} type="number" inputMode="decimal" min="0" step={step} value={set[field] ?? ''} onChange={(event) => onNumeric(set.setNumber, field, event.target.value)} /></label>;
   return <div className={`set-entry ${set.completed ? 'completed' : ''}`}><div className="set-entry-title"><strong>{label}</strong><span>{set.completed ? 'Concluído' : 'Pendente'}</span></div><div className="set-entry-fields typed-fields">
-    {exerciseType === 'strength' && numeric('weightKg', 'Peso (kg)', '0.5')}
+    {exerciseType === 'strength' && <><div className="strength-series-field"><span>Série</span><strong>{set.setNumber}</strong></div>{numeric('weightKg', 'Peso (kg)', '0.5')}</>}
     {exerciseType === 'distance' && <>{numeric('weightKg', 'Carga (kg)', '0.5')}{numeric('distanceMeters', 'Distância (m)', '0.5')}</>}
     {exerciseType === 'isometric' && numeric('durationSeconds', 'Tempo (segundos)')}
     {exerciseType === 'mobility' && <>{numeric('durationSeconds', 'Tempo (segundos)')}<label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
