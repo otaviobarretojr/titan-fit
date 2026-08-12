@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { readDailyActivitySummary, requestHealthPermissions } from '../features/health/bridge';
+import type { DailyActivitySummary } from '../features/health/types';
 import { DEFAULT_MEALS } from '../features/nutrition/defaultPlan';
 import { formatMacros, mealStatusForTime, sumMacros } from '../features/nutrition/engine';
 import { getFood } from '../features/nutrition/foodLibrary';
@@ -9,13 +11,17 @@ export function NutritionEntry() {
   const [meals, setMeals] = useState<PlannedMeal[]>(DEFAULT_MEALS);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMealId, setActiveMealId] = useState<string | null>(null);
+  const [activity, setActivity] = useState<DailyActivitySummary | null>(null);
+  const [healthMessage, setHealthMessage] = useState('Conectar relógio');
   const activeMeal = meals.find((meal) => meal.id === activeMealId) ?? null;
 
   useEffect(() => {
     let mounted = true;
-    void loadDailyMeals().then((storedMeals) => {
+    void Promise.all([loadDailyMeals(), readDailyActivitySummary()]).then(([storedMeals, dailyActivity]) => {
       if (!mounted) return;
       setMeals(storedMeals);
+      setActivity(dailyActivity);
+      setHealthMessage(dailyActivity ? 'Relógio conectado' : 'Conectar relógio');
       setIsLoading(false);
     });
     return () => { mounted = false; };
@@ -26,6 +32,22 @@ export function NutritionEntry() {
   function persist(next: PlannedMeal[]) {
     setMeals(next);
     void saveDailyMeals(next);
+  }
+
+  async function connectHealth() {
+    setHealthMessage('Conectando…');
+    try {
+      const granted = await requestHealthPermissions(['steps', 'active-calories', 'distance', 'exercise']);
+      if (!granted) {
+        setHealthMessage('Autorize o acesso à saúde');
+        return;
+      }
+      const dailyActivity = await readDailyActivitySummary();
+      setActivity(dailyActivity);
+      setHealthMessage(dailyActivity ? 'Relógio conectado' : 'Sem dados de hoje');
+    } catch {
+      setHealthMessage('Não foi possível conectar');
+    }
   }
 
   function updateAmount(itemId: string, amount: number) {
@@ -81,11 +103,18 @@ export function NutritionEntry() {
   const next = enriched.find((meal) => meal.status === 'upcoming');
 
   return <main className="nutrition-app">
-    <header className="nutrition-home-header"><div><span className="nutrition-eyebrow">TITAN NUTRITION</span><h1>Hoje</h1></div><div className="nutrition-health-chip">⌚ Saúde em breve</div></header>
+    <header className="nutrition-home-header"><div><span className="nutrition-eyebrow">TITAN NUTRITION</span><h1>Hoje</h1></div><button className="nutrition-health-chip" onClick={() => void connectHealth()}>⌚ {healthMessage}</button></header>
 
     <section className="nutrition-summary-card">
       <div><small>Consumido</small><strong>{todayMacros.caloriesKcal} kcal</strong></div>
       <div className="nutrition-summary-macros"><span>Proteína <b>{todayMacros.proteinG} g</b></span><span>Carbo <b>{todayMacros.carbohydrateG} g</b></span><span>Gordura <b>{todayMacros.fatG} g</b></span></div>
+    </section>
+
+    <section className="nutrition-health-card">
+      <div><small>Calorias ativas</small><strong>{Math.round(activity?.activeCalories ?? 0)} kcal</strong></div>
+      <div><small>Passos</small><strong>{Math.round(activity?.steps ?? 0).toLocaleString('pt-BR')}</strong></div>
+      <div><small>Distância</small><strong>{((activity?.distanceMeters ?? 0) / 1000).toFixed(1)} km</strong></div>
+      <p>{activity ? 'Dados de atividade de hoje recebidos do relógio/Health Connect.' : 'Conecte o relógio para acompanhar o gasto de atividade junto da alimentação.'}</p>
     </section>
 
     {pending.length > 0 && <section className="nutrition-section"><h2>Pendentes</h2>{pending.map((meal) => <button className="nutrition-meal-card is-pending" key={meal.id} onClick={() => setActiveMealId(meal.id)}><span><small>{meal.time}</small><strong>{meal.name}</strong></span><b>Pendente</b></button>)}</section>}
