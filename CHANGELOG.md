@@ -2,6 +2,11 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.15 — Registro de séries simplificado
+- Cada série de musculação pede somente o peso/carga executado.
+- Campos manuais de repetições e RIR foram removidos do modo treino.
+- O TITAN não inventa repetições ou esforço; sem esses dados, análises dependentes deles ficam conservadoras.
+
 ## v0.58.14 — Saída do treino retorna à Home
 - Sair manualmente do modo treino agora retorna diretamente ao Dashboard/Home.
 - A tela intermediária “Projeto completo” deixa de aparecer ao sair de uma sessão em andamento.

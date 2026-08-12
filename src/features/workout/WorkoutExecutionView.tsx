@@ -170,7 +170,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
             return <button type="button" className={selected ? 'selected' : ''} key={option.id} onClick={() => selectExerciseOption(option)}><span>{index === 0 ? 'Principal' : 'Alternativa'}</span><strong>{option.name}</strong>{selected && <b>✓</b>}</button>;
           })}
         </div>
-        <p>A opção escolhida vale para esta sessão. Carga, repetições, RIR, histórico, PR e progressão ficam vinculados ao exercício realmente executado.</p>
+        <p>A opção escolhida vale para esta sessão. Peso, histórico e evolução ficam vinculados ao exercício realmente executado.</p>
       </details> : null}
 
       {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
@@ -225,7 +225,7 @@ function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, o
   const label = ['cardio', 'mobility'].includes(exerciseType) ? typeLabel(exerciseType) : `Série ${set.setNumber} de ${totalSets}`;
   const numeric = (field: NumericField, title: string, step = '1') => <label>{title}<input aria-label={`${exercise.name} série ${set.setNumber} ${ariaField(field)}`} type="number" inputMode="decimal" min="0" step={step} value={set[field] ?? ''} onChange={(event) => onNumeric(set.setNumber, field, event.target.value)} /></label>;
   return <div className={`set-entry ${set.completed ? 'completed' : ''}`}><div className="set-entry-title"><strong>{label}</strong><span>{set.completed ? 'Concluído' : 'Pendente'}</span></div><div className="set-entry-fields typed-fields">
-    {exerciseType === 'strength' && <>{numeric('weightKg', 'Carga (kg)', '0.5')}{numeric('repetitions', 'Repetições')}{numeric('rir', 'RIR')}</>}
+    {exerciseType === 'strength' && numeric('weightKg', 'Peso (kg)', '0.5')}
     {exerciseType === 'distance' && <>{numeric('weightKg', 'Carga (kg)', '0.5')}{numeric('distanceMeters', 'Distância (m)', '0.5')}</>}
     {exerciseType === 'isometric' && numeric('durationSeconds', 'Tempo (segundos)')}
     {exerciseType === 'mobility' && <>{numeric('durationSeconds', 'Tempo (segundos)')}<label>Observações<textarea aria-label={`${exercise.name} observações`} value={set.notes ?? ''} onChange={(event) => onText('notes', event.target.value)} /></label></>}
@@ -291,7 +291,7 @@ function effectiveExercise(base: TitanExercise, execution?: ExerciseExecution): 
 function alternativeExerciseId(baseId: string, name: string) { const slug = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); return `${baseId}::alt::${slug || 'alternativa'}`; }
 function hasRecordedExerciseData(set: ExecutedSet) { return set.completed || set.weightKg !== null || set.repetitions !== null || set.rir !== null || set.durationSeconds !== null || set.distanceMeters !== null || set.speedKmh !== null || set.averageHeartRate !== null || set.rpe !== null || Boolean(set.averagePace) || Boolean(set.cardioZone) || Boolean(set.notes); }
 function canCompleteSet(exerciseType: ExerciseType, set: ExecutedSet) {
-  if (exerciseType === 'strength') return set.weightKg !== null && set.weightKg >= 0 && (set.repetitions ?? 0) > 0 && set.rir !== null && set.rir >= 0 && set.rir <= 10;
+  if (exerciseType === 'strength') return set.weightKg !== null && set.weightKg >= 0;
   if (exerciseType === 'cardio') return (set.durationSeconds ?? 0) > 0;
   if (exerciseType === 'distance') return (set.distanceMeters ?? 0) > 0;
   if (exerciseType === 'isometric' || exerciseType === 'mobility') return (set.durationSeconds ?? 0) > 0;
