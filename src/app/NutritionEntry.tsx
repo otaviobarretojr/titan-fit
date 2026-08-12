@@ -3,7 +3,6 @@ import { readDailyActivitySummary, requestHealthPermissions, requestSamsungHealt
 import type { DailyActivitySummary } from '../features/health/types';
 import { DEFAULT_MEALS } from '../features/nutrition/defaultPlan';
 import { calculateFoodMacros, formatMacros, mealStatusForTime, sumMacros } from '../features/nutrition/engine';
-import { FOOD_LIBRARY } from '../features/nutrition/foodLibrary';
 import { getAllFoods, getFoodById } from '../features/nutrition/foodRepository';
 import { MealFoodPicker } from '../features/nutrition/MealFoodPicker';
 import { NutritionLibraryView } from '../features/nutrition/NutritionLibraryView';
