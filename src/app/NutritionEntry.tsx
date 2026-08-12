@@ -1,11 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
-import { readDailyActivitySummary, requestHealthPermissions } from '../features/health/bridge';
+import {
+  readDailyActivitySummary,
+  requestHealthPermissions,
+  requestSamsungHealthPermissions,
+  samsungHealthStatus,
+} from '../features/health/bridge';
 import type { DailyActivitySummary } from '../features/health/types';
 import { DEFAULT_MEALS } from '../features/nutrition/defaultPlan';
-import { formatMacros, mealStatusForTime, sumMacros } from '../features/nutrition/engine';
+import { calculateFoodMacros, formatMacros, mealStatusForTime, sumMacros } from '../features/nutrition/engine';
 import { getFood } from '../features/nutrition/foodLibrary';
 import { loadDailyMeals, saveDailyMeals } from '../features/nutrition/storage';
-import type { PlannedMeal } from '../features/nutrition/types';
+import type { Food, PlannedMeal } from '../features/nutrition/types';
+
+function normalizeAmount(raw: string, food: Food): number {
+  const normalized = raw.trim().replace(',', '.');
+  if (!normalized) return 0;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) return 0;
+  const safe = Math.max(0, parsed);
+  return food.unit === 'unit' ? Math.round(safe) : Math.round(safe * 10) / 10;
+}
+
+function healthSourceLabel(activity: DailyActivitySummary | null): string {
+  if (!activity) return 'Sem dados de hoje';
+  if (activity.source === 'samsung-health') return 'Samsung Health';
+  if (activity.source === 'health-connect-aggregate') return 'Health Connect';
+  return 'Relógio conectado';
+}
 
 export function NutritionEntry() {
   const [meals, setMeals] = useState<PlannedMeal[]>(DEFAULT_MEALS);
@@ -15,16 +36,31 @@ export function NutritionEntry() {
   const [healthMessage, setHealthMessage] = useState('Conectar relógio');
   const activeMeal = meals.find((meal) => meal.id === activeMealId) ?? null;
 
+  async function refreshActivity() {
+    const dailyActivity = await readDailyActivitySummary();
+    setActivity(dailyActivity);
+    setHealthMessage(healthSourceLabel(dailyActivity));
+    return dailyActivity;
+  }
+
   useEffect(() => {
     let mounted = true;
     void Promise.all([loadDailyMeals(), readDailyActivitySummary()]).then(([storedMeals, dailyActivity]) => {
       if (!mounted) return;
       setMeals(storedMeals);
       setActivity(dailyActivity);
-      setHealthMessage(dailyActivity ? 'Relógio conectado' : 'Conectar relógio');
+      setHealthMessage(dailyActivity ? healthSourceLabel(dailyActivity) : 'Conectar relógio');
       setIsLoading(false);
     });
-    return () => { mounted = false; };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refreshActivity();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   const todayMacros = useMemo(() => formatMacros(sumMacros(meals.filter((meal) => meal.status === 'completed').flatMap((meal) => meal.items))), [meals]);
@@ -37,16 +73,25 @@ export function NutritionEntry() {
   async function connectHealth() {
     setHealthMessage('Conectando…');
     try {
+      const samsungStatus = await samsungHealthStatus();
+      if (samsungStatus.available) {
+        const samsungPermission = samsungStatus.granted ? samsungStatus : await requestSamsungHealthPermissions();
+        if (samsungPermission.granted) {
+          const directActivity = await refreshActivity();
+          if (directActivity) return;
+        }
+      }
+
       const granted = await requestHealthPermissions(['steps', 'active-calories', 'distance', 'exercise']);
       if (!granted) {
-        setHealthMessage('Autorize o acesso à saúde');
+        setHealthMessage('Autorize Samsung Health/Health Connect');
         return;
       }
-      const dailyActivity = await readDailyActivitySummary();
-      setActivity(dailyActivity);
-      setHealthMessage(dailyActivity ? 'Relógio conectado' : 'Sem dados de hoje');
+
+      const dailyActivity = await refreshActivity();
+      if (!dailyActivity) setHealthMessage('Autorizado • sem dados de hoje');
     } catch {
-      setHealthMessage('Não foi possível conectar');
+      setHealthMessage('Falha ao ler dados de saúde');
     }
   }
 
@@ -84,9 +129,30 @@ export function NutritionEntry() {
         {activeMeal.items.map((item) => {
           const food = getFood(item.foodId);
           if (!food) return null;
-          return <article className="nutrition-food-card" key={item.id}>
-            <div className="nutrition-food-copy"><strong>{food.name}</strong><small>Planejado: {item.plannedAmount} {food.unit}</small></div>
-            <label className="nutrition-amount"><input inputMode="decimal" type="number" min="0" step={food.unit === 'unit' ? 1 : 5} value={item.actualAmount} onChange={(event) => updateAmount(item.id, Number(event.target.value))} /><span>{food.unit}</span></label>
+          const itemMacros = formatMacros(calculateFoodMacros(item.foodId, item.actualAmount));
+          const unusuallyHigh = item.plannedAmount > 0 && item.actualAmount > item.plannedAmount * 3;
+          const increment = food.unit === 'unit' ? 1 : 5;
+          return <article className={`nutrition-food-card${unusuallyHigh ? ' is-warning' : ''}`} key={item.id}>
+            <div className="nutrition-food-copy">
+              <strong>{food.name}</strong>
+              <small>Planejado: {item.plannedAmount} {food.unit}</small>
+              <small className="nutrition-item-macros">{itemMacros.caloriesKcal} kcal • P {itemMacros.proteinG} • C {itemMacros.carbohydrateG} • G {itemMacros.fatG}</small>
+              {unusuallyHigh && <small className="nutrition-amount-warning">Quantidade muito acima do planejado — confira.</small>}
+            </div>
+            <div className="nutrition-amount-control">
+              <button type="button" aria-label={`Diminuir ${food.name}`} onClick={() => updateAmount(item.id, Math.max(0, item.actualAmount - increment))}>−</button>
+              <label className="nutrition-amount">
+                <input
+                  inputMode={food.unit === 'unit' ? 'numeric' : 'decimal'}
+                  type="text"
+                  value={String(item.actualAmount).replace('.', ',')}
+                  onChange={(event) => updateAmount(item.id, normalizeAmount(event.target.value, food))}
+                  aria-label={`Quantidade consumida de ${food.name}`}
+                />
+                <span>{food.unit}</span>
+              </label>
+              <button type="button" aria-label={`Aumentar ${food.name}`} onClick={() => updateAmount(item.id, item.actualAmount + increment)}>+</button>
+            </div>
           </article>;
         })}
       </section>
@@ -114,7 +180,7 @@ export function NutritionEntry() {
       <div><small>Calorias ativas</small><strong>{Math.round(activity?.activeCalories ?? 0)} kcal</strong></div>
       <div><small>Passos</small><strong>{Math.round(activity?.steps ?? 0).toLocaleString('pt-BR')}</strong></div>
       <div><small>Distância</small><strong>{((activity?.distanceMeters ?? 0) / 1000).toFixed(1)} km</strong></div>
-      <p>{activity ? 'Dados de atividade de hoje recebidos do relógio/Health Connect.' : 'Conecte o relógio para acompanhar o gasto de atividade junto da alimentação.'}</p>
+      <p>{activity ? `Dados de hoje recebidos via ${healthSourceLabel(activity)}.` : 'Conecte o relógio para acompanhar o gasto de atividade junto da alimentação.'}</p>
     </section>
 
     {pending.length > 0 && <section className="nutrition-section"><h2>Pendentes</h2>{pending.map((meal) => <button className="nutrition-meal-card is-pending" key={meal.id} onClick={() => setActiveMealId(meal.id)}><span><small>{meal.time}</small><strong>{meal.name}</strong></span><b>Pendente</b></button>)}</section>}
