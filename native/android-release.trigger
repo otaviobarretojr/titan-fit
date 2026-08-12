@@ -1,1 +1,1 @@
-release-v0.58.13-navigation-proportion-stable
+release-v0.58.14-workout-exit-home-stable
