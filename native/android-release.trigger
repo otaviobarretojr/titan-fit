@@ -1,1 +1,1 @@
-release-titan-nutrition-v0.58.17-foundation-2
+release-titan-nutrition-v0.58.17-dashboard-redesign-1
