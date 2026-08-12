@@ -1,30 +1,31 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_MEALS } from '../features/nutrition/defaultPlan';
 import { formatMacros, mealStatusForTime, sumMacros } from '../features/nutrition/engine';
 import { getFood } from '../features/nutrition/foodLibrary';
+import { loadDailyMeals, saveDailyMeals } from '../features/nutrition/storage';
 import type { PlannedMeal } from '../features/nutrition/types';
 
-const STORAGE_KEY = 'titan-nutrition:meals:v1';
-
-function loadMeals(): PlannedMeal[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) as PlannedMeal[] : DEFAULT_MEALS;
-  } catch {
-    return DEFAULT_MEALS;
-  }
-}
-
 export function NutritionEntry() {
-  const [meals, setMeals] = useState<PlannedMeal[]>(loadMeals);
+  const [meals, setMeals] = useState<PlannedMeal[]>(DEFAULT_MEALS);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeMealId, setActiveMealId] = useState<string | null>(null);
   const activeMeal = meals.find((meal) => meal.id === activeMealId) ?? null;
+
+  useEffect(() => {
+    let mounted = true;
+    void loadDailyMeals().then((storedMeals) => {
+      if (!mounted) return;
+      setMeals(storedMeals);
+      setIsLoading(false);
+    });
+    return () => { mounted = false; };
+  }, []);
 
   const todayMacros = useMemo(() => formatMacros(sumMacros(meals.filter((meal) => meal.status === 'completed').flatMap((meal) => meal.items))), [meals]);
 
   function persist(next: PlannedMeal[]) {
     setMeals(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    void saveDailyMeals(next);
   }
 
   function updateAmount(itemId: string, amount: number) {
@@ -39,6 +40,10 @@ export function NutritionEntry() {
     if (!activeMeal) return;
     persist(meals.map((meal) => meal.id === activeMeal.id ? { ...meal, status } : meal));
     setActiveMealId(null);
+  }
+
+  if (isLoading) {
+    return <main className="nutrition-app nutrition-loading"><span className="nutrition-eyebrow">TITAN NUTRITION</span><h1>Preparando seu dia…</h1></main>;
   }
 
   if (activeMeal) {
