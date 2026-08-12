@@ -6,12 +6,11 @@ import { buildWeeklyShoppingList } from '../features/nutrition/shoppingList';
 import { loadWeeklyPlan } from '../features/nutrition/weeklyPlanStorage';
 import { formatMacros, sumMacros } from '../features/nutrition/engine';
 import { getFoodById } from '../features/nutrition/foodRepository';
-import { readRecentNutritionHistory, buildCoachMessage } from '../features/nutrition/advanced';
 import { downloadNutritionBackup, restoreNutritionBackupText } from '../features/nutrition/backup';
 import { RecipeLibraryView } from '../features/nutrition/RecipeLibraryView';
 import { NutritionSettingsView } from '../features/nutrition/NutritionSettingsView';
-import { hydrationTotal, readHydrationHistory } from '../features/nutrition/hydration';
 import { loadNutritionSettings } from '../features/nutrition/settings';
+import { ProgressDashboard } from '../features/nutrition/ProgressDashboard';
 
 type Tab = 'today' | 'diet' | 'library' | 'progress' | 'more';
 
@@ -35,22 +34,6 @@ function DietView() {
   const macros = selectedDay ? formatMacros(sumMacros(selectedDay.meals.flatMap((meal) => meal.items.map((item) => ({ ...item, actualAmount: item.plannedAmount }))))) : null;
 
   return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">PLANEJAMENTO</span><h1>Dieta</h1><p>Escolha o dia e abra somente a refeição que deseja consultar.</p></header><section className="nutrition-day-picker" aria-label="Dias da semana">{plans.map((day) => <button key={day.id} className={day.id === selectedDay?.id ? 'is-active' : ''} onClick={() => { setSelectedDayId(day.id); setExpandedMealId(null); }}><small>{day.label.slice(0, 3)}</small><strong>{day.label}</strong></button>)}</section>{selectedDay && macros && <><section className="nutrition-day-summary"><div><span className="nutrition-eyebrow">{selectedDay.meals.length} REFEIÇÕES</span><h2>{selectedDay.label}</h2></div><div><strong>{macros.caloriesKcal} kcal</strong><small>P {macros.proteinG} • C {macros.carbohydrateG} • G {macros.fatG} g</small></div></section><section className="nutrition-diet-meals">{selectedDay.meals.map((meal) => { const open = expandedMealId === meal.id; const mealMacros = formatMacros(sumMacros(meal.items.map((item) => ({ ...item, actualAmount: item.plannedAmount })))); return <article className={`nutrition-diet-meal${open ? ' is-open' : ''}`} key={meal.id}><button className="nutrition-diet-meal-head" onClick={() => setExpandedMealId(open ? null : meal.id)}><div><small>{meal.time}</small><strong>{meal.name}</strong><span>{meal.items.length} itens • {mealMacros.caloriesKcal} kcal</span></div><b>{open ? '−' : '+'}</b></button>{open && <div className="nutrition-diet-meal-body">{meal.items.map((item) => { const food = getFoodById(item.foodId); if (!food) return null; return <div key={item.id}><span>{food.name}</span><strong>{item.plannedAmount} {food.unit}</strong></div>; })}<div className="nutrition-diet-meal-macros"><small>Macros da refeição</small><strong>{mealMacros.caloriesKcal} kcal • P {mealMacros.proteinG} • C {mealMacros.carbohydrateG} • G {mealMacros.fatG}</strong></div></div>}</article>; })}</section></>}</main>;
-}
-
-function ProgressView() {
-  const settings = loadNutritionSettings();
-  const history = readRecentNutritionHistory(30);
-  const recent = history.slice(-7);
-  const hydration = readHydrationHistory(7);
-  const hydrationDays = hydration.filter((day) => hydrationTotal(day) > 0);
-  const avgWater = hydrationDays.length ? Math.round(hydrationDays.reduce((sum, day) => sum + hydrationTotal(day), 0) / hydrationDays.length) : 0;
-  const avgCalories = history.length ? Math.round(history.reduce((sum, day) => sum + day.calories, 0) / history.length) : 0;
-  const avgProtein = history.length ? Math.round(history.reduce((sum, day) => sum + day.protein, 0) / history.length) : 0;
-  const maxCalories = Math.max(1, ...recent.map((day) => day.calories));
-  let projectedBalance: number | undefined;
-  try { projectedBalance = (JSON.parse(localStorage.getItem('titan-nutrition:energy-today:v1') ?? '{}') as { projectedBalance?: number }).projectedBalance; } catch { projectedBalance = undefined; }
-  const coach = buildCoachMessage(history.slice(-14), settings.calorieTarget, settings.proteinTarget, { projectedBalance, balanceMin: settings.balanceMin, balanceMax: settings.balanceMax, hydrationAverageMl: avgWater, hydrationGoalMl: settings.hydrationGoalMl });
-  return <main className="nutrition-app nutrition-shell-page"><header className="nutrition-shell-header"><span className="nutrition-eyebrow">30 DIAS</span><h1>Evolução</h1><p>Médias, aderência, hidratação e leitura do Coach.</p></header><section className="nutrition-insight-grid"><article><small>Média kcal</small><strong>{avgCalories || '—'}</strong></article><article><small>Média proteína</small><strong>{avgProtein ? `${avgProtein} g` : '—'}</strong></article><article><small>Média água · 7d</small><strong>{avgWater ? `${(avgWater / 1000).toFixed(1).replace('.', ',')} L` : '—'}</strong></article><article><small>Saldo alvo</small><strong>{settings.balanceMin} a {settings.balanceMax}</strong></article></section><section className="nutrition-coach-card"><span className="nutrition-eyebrow">COACH TITAN V3</span><p>{coach}</p></section><section className="nutrition-trend-card"><h3>Calorias · últimos 7 dias</h3><div className="nutrition-mini-chart">{recent.map((day) => <div key={day.date}><span style={{ height: `${Math.max(4, day.calories / maxCalories * 100)}%` }} /><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'narrow' })}</small></div>)}</div></section><section className="nutrition-hydration-history-card"><h3>Hidratação · últimos 7 dias</h3>{hydration.map((day) => { const total = hydrationTotal(day); return <div key={day.date}><small>{new Date(`${day.date}T12:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' })}</small><span><i style={{ width: `${Math.min(100, total / Math.max(1, day.goalMl) * 100)}%` }}/></span><strong>{(total / 1000).toFixed(1).replace('.', ',')} L</strong></div>; })}</section></main>;
 }
 
 function MoreView() {
@@ -99,7 +82,7 @@ export function NutritionShell() {
   if (tab === 'today') content = <div className="titan-today-v4"><TitanTodayHero/><NutritionEntry /></div>;
   else if (tab === 'diet') content = <DietView />;
   else if (tab === 'library') content = <main className="nutrition-library-shell"><div className="nutrition-library-segment"><button className={libraryMode === 'foods' ? 'is-active' : ''} onClick={() => setLibraryMode('foods')}>Alimentos</button><button className={libraryMode === 'recipes' ? 'is-active' : ''} onClick={() => setLibraryMode('recipes')}>Receitas</button></div>{libraryMode === 'foods' ? <NutritionLibraryView onBack={() => setTab('today')} /> : <RecipeLibraryView />}</main>;
-  else if (tab === 'progress') content = <ProgressView />;
+  else if (tab === 'progress') content = <ProgressDashboard />;
   else content = <MoreView />;
   return <div className="nutrition-shell">{content}<BottomNav tab={tab} onChange={setTab}/></div>;
 }
