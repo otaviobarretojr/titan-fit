@@ -1,68 +1,26 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { TitanEntry } from './app/TitanEntry';
-import { enableTitanHaptics } from './ui/haptics';
-import { enableEvolutionFeedback } from './ui/evolution-feedback';
-import { enablePostWorkoutCoach } from './ui/post-workout-coach';
+import { NutritionShell } from './app/NutritionShell';
+import { NutritionNotificationBridge } from './app/NutritionNotificationBridge';
+import { HealthSyncEngine } from './features/health/HealthSyncEngine';
 import './styles/tokens.css';
 import './styles/global.css';
-import './styles/dashboard.css';
-import './styles/history.css';
-import './styles/coach.css';
-import './styles/pwa.css';
-import './styles/weekly-library.css';
-import './styles/week-library-v0282.css';
-import './styles/cardio-v029.css';
-import './styles/evolution.css';
-import './styles/one-ui.css';
-import './styles/workout-mobile.css';
-import './styles/native-polish.css';
-import './styles/design-system-v025.css';
-import './styles/chart-readability-v0251.css';
-import './styles/evolution-feedback.css';
-import './styles/polish-v0253.css';
-import './styles/smart-progression-v026.css';
-import './styles/pr-hall-v0261.css';
-import './styles/live-pr-v0265.css';
-import './styles/workout-close-v0266.css';
-import './styles/coach-v027.css';
-import './styles/home-premium-v0272.css';
-import './styles/home-muscle-art-v0273.css';
-import './styles/post-workout-coach-v0274.css';
-import './styles/weekly-coach-v0275.css';
-import './styles/home-uniform-v0292.css';
-import './styles/home-day-aware-v0293.css';
-import './styles/home-clean-v0305.css';
-import './styles/titan-light-v031.css';
-import './styles/visual-harmony-v032.css';
-import './styles/full-visual-audit-v0321.css';
-import './styles/score-alignment-v0322.css';
-import './styles/programming-v033.css';
-import './styles/exercise-alternatives-v036.css';
-import './styles/workout-mode-v038.css';
-import './styles/profile-onboarding.css';
-import './styles/exercise-library-v048.css';
-import './styles/ui-audit-v055.css';
-import './styles/exercise-video-v059.css';
-import './styles/project-management.css';
-import './styles/settings-cleanup.css';
-import './styles/health-dashboard-v05112.css';
-import './styles/titan-ui-v052.css';
-import './styles/health-clean-v0527.css';
-import './styles/health-hub-v0529.css';
-import './styles/home-compact-v058.css';
-import './styles/navigation-definitive-v0572.css';
-import './styles/home-harmony-v0578.css';
-import './styles/layout-clean-v05712.css';
-import './styles/navigation-audit-v05812.css';
-import './styles/navigation-proportion-v05813.css';
-
-enableTitanHaptics();
-enableEvolutionFeedback();
-enablePostWorkoutCoach();
+import './styles/nutrition.css';
+import './styles/nutrition-sections.css';
+import './styles/nutrition-v2.css';
+import './styles/nutrition-v3.css';
+import './styles/nutrition-shell.css';
+import './styles/nutrition-v4.css';
+import './styles/nutrition-v5.css';
+import './styles/nutrition-v6.css';
+import './styles/nutrition-v7.css';
+import './styles/nutrition-v8.css';
+import './styles/nutrition-v9.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <TitanEntry />
+    <NutritionNotificationBridge />
+    <HealthSyncEngine />
+    <NutritionShell />
   </React.StrictMode>
 );

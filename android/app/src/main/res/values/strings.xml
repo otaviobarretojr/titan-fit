@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">TITAN FIT</string>
-    <string name="title_activity_main">TITAN FIT</string>
-    <string name="package_name">com.otaviobarretojr.titanfit</string>
-    <string name="custom_url_scheme">com.otaviobarretojr.titanfit</string>
+    <string name="app_name">TITAN Nutrition</string>
+    <string name="title_activity_main">TITAN Nutrition</string>
+    <string name="package_name">com.otaviobarretojr.titannutrition</string>
+    <string name="custom_url_scheme">com.otaviobarretojr.titannutrition</string>
 </resources>

@@ -1,4 +1,4 @@
-name: Release Android TITAN FIT
+name: Release Android TITAN Nutrition
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.TITAN_ANDROID_KEYSTORE_PASSWORD }}
         run: |
           if [ -z "$KEYSTORE_B64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
-            echo 'ERRO: assinatura permanente do TITAN FIT não está configurada.'
+            echo 'ERRO: assinatura permanente do TITAN não está configurada.'
             echo 'Cadastre TITAN_ANDROID_KEYSTORE_B64 e TITAN_ANDROID_KEYSTORE_PASSWORD nos Actions Secrets.'
             exit 1
           fi
@@ -91,16 +91,16 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          cp android/app/build/outputs/apk/release/app-release.apk "TITAN-FIT-v${VERSION}-android-test.apk"
-          sha256sum "TITAN-FIT-v${VERSION}-android-test.apk" > "TITAN-FIT-v${VERSION}-android-test.apk.sha256"
+          cp android/app/build/outputs/apk/release/app-release.apk "TITAN-Nutrition-v${VERSION}-android-test.apk"
+          sha256sum "TITAN-Nutrition-v${VERSION}-android-test.apk" > "TITAN-Nutrition-v${VERSION}-android-test.apk.sha256"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TITAN-FIT-v${{ env.VERSION }}-android
+          name: TITAN-Nutrition-v${{ env.VERSION }}-android
           path: |
-            TITAN-FIT-v${{ env.VERSION }}-android-test.apk
-            TITAN-FIT-v${{ env.VERSION }}-android-test.apk.sha256
+            TITAN-Nutrition-v${{ env.VERSION }}-android-test.apk
+            TITAN-Nutrition-v${{ env.VERSION }}-android-test.apk.sha256
           if-no-files-found: error
           retention-days: 30
 
@@ -108,13 +108,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v${VERSION}"
-          APK="TITAN-FIT-v${VERSION}-android-test.apk"
+          TAG="nutrition-v${VERSION}"
+          APK="TITAN-Nutrition-v${VERSION}-android-test.apk"
           CHECKSUM="${APK}.sha256"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" "$CHECKSUM" --clobber
           else
             gh release create "$TAG" "$APK" "$CHECKSUM" \
-              --title "TITAN FIT v${VERSION} — Android Test" \
-              --notes "Build Android assinado com a chave permanente do TITAN FIT. Atualizações futuras usam a mesma identidade de assinatura para preservar dados locais."
+              --title "TITAN Nutrition v${VERSION} — Android Test" \
+              --notes "Build Android isolado do TITAN Fit, com identidade própria e suporte a Health Connect/Samsung Health."
           fi
