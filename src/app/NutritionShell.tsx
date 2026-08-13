@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { NutritionEntry } from './NutritionEntry';
 import { TitanTodayHero } from './TitanTodayHero';
+import { AdaptiveDayCoachPanel } from './AdaptiveDayCoachPanel';
 import { NutritionLibraryView } from '../features/nutrition/NutritionLibraryView';
 import { buildWeeklyShoppingList } from '../features/nutrition/shoppingList';
 import { loadWeeklyPlan } from '../features/nutrition/weeklyPlanStorage';
@@ -12,17 +13,18 @@ import { NutritionSettingsView } from '../features/nutrition/NutritionSettingsVi
 import { loadNutritionSettings } from '../features/nutrition/settings';
 import { ProgressDashboard } from '../features/nutrition/ProgressDashboard';
 
-type Tab = 'today' | 'diet' | 'library' | 'progress' | 'more';
+type Tab = 'today' | 'diet' | 'coach' | 'library' | 'progress' | 'more';
 
 function BottomNav({ tab, onChange }: { tab: Tab; onChange: (tab: Tab) => void }) {
   const items: Array<{ id: Tab; icon: string; label: string }> = [
     { id: 'today', icon: '⌂', label: 'Hoje' },
     { id: 'diet', icon: '▦', label: 'Dieta' },
+    { id: 'coach', icon: '◆', label: 'Coach' },
     { id: 'library', icon: '◫', label: 'Biblioteca' },
     { id: 'progress', icon: '⌁', label: 'Evolução' },
     { id: 'more', icon: '•••', label: 'Mais' },
   ];
-  return <nav className="nutrition-bottom-nav" aria-label="Navegação principal">{items.map((item) => <button key={item.id} className={tab === item.id ? 'is-active' : ''} onClick={() => onChange(item.id)}><span>{item.icon}</span><small>{item.label}</small></button>)}</nav>;
+  return <nav className="nutrition-bottom-nav nutrition-bottom-nav-six" aria-label="Navegação principal">{items.map((item) => <button key={item.id} className={tab === item.id ? 'is-active' : ''} onClick={() => onChange(item.id)}><span>{item.icon}</span><small>{item.label}</small></button>)}</nav>;
 }
 
 function DietView() {
@@ -81,6 +83,7 @@ export function NutritionShell() {
   let content;
   if (tab === 'today') content = <div className="titan-today-v4"><TitanTodayHero/><NutritionEntry /></div>;
   else if (tab === 'diet') content = <DietView />;
+  else if (tab === 'coach') content = <AdaptiveDayCoachPanel />;
   else if (tab === 'library') content = <main className="nutrition-library-shell"><div className="nutrition-library-segment"><button className={libraryMode === 'foods' ? 'is-active' : ''} onClick={() => setLibraryMode('foods')}>Alimentos</button><button className={libraryMode === 'recipes' ? 'is-active' : ''} onClick={() => setLibraryMode('recipes')}>Receitas</button></div>{libraryMode === 'foods' ? <NutritionLibraryView onBack={() => setTab('today')} /> : <RecipeLibraryView />}</main>;
   else if (tab === 'progress') content = <ProgressDashboard />;
   else content = <MoreView />;
