@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AdaptiveDayCoachPanel } from './app/AdaptiveDayCoachPanel';
 import { NutritionShell } from './app/NutritionShell';
 import { NutritionNotificationBridge } from './app/NutritionNotificationBridge';
 import { HealthSyncEngine } from './features/health/HealthSyncEngine';
@@ -16,12 +15,12 @@ import './styles/nutrition-v5.css';
 import './styles/nutrition-v6.css';
 import './styles/nutrition-v7.css';
 import './styles/nutrition-v8.css';
+import './styles/nutrition-v9.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <NutritionNotificationBridge />
     <HealthSyncEngine />
     <NutritionShell />
-    <AdaptiveDayCoachPanel />
   </React.StrictMode>
 );
