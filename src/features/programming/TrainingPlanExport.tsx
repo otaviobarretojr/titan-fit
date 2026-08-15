@@ -1,21 +1,12 @@
 import { useState } from 'react';
 import type { TitanPlan } from '../plan/types';
+import { buildTrainingExportFilename, serializeTrainingPlan } from './trainingPlanExport';
 
 type ExportStatus = 'idle' | 'sharing' | 'shared' | 'downloaded' | 'cancelled' | 'error';
 type ShareCapableNavigator = Navigator & {
   canShare?: (data?: { files?: File[] }) => boolean;
   share?: (data?: { files?: File[]; title?: string; text?: string }) => Promise<void>;
 };
-
-export function serializeTrainingPlan(plan: TitanPlan) {
-  return JSON.stringify(plan, null, 2);
-}
-
-export function buildTrainingExportFilename(plan: TitanPlan, date = new Date()) {
-  const safeId = String(plan.id || 'treino-atual').replace(/[^a-zA-Z0-9-_]+/g, '-').replace(/^-+|-+$/g, '') || 'treino-atual';
-  const stamp = date.toISOString().slice(0, 10);
-  return `TITAN-TREINO-${safeId}-${stamp}.json`;
-}
 
 export function TrainingPlanExport({ plan }: { plan: TitanPlan }) {
   const [status, setStatus] = useState<ExportStatus>('idle');
