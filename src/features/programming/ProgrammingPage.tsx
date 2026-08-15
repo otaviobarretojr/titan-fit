@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ExerciseLibraryPage } from '../exercise-library/ExerciseLibraryPage';
+import { TrainingPlanExport } from './TrainingPlanExport';
 import type { TitanExercise, TitanPlan, TitanWorkoutDay } from '../plan/types';
 import { loadWorkoutExecution } from '../workout/storage';
 
@@ -23,6 +24,7 @@ export function ProgrammingPage({ plan, onStartWorkout }: Props) {
   return <div className="programming-page">
     <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Treino, cardio e biblioteca organizados em uma única área.</p></section>
     <div className="programming-tabs programming-tabs-two" role="tablist" aria-label="Conteúdo da programação"><button type="button" role="tab" aria-selected={activeTab === 'week'} className={activeTab === 'week' ? 'active' : ''} onClick={() => setActiveTab('week')}>Treino</button><button type="button" role="tab" aria-selected={activeTab === 'library'} className={activeTab === 'library' ? 'active' : ''} onClick={() => setActiveTab('library')}>Biblioteca</button></div>
+    {activeTab === 'week' && plan && <TrainingPlanExport plan={plan} />}
     {activeTab === 'library' && <ExerciseLibraryPage />}
     {activeTab === 'week' && (!plan ? <ProgrammingEmpty /> : <>
       <section className="programming-today" aria-label="Treino de hoje"><div><span className="eyebrow">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p>{todayExecution && <span className="programming-tag today-tag">SESSÃO EM ANDAMENTO</span>}{todayWorkout && onStartWorkout && <button type="button" className="primary-action" onClick={() => onStartWorkout(todayWorkout.id)}>{todayExecution ? 'Retomar treino' : 'Iniciar treino'}</button>}</div></section>

@@ -38,6 +38,7 @@ import './styles/visual-harmony-v032.css';
 import './styles/full-visual-audit-v0321.css';
 import './styles/score-alignment-v0322.css';
 import './styles/programming-v033.css';
+import './styles/programming-export-v05818.css';
 import './styles/exercise-alternatives-v036.css';
 import './styles/workout-mode-v038.css';
 import './styles/profile-onboarding.css';

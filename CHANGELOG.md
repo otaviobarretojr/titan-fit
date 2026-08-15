@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.58.18 — Exportação do treino atual
+- Programação ganha a ação Exportar treino atual.
+- Exportação gera o próprio TitanPlan em JSON, compatível com o fluxo de revisão e futura reimportação do TITAN FIT.
+- Arquivo contém somente a programação ativa; histórico, fotos e dados de saúde não são incluídos.
+- Em dispositivos compatíveis, abre o compartilhamento nativo; nos demais, baixa o arquivo JSON.
+- Nome do arquivo inclui o ID do projeto e a data da exportação.
+
 ## v0.58.17 — Repetições + Peso
 - Cada série de musculação mantém sua identificação no cabeçalho (Série 1 de N, Série 2 de N...).
 - Os dois campos de preenchimento passam a ser Repetições e Peso (kg).
