@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTrainingExportFilename, serializeTrainingPlan } from '../src/features/programming/TrainingPlanExport';
+import { buildTrainingExportFilename, serializeTrainingPlan } from '../src/features/programming/trainingPlanExport';
 import type { TitanPlan } from '../src/features/plan/types';
 
 describe('training plan export', () => {
