@@ -1,0 +1,15 @@
+.programming-export-card{
+  margin:12px 0 18px;
+  padding:16px;
+  border:1px solid rgba(15,23,42,.08);
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 8px 24px rgba(15,23,42,.05);
+}
+.programming-export-copy{display:grid;gap:5px}
+.programming-export-copy strong{font-size:1rem;color:#172033}
+.programming-export-copy p{margin:0;color:#6d7787;font-size:.82rem;line-height:1.4}
+.programming-export-action{width:100%;margin-top:12px;min-height:46px}
+.programming-export-status{display:block;margin-top:8px;font-size:.76rem;color:#667085}
+.programming-export-status.success{color:#166534}
+.programming-export-status.error{color:#b42318}
