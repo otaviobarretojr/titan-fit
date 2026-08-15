@@ -1,3 +1,4 @@
+// v0.58.18 rerun after separating Fast Refresh-safe utilities
 import fs from 'node:fs';
 
 function replace(path, before, after) {
