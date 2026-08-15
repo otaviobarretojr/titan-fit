@@ -1,4 +1,4 @@
-// v0.58.18 rerun after separating Fast Refresh-safe utilities
+// v0.58.18 rerun with complete TitanPlan fixture
 import fs from 'node:fs';
 
 function replace(path, before, after) {
