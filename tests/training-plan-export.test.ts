@@ -3,11 +3,13 @@ import { buildTrainingExportFilename, serializeTrainingPlan } from '../src/featu
 import type { TitanPlan } from '../src/features/plan/types';
 
 describe('training plan export', () => {
-  const plan = {
+  const plan: TitanPlan = {
+    schemaVersion: 1,
     id: 'projeto-titan-atual',
     name: 'Projeto TITAN Atual',
+    createdAt: '2026-08-15T12:00:00.000Z',
     workouts: [{ id: 'push-a', day: 'Segunda', title: 'Push A', exercises: [] }]
-  } as TitanPlan;
+  };
 
   it('exporta o próprio TitanPlan sem embrulhar histórico ou dados paralelos', () => {
     const parsed = JSON.parse(serializeTrainingPlan(plan));
