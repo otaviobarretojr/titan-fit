@@ -1,1 +1,1 @@
-release-v0.58.17-repetitions-weight-stable
+release-v0.58.18-training-export-stable
