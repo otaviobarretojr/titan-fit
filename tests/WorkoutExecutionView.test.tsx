@@ -110,7 +110,7 @@ describe('WorkoutExecutionView video-free', () => {
     expect(document.querySelector('iframe, video')).toBeNull();
   });
 
-  it('salva o histórico e apresenta o resumo final', () => {
+  it('salva o histórico, apresenta o resumo final e só então abre progresso', () => {
     const onCompleted = vi.fn();
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
@@ -123,9 +123,11 @@ describe('WorkoutExecutionView video-free', () => {
     expect(screen.getByText('TREINO CONCLUÍDO')).toBeInTheDocument();
     expect(screen.getByText('1.460 kg')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
-    expect(onCompleted).toHaveBeenCalledTimes(1);
+    expect(onCompleted).not.toHaveBeenCalled();
     const history = localStorage.getItem('titan-fit:history:v1');
     expect(history).toContain('"workoutTitle":"Push A"');
     expect(history).toContain('"totalVolumeKg":1460');
+    fireEvent.click(screen.getByRole('button', { name: 'Ver progresso' }));
+    expect(onCompleted).toHaveBeenCalledTimes(1);
   });
 });
