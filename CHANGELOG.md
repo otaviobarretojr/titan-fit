@@ -2,6 +2,16 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.59.0 — Rework Foundation · Video-free
+- Remove a Biblioteca visual de exercícios da Programação.
+- Remove player, bloqueio e qualquer etapa de vídeo do modo treino.
+- Remove vídeo, videoPolicy e videoLibrary do schema ativo; projetos legados continuam importáveis e esses campos são descartados.
+- Exportação do treino elimina qualquer metadado de vídeo legado ainda persistido.
+- Botão Voltar do Android durante o modo treino retorna para Hoje/Home e preserva a sessão.
+- Detalhes da Programação passam a respeitar o histórico do navegador para o gesto/botão Voltar.
+- Nova camada final de layout centraliza safe areas do Android e evita sobreposição da navegação inferior com a barra do sistema.
+- Fundação preparada para a nova identidade visual do TITAN FIT.
+
 ## v0.58.18 — Exportação do treino atual
 - Programação ganha a ação Exportar treino atual.
 - Exportação gera o próprio TitanPlan em JSON, compatível com o fluxo de revisão e futura reimportação do TITAN FIT.

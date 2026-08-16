@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import packageInfo from '../../package.json';
 import { BackupPanel } from '../core/backup/BackupPanel';
@@ -36,6 +36,8 @@ function normalizeTabId(value: unknown): TabId { if (value === 'progress') retur
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>(() => normalizeTabId(window.history.state?.titanTab));
+  const activeTabRef = useRef<TabId>(activeTab);
+  activeTabRef.current = activeTab;
   const [activePlan, setActivePlan] = useState<TitanPlan | null>(() => loadActivePlan());
   const [showImporter, setShowImporter] = useState(false);
   const [generationContext, setGenerationContext] = useState<GenerationContext | null>(null);
@@ -52,7 +54,7 @@ export function App() {
     const updateConnection = () => setIsOnline(navigator.onLine);
     const captureInstallPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as BeforeInstallPromptEvent); };
     const clearTransientNavigation = () => { setShowImporter(false); setGenerationContext(null); setDirectWorkoutId(null); };
-    const handlePopState = (event: PopStateEvent) => { setActiveTab(normalizeTabId(event.state?.titanTab)); clearTransientNavigation(); };
+    const handlePopState = (event: PopStateEvent) => { if (activeTabRef.current === 'workout') { window.history.replaceState({ ...(event.state ?? {}), titanRoot: true, titanTab: 'today' }, ''); setActiveTab('today'); clearTransientNavigation(); return; } setActiveTab(normalizeTabId(event.state?.titanTab)); clearTransientNavigation(); };
     const currentState = window.history.state ?? {};
     if (!currentState.titanRoot) {
       window.history.replaceState({ ...currentState, titanRoot: true, titanTab: 'today' }, '');

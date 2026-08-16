@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getExerciseVideo, type CuratedExerciseVideo } from '../exercise-library/videos';
 import { getProgressionAdvice } from '../history/intelligence';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
@@ -22,7 +21,6 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const [timerRunning, setTimerRunning] = useState(false);
   const [sessionSeconds, setSessionSeconds] = useState(() => secondsSince(initial.startedAt));
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
-  const [videoUnlocked, setVideoUnlocked] = useState<Record<string, boolean>>({});
   const [prCelebration, setPrCelebration] = useState<PrCelebration | null>(null);
 
   useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
@@ -61,8 +59,6 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const exerciseCompleted = exerciseSkipped || activeSets.every((set) => set.completed);
   const progress = totals.total ? Math.round((totals.resolved / totals.total) * 100) : 0;
   const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
-  const exerciseVideo = getExerciseVideo(activeExercise);
-  const videoIsRequired = Boolean(exerciseVideo) && !videoUnlocked[activeExercise.id] && !exerciseCompleted;
 
   function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
     setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: false, sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
@@ -173,15 +169,6 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
         <p>A opção escolhida vale para esta sessão. Peso, histórico e evolução ficam vinculados ao exercício realmente executado.</p>
       </details> : null}
 
-      {exerciseVideo && <section className={`video-stage ${videoIsRequired ? 'expanded' : 'collapsed'}`}>
-        {videoIsRequired ? <>
-          <WorkoutExerciseVideo video={exerciseVideo} exerciseName={activeExercise.name} />
-          <div className="video-stage-meta"><strong>{exerciseVideo.title}</strong><small>{exerciseVideo.source}</small></div>
-          <button type="button" className="primary-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Já assisti · começar séries</button>
-          <button type="button" className="text-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: true }))}>Pular demonstração</button>
-        </> : <button type="button" className="video-replay-action" onClick={() => setVideoUnlocked((current) => ({ ...current, [activeExercise.id]: false }))}>▶ Rever execução</button>}
-      </section>}
-
       <Prescription exercise={activeExercise} />
       {exerciseType === 'strength' && <>
         <div className="progression-panel workout-pr-panel">
@@ -198,7 +185,7 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
       {activeExercise.commonMistakes?.length ? <details className="exercise-details"><summary>Erros comuns</summary><ul>{activeExercise.commonMistakes.map((mistake) => <li key={mistake}>{mistake}</li>)}</ul></details> : null}
       {exerciseType === 'cardio' && activeExercise.progression?.length ? <ProgressionPlan exercise={activeExercise} /> : null}
 
-      {!exerciseSkipped && !videoIsRequired && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
+      {!exerciseSkipped && <div className="set-entry-list">{activeSets.map((set) => <SetEntry key={set.setNumber} exercise={activeExercise} exerciseType={exerciseType} set={set} totalSets={activeSets.length} onNumeric={updateNumeric} onText={(field, value) => updateSet(set.setNumber, { [field]: value || null })} onComplete={() => completeSet(set)} />)}</div>}
       {exerciseSkipped && <div className="workout-skipped-state"><strong>Exercício pulado</strong><span>Não gera séries, volume ou PR para o que não foi executado.</span><button type="button" className="secondary-action" onClick={restoreSkippedExercise}>Voltar e fazer exercício</button></div>}
     </article>
 
@@ -207,18 +194,6 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
     <div className="exercise-navigation"><button type="button" className="secondary-action" disabled={activeExerciseIndex === 0} onClick={previousExerciseNav}>Anterior</button>{activeExerciseIndex < workout.exercises.length - 1 ? <button type="button" className="primary-action" disabled={!exerciseCompleted} onClick={nextExercise}>Próximo exercício</button> : <button type="button" className="primary-action" disabled={totals.resolved !== totals.total} onClick={finishWorkout}>Concluir e salvar treino</button>}</div>
     <button type="button" className="danger-action reset-session" onClick={resetSession}>Resetar sessão</button>
   </div>;
-}
-
-function WorkoutExerciseVideo({ video, exerciseName }: { video: CuratedExerciseVideo; exerciseName: string }) {
-  if (video.provider === 'hosted' && video.videoUrl) {
-    return <div className="exercise-video"><video src={video.videoUrl} controls playsInline preload="metadata" aria-label={`Vídeo demonstrativo de ${exerciseName}`} /></div>;
-  }
-  const src = video.provider === 'youtube' && video.videoId
-    ? `https://www.youtube-nocookie.com/embed/${video.videoId}?rel=0&playsinline=1&hl=pt-BR&cc_lang_pref=pt`
-    : video.provider === 'vimeo' && video.videoId
-      ? `https://player.vimeo.com/video/${video.videoId}?dnt=1&playsinline=1&texttrack=pt`
-      : video.embedUrl;
-  return <div className="exercise-video"><iframe title={video.title} src={src} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen /></div>;
 }
 
 function SetEntry({ exercise, exerciseType, set, totalSets, onNumeric, onText, onComplete }: { exercise: TitanExercise; exerciseType: ExerciseType; set: ExecutedSet; totalSets: number; onNumeric: (setNumber: number, field: NumericField, value: string) => void; onText: (field: 'averagePace' | 'cardioZone' | 'notes', value: string) => void; onComplete: () => void }) {
@@ -276,7 +251,7 @@ function resolveStructuredAlternative(base: TitanExercise, alternative: TitanExe
   return { ...base, ...alternative, muscleGroup: alternative.muscleGroup ?? base.muscleGroup, alternatives: undefined, alternativeExercises: undefined };
 }
 function legacyAlternative(base: TitanExercise, name: string): TitanExercise {
-  return { ...base, id: alternativeExerciseId(base.id, name), name, technique: undefined, commonMistakes: undefined, video: undefined, alternatives: undefined, alternativeExercises: undefined };
+  return { ...base, id: alternativeExerciseId(base.id, name), name, technique: undefined, commonMistakes: undefined, alternatives: undefined, alternativeExercises: undefined };
 }
 function exerciseOptions(base: TitanExercise): TitanExercise[] {
   const structured = (base.alternativeExercises ?? []).map((alternative) => resolveStructuredAlternative(base, alternative));

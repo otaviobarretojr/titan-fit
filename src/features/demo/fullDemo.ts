@@ -13,7 +13,7 @@ const strength = (
   rir: number, restSeconds: number, technique: string, commonMistakes: string[], alternatives: string[],
 ): TitanExercise => ({
   id, name, muscleGroup, exerciseType: 'strength', sets, minReps, maxReps, targetRir: rir, restSeconds,
-  technique, commonMistakes, alternatives, videoPolicy: 'required',
+  technique, commonMistakes, alternatives,
 });
 
 const cardioExercise = (
@@ -21,7 +21,6 @@ const cardioExercise = (
 ): TitanExercise => ({
   id, name, muscleGroup: 'Cardio', exerciseType: 'cardio', durationSeconds, speedKmh, inclinePercent, cardioZone: zone,
   notes: 'Mantenha o esforço dentro da zona planejada e registre tempo, distância, FC e percepção de esforço.',
-  videoPolicy: 'not-required',
 });
 
 const workouts: TitanWorkoutDay[] = [
@@ -49,7 +48,7 @@ const workouts: TitanWorkoutDay[] = [
     strength('desenvolvimento-maquina', 'Desenvolvimento na máquina', 'Ombros', 3, 8, 12, 2, 120, 'Mantenha costas apoiadas e não force amplitude dolorosa.', ['Arquear excessivamente'], ['Desenvolvimento com halteres']),
     strength('elevacao-lateral', 'Elevação lateral com halteres', 'Deltoide lateral', 4, 12, 20, 1, 60, 'Conduza pelos cotovelos com controle.', ['Usar balanço'], ['Elevação lateral na polia']),
     strength('crucifixo-inverso', 'Crucifixo inverso na máquina', 'Deltoide posterior', 3, 12, 15, 1, 75, 'Abra os braços sem projetar a cabeça.', ['Encolher os ombros'], ['Face pull']),
-    { id: 'prancha', name: 'Prancha', muscleGroup: 'Core', exerciseType: 'isometric', sets: 3, durationSeconds: 45, restSeconds: 60, technique: 'Mantenha costelas e pelve alinhadas.', commonMistakes: ['Elevar o quadril', 'Perder a posição lombar'], alternatives: ['Dead bug'], videoPolicy: 'required' },
+    { id: 'prancha', name: 'Prancha', muscleGroup: 'Core', exerciseType: 'isometric', sets: 3, durationSeconds: 45, restSeconds: 60, technique: 'Mantenha costelas e pelve alinhadas.', commonMistakes: ['Elevar o quadril', 'Perder a posição lombar'], alternatives: ['Dead bug'] },
   ]},
   { id: 'demo-legs-b', day: 'Sexta-feira', title: 'LEGS B — Posterior, glúteos e panturrilhas', focus: 'Posteriores de coxa e glúteos.', exercises: [
     strength('cadeira-flexora', 'Cadeira flexora', 'Posterior de coxa', 4, 8, 12, 2, 90, 'Mantenha quadril apoiado e controle a extensão.', ['Elevar o quadril'], ['Mesa flexora']),
@@ -116,9 +115,7 @@ export const demoPlan: TitanPlan = {
   project: {
     name: 'Projeto TITAN — Hipertrofia + 5 km', objective: 'Hipertrofia com condicionamento cardiovascular',
     startDate: demoStartDate(), durationWeeks: 12, strengthStartTime: '19:30', cardioGoal: 'Cardio diário e progressão para 5 km', cardioSchedule,
-  },
-  videoLibrary: { version: 'demo-qa-v2', curatedVideos: 25, pendingCuration: 0, cardioWithoutVideo: 7 },
-  workouts,
+  },  workouts,
 };
 
 const set = (setNumber: number, weightKg: number | null, repetitions: number | null, rir: number | null): HistorySet => ({
