@@ -8,11 +8,6 @@ const workout: TitanWorkoutDay = {
   exercises: [{ id: 'bench', name: 'Supino máquina', muscleGroup: 'Peitoral', exerciseType: 'strength', sets: 2, minReps: 8, maxReps: 10, targetRir: 2, restSeconds: 90 }]
 };
 
-function unlockVideoIfPresent() {
-  const skip = screen.queryByRole('button', { name: 'Pular demonstração' });
-  if (skip) fireEvent.click(skip);
-}
-
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -20,26 +15,20 @@ beforeEach(() => {
   vi.stubGlobal('scrollTo', vi.fn());
 });
 
-describe('WorkoutExecutionView', () => {
-  it('exibe a demonstração cadastrada antes de liberar as séries', () => {
+describe('WorkoutExecutionView video-free', () => {
+  it('libera as séries imediatamente sem demonstração ou player', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    expect(screen.getByTitle('Chest press convergente — execução')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();
-    expect(screen.queryByLabelText('Supino máquina série 1 carga')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Já assisti · começar séries' }));
     expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
     expect(screen.getByLabelText('Supino máquina série 1 repetições')).toBeInTheDocument();
-    expect(screen.getByLabelText('Supino máquina série 1 carga')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /assistir|demonstração|vídeo/i })).not.toBeInTheDocument();
+    expect(document.querySelector('iframe, video')).toBeNull();
   });
 
   it('registra repetições e peso por série', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    unlockVideoIfPresent();
-
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
-
     expect(screen.getByText(/1 séries feitas · 1\s*\/\s*2 resolvidas · Tempo/i)).toBeInTheDocument();
     expect(screen.queryByText(/Volume 720 kg/i)).not.toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
@@ -52,7 +41,6 @@ describe('WorkoutExecutionView', () => {
 
   it('exige dados executados antes de registrar uma série', () => {
     render(<WorkoutExecutionView planId="plan-required" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    unlockVideoIfPresent();
     const register = screen.getAllByRole('button', { name: 'Registrar série' })[0];
     expect(screen.queryByLabelText('Supino máquina série 1 RIR')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Supino máquina série 1 repetições')).toBeInTheDocument();
@@ -65,7 +53,6 @@ describe('WorkoutExecutionView', () => {
 
   it('inicia o descanso automático ao registrar uma série válida', () => {
     render(<WorkoutExecutionView planId="plan-rest" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    unlockVideoIfPresent();
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
@@ -75,13 +62,10 @@ describe('WorkoutExecutionView', () => {
 
   it('permite pular exercício sem criar volume ou PR falso', () => {
     render(<WorkoutExecutionView planId="plan-skip" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    unlockVideoIfPresent();
     fireEvent.click(screen.getByRole('button', { name: 'Pular exercício' }));
-
     expect(screen.getByText('PULADO NESTA SESSÃO')).toBeInTheDocument();
     expect(screen.getByText('Exercício pulado')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Concluir e salvar treino' })).toBeEnabled();
-
     fireEvent.click(screen.getByRole('button', { name: 'Concluir e salvar treino' }));
     expect(screen.getByText('TREINO CONCLUÍDO')).toBeInTheDocument();
     const history = localStorage.getItem('titan-fit:history:v1');
@@ -105,7 +89,7 @@ describe('WorkoutExecutionView', () => {
     expect(screen.getByRole('button', { name: 'Pular exercício' })).toBeInTheDocument();
   });
 
-  it('troca para uma alternativa oficial e exibe o vídeo próprio dela', () => {
+  it('troca para uma alternativa oficial preservando técnica e prescrição sem player', () => {
     const workoutWithAlternative: TitanWorkoutDay = {
       ...workout,
       exercises: [{
@@ -116,41 +100,32 @@ describe('WorkoutExecutionView', () => {
       }],
     };
     render(<WorkoutExecutionView planId="plan-alt" planName="Plano A" workout={workoutWithAlternative} onBack={vi.fn()} onCompleted={vi.fn()} />);
-    unlockVideoIfPresent();
     fireEvent.click(screen.getByText('Trocar'));
     fireEvent.click(screen.getByRole('button', { name: /Alternativa Supino reto com barra/i }));
     expect(screen.getByText('Alternativa selecionada · histórico próprio')).toBeInTheDocument();
-    expect(screen.getByTitle('Supino reto com barra — execução')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Já assisti · começar séries' })).toBeInTheDocument();
     expect(screen.getByText('Técnica da alternativa')).toBeInTheDocument();
     expect(screen.queryByText('Técnica principal')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Supino reto com barra série 1 repetições')).toBeInTheDocument();
+    expect(screen.getByLabelText('Supino reto com barra série 1 carga')).toBeInTheDocument();
+    expect(document.querySelector('iframe, video')).toBeNull();
   });
 
   it('salva o histórico e apresenta o resumo final', () => {
     const onCompleted = vi.fn();
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);
-    unlockVideoIfPresent();
-
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 2 repetições'), { target: { value: '8' } });
     fireEvent.change(screen.getByLabelText('Supino máquina série 2 carga'), { target: { value: '82.5' } });
-
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
     fireEvent.click(screen.getByRole('button', { name: 'Concluir e salvar treino' }));
-
     expect(screen.getByText('TREINO CONCLUÍDO')).toBeInTheDocument();
     expect(screen.getByText('1.460 kg')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
-
+    expect(onCompleted).toHaveBeenCalledTimes(1);
     const history = localStorage.getItem('titan-fit:history:v1');
     expect(history).toContain('"workoutTitle":"Push A"');
     expect(history).toContain('"totalVolumeKg":1460');
-    expect(history).toContain('"bestWeightKg":82.5');
-    expect(localStorage.getItem('titan-fit:execution:plan-1:push-a')).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Ver progresso' }));
-    expect(onCompleted).toHaveBeenCalledOnce();
   });
 });
