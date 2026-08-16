@@ -3,7 +3,8 @@ on:
   push:
     paths:
       - '.github/workflows/v0590-rework.yml'
-      - 'scripts/apply-v0590-rework.mjs'
+      - 'scripts/apply-v0590-core.mjs'
+      - 'src/features/programming/ProgrammingPage.tsx'
       - 'src/styles/rework-foundation-v059.css'
 permissions:
   contents: write
@@ -17,7 +18,7 @@ jobs:
           node-version: 24
           cache: npm
       - name: Apply rework
-        run: node scripts/apply-v0590-rework.mjs
+        run: node scripts/apply-v0590-core.mjs
       - name: Validate
         run: |
           npm ci
