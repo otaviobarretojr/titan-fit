@@ -1,0 +1,92 @@
+/* TITAN FIT v0.59.0 — Rework foundation
+   Authoritative mobile geometry for Android/PWA before the new visual identity. */
+:root{
+  --titan-safe-top:env(safe-area-inset-top,0px);
+  --titan-safe-right:env(safe-area-inset-right,0px);
+  --titan-safe-bottom:env(safe-area-inset-bottom,0px);
+  --titan-safe-left:env(safe-area-inset-left,0px);
+  --titan-bottom-nav-content:76px;
+}
+
+html,body,#root{min-height:100%;min-height:100dvh}
+body{overscroll-behavior-y:none}
+.app-shell{min-height:100dvh;padding-left:var(--titan-safe-left);padding-right:var(--titan-safe-right);box-sizing:border-box}
+.app-header{padding-top:max(12px,var(--titan-safe-top))}
+
+/* One geometry source for the main navigation. */
+.bottom-navigation{
+  position:fixed!important;
+  z-index:160!important;
+  left:var(--titan-safe-left)!important;
+  right:var(--titan-safe-right)!important;
+  bottom:0!important;
+  transform:none!important;
+  width:auto!important;
+  max-width:none!important;
+  height:calc(var(--titan-bottom-nav-content) + var(--titan-safe-bottom))!important;
+  margin:0!important;
+  padding:6px 0 calc(6px + var(--titan-safe-bottom))!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:0!important;
+  align-items:center!important;
+  box-sizing:border-box!important;
+  border:0!important;
+  border-top:1px solid rgba(15,23,42,.10)!important;
+  border-radius:0!important;
+  background:rgba(255,255,255,.985)!important;
+  box-shadow:0 -8px 24px rgba(15,23,42,.08)!important;
+  overflow:hidden!important;
+}
+.bottom-navigation button{
+  width:100%!important;
+  min-width:0!important;
+  height:62px!important;
+  min-height:62px!important;
+  margin:0!important;
+  padding:3px 0!important;
+  display:grid!important;
+  grid-template-rows:38px 16px!important;
+  place-items:center!important;
+  align-content:center!important;
+  gap:2px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  font-size:.73rem!important;
+  line-height:1!important;
+}
+.bottom-navigation .nav-icon-wrap{
+  width:58px!important;
+  height:38px!important;
+  min-width:58px!important;
+  min-height:38px!important;
+  margin:0 auto!important;
+  display:grid!important;
+  place-items:center!important;
+}
+.bottom-navigation .nav-icon{
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+}
+.bottom-navigation button>span:last-child{width:100%!important;text-align:center!important;padding:0 2px!important}
+.app-main{padding-bottom:calc(var(--titan-bottom-nav-content) + var(--titan-safe-bottom) + 20px)!important}
+
+/* Workout has no app bottom nav, but must stay clear of Android gesture/navigation area. */
+.workout-mode,.workout-summary,.programming-detail{padding-bottom:max(24px,calc(var(--titan-safe-bottom) + 20px))!important}
+.workout-mode .exercise-navigation{margin-bottom:max(8px,var(--titan-safe-bottom))}
+
+/* Content should never render under cutouts/system edges. */
+@supports(padding:max(0px)){
+  .pwa-prompt{bottom:calc(var(--titan-safe-bottom) + 12px)}
+}
+
+@media(max-width:380px){
+  :root{--titan-bottom-nav-content:72px}
+  .bottom-navigation button{height:59px!important;min-height:59px!important;font-size:.69rem!important;grid-template-rows:36px 15px!important}
+  .bottom-navigation .nav-icon-wrap{width:54px!important;height:36px!important;min-width:54px!important;min-height:36px!important}
+  .bottom-navigation .nav-icon{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important}
+}
