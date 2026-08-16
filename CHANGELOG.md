@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.59.1 — Espaçamento da navegação Android
+- Menu inferior passa a manter uma folga visual adicional da barra de gestos/botões do Android.
+- Conteúdo recebe padding inferior correspondente para não ficar escondido atrás da navegação.
+- Área de saída do modo treino foi compactada para liberar espaço útil na tela.
+- Safe-area continua respeitada em aparelhos com gestos, recortes e barras de sistema diferentes.
+
 ## v0.59.0 — Rework Foundation · Video-free
 - Remove a Biblioteca visual de exercícios da Programação.
 - Remove player, bloqueio e qualquer etapa de vídeo do modo treino.
