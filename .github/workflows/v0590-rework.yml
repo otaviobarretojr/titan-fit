@@ -9,6 +9,7 @@ on:
       - 'src/features/plan/PlanViewer.tsx'
       - 'tests/plan-validation.test.ts'
       - 'tests/PlanViewer.test.tsx'
+      - 'tests/WorkoutExecutionView.test.tsx'
       - 'src/styles/rework-foundation-v059.css'
 permissions:
   contents: write
@@ -37,6 +38,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A src package.json package-lock.json CHANGELOG.md scripts/validate-project.mjs
+          git add -A src tests package.json package-lock.json CHANGELOG.md scripts/validate-project.mjs
           git commit -m "refactor: establish video-free rework foundation v0.59.0"
           git push
