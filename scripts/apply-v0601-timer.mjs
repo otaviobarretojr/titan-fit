@@ -60,3 +60,5 @@ const marker = 'Este arquivo registra os cortes de versão oficiais do aplicativ
 const section = `\n## v0.60.1 — Cronômetro real do treino\n- Abrir o modo treino não inicia mais o cronômetro da sessão.\n- O tempo começa somente quando o primeiro registro válido da sessão é concluído.\n- Retomar um treino iniciado preserva o instante real do primeiro registro.\n- O tempo salvo no histórico passa a usar esse mesmo início real, sem contabilizar espera antes da primeira série.\n`;
 if (!changelog.includes('## v0.60.1 — Cronômetro real do treino')) changelog = changelog.replace(marker, marker + section);
 fs.writeFileSync('CHANGELOG.md', changelog);
+
+// Trigger validation after workflow exists.
