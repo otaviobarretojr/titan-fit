@@ -1,0 +1,35 @@
+name: "Validate TITAN FIT v0.60 visual rework"
+on:
+  push:
+    paths:
+      - '.github/workflows/v060-visual-rework.yml'
+      - 'scripts/apply-v060-meta.mjs'
+permissions:
+  contents: write
+jobs:
+  visual-rework:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Sync v0.60 metadata
+        run: node scripts/apply-v060-meta.mjs
+      - name: Install dependencies
+        run: npm ci
+      - name: Validate visual rework
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm run validate
+      - name: Commit v0.60 metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json CHANGELOG.md
+          git diff --cached --quiet || git commit -m "chore: finalize TITAN FIT v0.60.0 metadata"
+          git push
