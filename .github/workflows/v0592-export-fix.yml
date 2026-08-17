@@ -1,0 +1,35 @@
+name: "TITAN FIT v0.59.2 native training export fix"
+on:
+  push:
+    paths:
+      - '.github/workflows/v0592-export-fix.yml'
+      - 'scripts/apply-v0592-export-fix.mjs'
+permissions:
+  contents: write
+jobs:
+  fix-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Apply native export fix
+        run: node scripts/apply-v0592-export-fix.mjs
+      - name: Install dependencies and refresh lockfile
+        run: npm install
+      - name: Validate
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run test
+          npm run build
+          npm run validate
+      - name: Commit v0.59.2
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/features/programming/TrainingPlanExport.tsx package.json package-lock.json CHANGELOG.md
+          git commit -m "fix: export training plan through native Android file sharing v0.59.2"
+          git push
