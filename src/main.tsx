@@ -54,6 +54,7 @@ import './styles/layout-clean-v05712.css';
 import './styles/navigation-audit-v05812.css';
 import './styles/navigation-proportion-v05813.css';
 import './styles/rework-foundation-v059.css';
+import './styles/visual-rework-v060.css';
 
 enableTitanHaptics();
 enableEvolutionFeedback();
