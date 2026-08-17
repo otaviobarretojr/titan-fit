@@ -1,1 +1,1 @@
-release-v0.59.3-pr-engine-stable-retry-1
+release-v0.60.0-visual-rework-stable
