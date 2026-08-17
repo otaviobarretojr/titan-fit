@@ -2,6 +2,17 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.60.0 — Visual Rework
+- Nova camada visual definitiva para celular, preservando integralmente regras, dados e comportamento do TITAN FIT.
+- Cabeçalho global compactado e hierarquia tipográfica revisada.
+- Navegação inferior redesenhada com quatro zonas equilibradas, estado ativo discreto e safe-area Android preservada.
+- Home reorganizada com treino do dia como ação dominante e Coach TITAN mais compacto.
+- Programação recebe cards semanais mais enxutos, detalhe de treino mais limpo e melhor densidade de informação.
+- Saúde/Evolução ganha seletor horizontal compacto e padrão visual unificado entre suas áreas.
+- Ajustes passa a usar cards mais simples, menos profundidade visual e ações secundárias consistentes.
+- Modo treino recebe cabeçalho de saída compacto, progresso enxuto, PR/Meta priorizados, campos de execução mais legíveis e navegação de exercício fixa ao alcance do polegar.
+- Paleta, raios, bordas, sombras e espaçamentos passam a seguir um único sistema visual v0.60.
+
 ## v0.59.3 — Motor de PR corrigido
 - A primeira sessão válida de um exercício passa a formar o PR inicial em vez de aparecer como “Ainda sem PR”.
 - PR de musculação passa a priorizar maior carga; repetições desempata quando a carga é a mesma.
