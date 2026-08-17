@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.60.1 — Cronômetro real do treino
+- Abrir o modo treino não inicia mais o cronômetro da sessão.
+- O tempo começa somente quando o primeiro registro válido da sessão é concluído.
+- Retomar um treino iniciado preserva o instante real do primeiro registro.
+- O tempo salvo no histórico passa a usar esse mesmo início real, sem contabilizar espera antes da primeira série.
+
 ## v0.60.0 — Visual Rework
 - Nova camada visual definitiva para celular, preservando integralmente regras, dados e comportamento do TITAN FIT.
 - Cabeçalho global compactado e hierarquia tipográfica revisada.

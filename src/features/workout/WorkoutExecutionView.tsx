@@ -19,12 +19,17 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(() => findFirstPendingExercise(workout, initial));
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [sessionSeconds, setSessionSeconds] = useState(() => secondsSince(initial.startedAt));
+  const [sessionSeconds, setSessionSeconds] = useState(() => initial.timerStartedAt ? secondsSince(initial.timerStartedAt) : 0);
   const [summary, setSummary] = useState<WorkoutSummary | null>(null);
   const [prCelebration, setPrCelebration] = useState<PrCelebration | null>(null);
 
   useEffect(() => { saveWorkoutExecution(execution); }, [execution]);
-  useEffect(() => { const interval = window.setInterval(() => setSessionSeconds(secondsSince(execution.startedAt)), 1000); return () => window.clearInterval(interval); }, [execution.startedAt]);
+  useEffect(() => {
+    if (!execution.timerStartedAt) { setSessionSeconds(0); return; }
+    setSessionSeconds(secondsSince(execution.timerStartedAt));
+    const interval = window.setInterval(() => setSessionSeconds(secondsSince(execution.timerStartedAt!)), 1000);
+    return () => window.clearInterval(interval);
+  }, [execution.timerStartedAt]);
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
     const interval = window.setInterval(() => setTimerSeconds((current) => {
@@ -60,8 +65,8 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
   const progress = totals.total ? Math.round((totals.resolved / totals.total) * 100) : 0;
   const strengthSnapshot = useMemo(() => getStrengthSnapshot(previousHistory, activeExercise), [previousHistory, activeExercise]);
 
-  function updateSet(setNumber: number, patch: Partial<ExecutedSet>) {
-    setExecution((current) => ({ ...current, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: false, sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
+  function updateSet(setNumber: number, patch: Partial<ExecutedSet>, executionPatch: Partial<WorkoutExecution> = {}) {
+    setExecution((current) => ({ ...current, ...executionPatch, updatedAt: new Date().toISOString(), exercises: { ...current.exercises, [baseExercise.id]: { ...current.exercises[baseExercise.id], skipped: false, sets: current.exercises[baseExercise.id].sets.map((set) => set.setNumber === setNumber ? { ...set, ...patch } : set) } } }));
   }
   function updateNumeric(setNumber: number, field: NumericField, value: string) { updateSet(setNumber, { [field]: value === '' ? null : Number(value) }); }
   function selectExerciseOption(option: TitanExercise) {
@@ -98,7 +103,8 @@ export function WorkoutExecutionView({ planId, planName, workout, onBack, onComp
         navigator.vibrate?.([120, 70, 220]);
       }
     }
-    updateSet(set.setNumber, { completed });
+    const timerStartedAt = completed && !execution.timerStartedAt ? new Date().toISOString() : execution.timerStartedAt;
+    updateSet(set.setNumber, { completed }, timerStartedAt ? { timerStartedAt } : {});
     if (completed && (activeExercise.restSeconds ?? 0) > 0) { setTimerSeconds(activeExercise.restSeconds ?? 0); setTimerRunning(true); }
   }
   function skipExercise() {
@@ -244,7 +250,8 @@ function normalizeExecution(saved: WorkoutExecution | null, planId: string, work
     const fallbackSets = Array.from({ length: Math.max(1, selected.sets ?? exercise.sets ?? 1) }, (_, index) => blankSet(index + 1, selected));
     fresh.exercises[exercise.id] = { exerciseId: exercise.id, exerciseType: resolveExerciseType(selected), selectedExerciseId: selected.id, selectedExerciseName: selected.name, skipped: Boolean(previous.skipped), sets: fallbackSets.map((fallback, index) => ({ ...fallback, ...(previous.sets?.[index] ?? {}) })) };
   }
-  return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, updatedAt: saved.updatedAt ?? fresh.updatedAt };
+  const hasCompletedSet = Object.values(saved.exercises ?? {}).some((item) => item.sets?.some((set) => set.completed));
+  return { ...fresh, startedAt: saved.startedAt ?? fresh.startedAt, timerStartedAt: saved.timerStartedAt ?? (hasCompletedSet ? saved.startedAt : undefined), updatedAt: saved.updatedAt ?? fresh.updatedAt };
 }
 function findFirstPendingExercise(workout: TitanWorkoutDay, execution: WorkoutExecution) { const index = workout.exercises.findIndex((exercise) => { const entry = execution.exercises[exercise.id]; return entry && !entry.skipped && entry.sets.some((set) => !set.completed); }); return index < 0 ? workout.exercises.length - 1 : index; }
 function resolveStructuredAlternative(base: TitanExercise, alternative: TitanExerciseAlternative): TitanExercise {
@@ -358,7 +365,8 @@ function createHistoryRecord(planId: string, planName: string, workout: TitanWor
     const heartRates = values('averageHeartRate');
     return [{ exerciseId: selectedExercise.id, name: selectedExercise.name, muscleGroup: selectedExercise.muscleGroup, exerciseType, sets, volumeKg, bestWeightKg: values('weightKg').length ? Math.max(...values('weightKg')) : null, totalDistanceMeters: values('distanceMeters').reduce((a, b) => a + b, 0), totalDurationSeconds: values('durationSeconds').reduce((a, b) => a + b, 0), bestSpeedKmh: values('speedKmh').length ? Math.max(...values('speedKmh')) : null, bestInclinePercent: values('inclinePercent').length ? Math.max(...values('inclinePercent')) : null, averageHeartRate: heartRates.length ? Math.round(heartRates.reduce((a, b) => a + b, 0) / heartRates.length) : null }];
   });
-  return { id: `${planId}:${workout.id}:${completedAt}`, planId, planName, workoutId: workout.id, workoutTitle: workout.title, workoutDay: workout.day, startedAt: execution.startedAt, completedAt, durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(execution.startedAt).getTime()) / 1000)), totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0), totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0), exercises };
+  const effectiveStartedAt = execution.timerStartedAt ?? completedAt;
+  return { id: `${planId}:${workout.id}:${completedAt}`, planId, planName, workoutId: workout.id, workoutTitle: workout.title, workoutDay: workout.day, startedAt: effectiveStartedAt, completedAt, durationSeconds: Math.max(0, Math.round((new Date(completedAt).getTime() - new Date(effectiveStartedAt).getTime()) / 1000)), totalSets: exercises.reduce((total, exercise) => total + exercise.sets.length, 0), totalVolumeKg: exercises.reduce((total, exercise) => total + exercise.volumeKg, 0), exercises };
 }
 function secondsSince(startedAt: string) { return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)); }
 function formatTimer(seconds: number) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }

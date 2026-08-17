@@ -24,6 +24,23 @@ describe('WorkoutExecutionView video-free', () => {
     expect(document.querySelector('iframe, video')).toBeNull();
   });
 
+  it('inicia o cronômetro da sessão somente no primeiro registro válido', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-17T20:00:00.000Z'));
+    render(<WorkoutExecutionView planId="plan-timer" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    expect(screen.getByText(/Tempo 00:00/i)).toBeInTheDocument();
+    vi.setSystemTime(new Date('2026-08-17T20:05:00.000Z'));
+    vi.advanceTimersByTime(1000);
+    expect(screen.getByText(/Tempo 00:00/i)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '10' } });
+    fireEvent.change(screen.getByLabelText('Supino máquina série 1 carga'), { target: { value: '80' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Registrar série' })[0]);
+    vi.setSystemTime(new Date('2026-08-17T20:05:10.000Z'));
+    vi.advanceTimersByTime(1000);
+    expect(screen.getByText(/Tempo 00:10/i)).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
   it('registra repetições e peso por série', () => {
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Supino máquina série 1 repetições'), { target: { value: '9' } });

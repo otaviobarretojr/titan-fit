@@ -32,6 +32,7 @@ export type WorkoutExecution = {
   planId: string;
   workoutId: string;
   startedAt: string;
+  timerStartedAt?: string;
   updatedAt: string;
   completedAt?: string;
   exercises: Record<string, ExerciseExecution>;
