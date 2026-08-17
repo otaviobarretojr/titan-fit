@@ -2,6 +2,13 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.59.2 — Exportação nativa do treino
+- Exportação no APK deixa de depender de Web Share API e download blob do WebView.
+- Android passa a criar fisicamente o JSON com Capacitor Filesystem no cache nativo.
+- Compartilhamento usa Capacitor Share com URI file:// real e compatível com Android.
+- Navegador/PWA mantém Web Share e download de JSON como fallback.
+- Arquivo exportado continua sem histórico, fotos, saúde ou metadados legados de vídeo.
+
 ## v0.59.1 — Espaçamento da navegação Android
 - Menu inferior passa a manter uma folga visual adicional da barra de gestos/botões do Android.
 - Conteúdo recebe padding inferior correspondente para não ficar escondido atrás da navegação.
