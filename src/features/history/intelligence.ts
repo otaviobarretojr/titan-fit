@@ -12,9 +12,18 @@ export type ProgressionAdvice = TitanProgressionDecision;
 export type ProgressionPrescription = Partial<TitanProgressionPrescription>;
 export type RecoveryEstimate = { muscleGroup: string; percent: number; label: string; lastTrainedAt: string };
 
+export function canonicalExerciseId(exerciseId: string) {
+  const marker = exerciseId.indexOf('--workout-');
+  return marker >= 0 ? exerciseId.slice(0, marker) : exerciseId;
+}
+
+export function sameExerciseIdentity(leftId: string, rightId: string) {
+  return leftId === rightId || canonicalExerciseId(leftId) === canonicalExerciseId(rightId);
+}
+
 export function getExerciseSessions(records: WorkoutHistoryRecord[], exerciseId: string) {
   return records.flatMap((record) => record.exercises
-    .filter((exercise) => exercise.exerciseId === exerciseId)
+    .filter((exercise) => sameExerciseIdentity(exercise.exerciseId, exerciseId))
     .map((exercise) => ({ exercise, completedAt: record.completedAt })))
     .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 }
@@ -32,14 +41,14 @@ export function calculateStrengthPr(records: WorkoutHistoryRecord[], exerciseId:
       if (weightKg > 0) bestWeightKg = Math.max(bestWeightKg ?? 0, weightKg);
       if (weightKg <= 0 || repetitions <= 0) continue;
       const estimatedVolumeKg = weightKg * repetitions;
-      if (!bestSet || estimatedVolumeKg > bestSet.estimatedVolumeKg || (estimatedVolumeKg === bestSet.estimatedVolumeKg && weightKg > bestSet.weightKg)) bestSet = { weightKg, repetitions, estimatedVolumeKg };
+      if (!bestSet || weightKg > bestSet.weightKg || (weightKg === bestSet.weightKg && repetitions > bestSet.repetitions)) bestSet = { weightKg, repetitions, estimatedVolumeKg };
     }
   }
   return { bestWeightKg, bestSet, bestSessionVolumeKg };
 }
 
 export function getProgressionAdvice(records: WorkoutHistoryRecord[], exerciseId: string, prescription: ProgressionPrescription = {}): ProgressionAdvice {
-  const catalogExercise = TITAN_COMPLETE_EXERCISE_CATALOG.find((exercise) => exercise.id === exerciseId);
+  const catalogExercise = TITAN_COMPLETE_EXERCISE_CATALOG.find((exercise) => sameExerciseIdentity(exercise.id, exerciseId));
   const sessions = getExerciseSessions(records, exerciseId)
     .filter(({ exercise }) => (exercise.exerciseType ?? 'strength') === 'strength')
     .slice(0, 3)

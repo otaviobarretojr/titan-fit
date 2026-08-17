@@ -110,6 +110,20 @@ describe('WorkoutExecutionView video-free', () => {
     expect(document.querySelector('iframe, video')).toBeNull();
   });
 
+  it('mostra a primeira sessão válida como PR inicial', () => {
+    localStorage.setItem('titan-fit:history:v1', JSON.stringify([{ id:'h1', planId:'old', planName:'Anterior', workoutId:'push', workoutTitle:'Push', workoutDay:'Segunda', startedAt:'2026-08-10T20:00:00.000Z', completedAt:'2026-08-10T21:00:00.000Z', durationSeconds:3600, totalSets:2, totalVolumeKg:1520, exercises:[{ exerciseId:'bench', name:'Supino máquina', muscleGroup:'Peitoral', exerciseType:'strength', volumeKg:1520, bestWeightKg:80, totalDistanceMeters:0, totalDurationSeconds:0, bestSpeedKmh:null, bestInclinePercent:null, averageHeartRate:null, sets:[{ setNumber:1, weightKg:80, repetitions:10, rir:null, durationSeconds:null, distanceMeters:null, speedKmh:null, inclinePercent:null, averagePace:null, averageHeartRate:null, calories:null, notes:null },{ setNumber:2, weightKg:80, repetitions:9, rir:null, durationSeconds:null, distanceMeters:null, speedKmh:null, inclinePercent:null, averagePace:null, averageHeartRate:null, calories:null, notes:null }] }] }]));
+    render(<WorkoutExecutionView planId="plan-new" planName="Plano novo" workout={workout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    expect(screen.getAllByText('80 kg × 10').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText('Ainda sem PR')).not.toBeInTheDocument();
+  });
+
+  it('preserva PR quando o mesmo exercício recebe sufixo de projeto', () => {
+    localStorage.setItem('titan-fit:history:v1', JSON.stringify([{ id:'h2', planId:'old', planName:'Anterior', workoutId:'upper', workoutTitle:'Upper', workoutDay:'Quarta', startedAt:'2026-08-11T20:00:00.000Z', completedAt:'2026-08-11T21:00:00.000Z', durationSeconds:3600, totalSets:1, totalVolumeKg:900, exercises:[{ exerciseId:'bench', name:'Supino máquina', muscleGroup:'Peitoral', exerciseType:'strength', volumeKg:900, bestWeightKg:90, totalDistanceMeters:0, totalDurationSeconds:0, bestSpeedKmh:null, bestInclinePercent:null, averageHeartRate:null, sets:[{ setNumber:1, weightKg:90, repetitions:10, rir:null, durationSeconds:null, distanceMeters:null, speedKmh:null, inclinePercent:null, averagePace:null, averageHeartRate:null, calories:null, notes:null }] }] }]));
+    const revisedWorkout: TitanWorkoutDay = { ...workout, exercises:[{ ...workout.exercises[0], id:'bench--workout-upper-b--p1' }] };
+    render(<WorkoutExecutionView planId="plan-revised" planName="Plano revisado" workout={revisedWorkout} onBack={vi.fn()} onCompleted={vi.fn()} />);
+    expect(screen.getAllByText('90 kg × 10').length).toBeGreaterThanOrEqual(2);
+  });
+
   it('salva o histórico, apresenta o resumo final e só então abre progresso', () => {
     const onCompleted = vi.fn();
     render(<WorkoutExecutionView planId="plan-1" planName="Plano A" workout={workout} onBack={vi.fn()} onCompleted={onCompleted} />);

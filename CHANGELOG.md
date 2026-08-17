@@ -2,6 +2,12 @@
 
 Este arquivo registra os cortes de versão oficiais do aplicativo. O histórico detalhado permanece nos commits e nas GitHub Releases.
 
+## v0.59.3 — Motor de PR corrigido
+- A primeira sessão válida de um exercício passa a formar o PR inicial em vez de aparecer como “Ainda sem PR”.
+- PR de musculação passa a priorizar maior carga; repetições desempata quando a carga é a mesma.
+- Histórico e progressão reconhecem IDs canônicos entre revisões do mesmo projeto, preservando PRs ao trocar tabelas compatíveis.
+- Detecção de PR ao vivo usa o mesmo critério do card “PR válido”.
+
 ## v0.59.2 — Exportação nativa do treino
 - Exportação no APK deixa de depender de Web Share API e download blob do WebView.
 - Android passa a criar fisicamente o JSON com Capacitor Filesystem no cache nativo.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getProgressionAdvice } from '../history/intelligence';
+import { getProgressionAdvice, sameExerciseIdentity } from '../history/intelligence';
 import { addWorkoutHistoryRecord, loadWorkoutHistory } from '../history/storage';
 import type { HistoryExercise, WorkoutHistoryRecord } from '../history/types';
 import type { ExerciseType, TitanExercise, TitanExerciseAlternative, TitanWorkoutDay } from '../plan/types';
@@ -275,7 +275,7 @@ function canCompleteSet(exerciseType: ExerciseType, set: ExecutedSet) {
 
 function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExercise) {
   const sessions = getStrengthSessions(history, exercise.id);
-  const advice = getProgressionAdvice(history, exercise.id);
+  const advice = getProgressionAdvice(history, exercise.id, { minReps: exercise.minReps, maxReps: exercise.maxReps, targetRir: exercise.targetRir });
   if (!sessions.length) return { last: 'Sem histórico', pr: 'Ainda sem PR', target: 'Criar referência inicial', status: 'insufficient', statusLabel: 'CRIANDO BASE', title: advice.title, message: advice.message };
 
   const lastBest = bestStrengthSet(sessions[0].exercise);
@@ -287,43 +287,22 @@ function getStrengthSnapshot(history: WorkoutHistoryRecord[], exercise: TitanExe
 
 function getStrengthSessions(history: WorkoutHistoryRecord[], exerciseId: string) {
   return history
-    .flatMap((record) => record.exercises.filter((item) => item.exerciseId === exerciseId).map((item) => ({ exercise: item, completedAt: record.completedAt })))
+    .flatMap((record) => record.exercises.filter((item) => sameExerciseIdentity(item.exerciseId, exerciseId)).map((item) => ({ exercise: item, completedAt: record.completedAt })))
     .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 }
 
 function bestStrengthSet(exercise: HistoryExercise): StrengthReference | null {
   const valid = (exercise.sets ?? []).filter((set) => (set.weightKg ?? 0) > 0 && (set.repetitions ?? 0) > 0);
   if (!valid.length) return null;
-  const best = [...valid].sort((a, b) => {
-    const scoreA = (a.weightKg ?? 0) * (a.repetitions ?? 0);
-    const scoreB = (b.weightKg ?? 0) * (b.repetitions ?? 0);
-    return scoreB - scoreA || (b.weightKg ?? 0) - (a.weightKg ?? 0);
-  })[0];
+  const best = [...valid].sort((a, b) => (b.weightKg ?? 0) - (a.weightKg ?? 0) || (b.repetitions ?? 0) - (a.repetitions ?? 0))[0];
   return { weightKg: best.weightKg ?? 0, repetitions: best.repetitions ?? 0 };
 }
 
 function findValidPr(sessionsDescending: { exercise: HistoryExercise; completedAt: string }[]): StrengthReference | null {
-  const chronological = [...sessionsDescending].reverse();
-  let bestWeight = -1;
-  let bestScore = -1;
-  let validSessions = 0;
   let currentPr: StrengthReference | null = null;
-
-  for (const session of chronological) {
+  for (const session of sessionsDescending) {
     const best = bestStrengthSet(session.exercise);
-    if (!best) continue;
-    validSessions += 1;
-    const score = best.weightKg * best.repetitions;
-    if (validSessions === 1) {
-      bestWeight = best.weightKg;
-      bestScore = score;
-      continue;
-    }
-    if (best.weightKg > bestWeight || score > bestScore) {
-      currentPr = best;
-      bestWeight = Math.max(bestWeight, best.weightKg);
-      bestScore = Math.max(bestScore, score);
-    }
+    if (best && isBetterStrengthReference(best, currentPr)) currentPr = best;
   }
   return currentPr;
 }
@@ -334,29 +313,22 @@ function detectLivePr(history: WorkoutHistoryRecord[], exerciseId: string, curre
   const candidate = toStrengthReference(candidateSet);
   if (!candidate) return null;
 
-  let bestWeight = -1;
-  let bestScore = -1;
-  for (const session of sessions) {
-    const best = bestStrengthSet(session.exercise);
-    if (!best) continue;
-    bestWeight = Math.max(bestWeight, best.weightKg);
-    bestScore = Math.max(bestScore, best.weightKg * best.repetitions);
-  }
+  let currentPr = findValidPr(sessions);
   for (const set of currentSets) {
     if (!set.completed || set.setNumber === candidateSet.setNumber) continue;
     const completed = toStrengthReference(set);
-    if (!completed) continue;
-    bestWeight = Math.max(bestWeight, completed.weightKg);
-    bestScore = Math.max(bestScore, completed.weightKg * completed.repetitions);
+    if (completed && isBetterStrengthReference(completed, currentPr)) currentPr = completed;
   }
-
-  const candidateScore = candidate.weightKg * candidate.repetitions;
-  return candidate.weightKg > bestWeight || candidateScore > bestScore ? candidate : null;
+  return isBetterStrengthReference(candidate, currentPr) ? candidate : null;
 }
 
 function toStrengthReference(set: ExecutedSet): StrengthReference | null {
   if ((set.weightKg ?? 0) <= 0 || (set.repetitions ?? 0) <= 0) return null;
   return { weightKg: set.weightKg ?? 0, repetitions: set.repetitions ?? 0 };
+}
+
+function isBetterStrengthReference(candidate: StrengthReference, current: StrengthReference | null) {
+  return !current || candidate.weightKg > current.weightKg || (candidate.weightKg === current.weightKg && candidate.repetitions > current.repetitions);
 }
 
 function buildSmartTodayTarget(suggestedWeightKg: number | null, suggestedReps: number | null, status: 'insufficient' | 'maintain' | 'progress' | 'review', last: StrengthReference | null, exercise: TitanExercise) {
