@@ -1,1 +1,1 @@
-release-v0.60.0-visual-rework-stable
+release-v0.60.1-workout-timer-first-record
