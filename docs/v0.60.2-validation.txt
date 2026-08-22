@@ -1,0 +1,122 @@
+status=1
+--- tail ---
+                  [33mstep[39m=[32m"0.5"[39m
+                  [33mtype[39m=[32m"number"[39m
+                  [33mvalue[39m=[32m"80"[39m
+                [36m/>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"true"[39m
+              [33mclass[39m=[32m"complete-set-action"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m✓ Registro concluído[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"set-entry "[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"set-entry-title"[39m
+            [36m>[39m
+              [36m<strong>[39m
+                [0mSérie 2 de 2[0m
+              [36m</strong>[39m
+              [36m<span>[39m
+                [0mPendente[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"set-entry-fields typed-fields"[39m
+            [36m>[39m
+              [36m<label>[39m
+                [0mRepetições[0m
+                [36m<input[39m
+                  [33maria-label[39m=[32m"Supino máquina série 2 repetições"[39m
+                  [33minputmode[39m=[32m"decimal"[39m
+                  [33mmin[39m=[32m"0"[39m
+                  [33mstep[39m=[32m"1"[39m
+                  [33mtype[39m=[32m"number"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</label>[39m
+              [36m<label>[39m
+                [0mPeso (kg)[0m
+                [36m<input[39m
+                  [33maria-label[39m=[32m"Supino máquina série 2 carga"[39m
+                  [33minputmode[39m=[32m"decimal"[39m
+                  [33mmin[39m=[32m"0"[39m
+                  [33mstep[39m=[32m"0.5"[39m
+                  [33mtype[39m=[32m"number"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<button[39m
+              [33maria-pressed[39m=[32m"false"[39m
+              [33mclass[39m=[32m"complete-set-action"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mRegistrar série[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</article>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"workout-skip-exercise"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m>[39m
+        [0mPular exercício[0m
+      [36m</button>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"exercise-navigation"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"secondary-action"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAnterior[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"primary-action"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mConcluir e salvar treino[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<button[39m
+        [33mclass[39m=[32m"danger-action reset-session"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m>[39m
+        [0mResetar sessão[0m
+      [36m</button>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+[90m [2m❯[22m Object.getElementError node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2m❯[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2m❯[22m tests/WorkoutExecutionView.test.tsx:[2m40:19[22m[39m
+    [90m 38| [39m    vi[33m.[39m[34msetSystemTime[39m([35mnew[39m [33mDate[39m([32m'2026-08-17T20:05:10.000Z'[39m))[33m;[39m
+    [90m 39| [39m    vi[33m.[39m[34madvanceTimersByTime[39m([34m1000[39m)[33m;[39m
+    [90m 40| [39m    [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([36m/Tempo 00:10/i[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+    [90m   | [39m                  [31m^[39m
+    [90m 41| [39m    vi[33m.[39m[34museRealTimers[39m()[33m;[39m
+    [90m 42| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m33 passed[39m[22m[90m (34)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m125 passed[39m[22m[90m (126)[39m
+[2m   Start at [22m 01:24:54
+[2m   Duration [22m 8.65s[2m (transform 1.06s, setup 1.59s, collect 2.22s, tests 2.08s, environment 12.34s, prepare 2.21s)[22m
+
+
+::error file=/home/runner/work/titan-fit/titan-fit/tests/WorkoutExecutionView.test.tsx,title=tests/WorkoutExecutionView.test.tsx > WorkoutExecutionView video-free > inicia o cronômetro da sessão somente no primeiro registro válido,line=40,column=19::TestingLibraryElementError: Unable to find an element with the text: /Tempo 00:10/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.%0A%0AIgnored nodes: comments, script, style%0A<body>%0A  <div>%0A    <div%0A      class="workout-mode"%0A    >%0A      <button%0A        class="secondary-action back-action"%0A        type="button"%0A      >%0A        ← Sair do modo treino%0A      </button>%0A      <section%0A        class="workout-progress-card compact-workout-progress"%0A      >%0A        <div>%0A          <span%0A            class="eyebrow"%0A          >%0A            EXERCÍCIO %0A            1%0A             DE %0A            1%0A          </span>%0A          <h2>%0A            Push A%0A          </h2>%0A          <p>%0A            1%0A             séries feitas · %0A            1%0A             / %0A            2%0A             resolvidas · Tempo %0A            00:00%0A          </p>%0A        </div>%0A        <strong>%0A          50%0A          %25%0A        </strong>%0A        <div%0A          class="workout-progress-track"%0A        >%0A          <span%0A            style="width: 50%25;"%0A          />%0A        </div>%0A      </section>%0A      <section%0A        aria-label="Cronômetro de descanso"%0A        class="rest-timer active"%0A      >%0A        <div>%0A          <span%0A            class="info-label"%0A          >%0A            DESCANSO AUTOMÁTICO%0A          </span>%0A          <strong>%0A            1:30%0A          </strong>%0A        </div>%0A        <div%0A          class="timer-actions"%0A        >%0A          <button%0A            class="secondary-action"%0A            type="button"%0A          >%0A            Pausar%0A          </button>%0A          <button%0A            class="secondary-action"%0A            type="button"%0A          >%0A            Pular%0A          </button>%0A        </div>%0A      </section>%0A      <article%0A        class="active-exercise-card "%0A      >%0A        <header>%0A          <span%0A            class="exercise-order"%0A          >%0A            1%0A          </span>%0A          <div>%0A            <span%0A              class="info-label"%0A            >%0A              Peitoral%0A               · %0A              Musculação%0A            </span>%0A            <h3>%0A              Supino máquina%0A            </h3>%0A          </div>%0A        </header>%0A        <div%0A          class="exercise-prescription"%0A        >%0A          <span>%0A            <strong>%0A              2 séries%0A            </strong>%0A          </span>%0A          <span>%0A            <strong>%0A              8–10 reps%0A            </strong>%0A          </span>%0A          <span>%0A            <strong>%0A              RIR 2%0A            </strong>%0A          </span>%0A        </div>%0A        <div%0A          class="progression-panel workout-pr-panel"%0A        >%0A          <div>%0A            <span>%0A              Última sessão%0A            </span>%0A            <strong>%0A              Sem histórico%0A            </strong>%0A          </div>%0A          <div>%0A            <span>%0A              🏆 PR válido%0A            </span>%0A            <strong>%0A              Ainda sem PR%0A            </strong>%0A          </div>%0A          <div>%0A            <span>%0A              Meta de hoje%0A            </span>%0A            <strong>%0A              Criar referência inicial%0A            </strong>%0A          </div>%0A        </div>%0A        <div%0A          class="smart-workout-target insufficient"%0A        >%0A          <div>%0A            <span%0A              class="smart-target-label"%0A            >%0A              COACH TITAN · %0A              CRIANDO BASE%0A            </span>%0A            <strong>%0A              Primeira referência%0A            </strong>%0A          </div>%0A          <p>%0A            Conclua o exercício em 8–10 reps e registre o RIR para criar a referência.%0A          </p>%0A        </div>%0A        <div%0A          class="set-entry-list"%0A        >%0A          <div%0A            class="set-entry completed"%0A          >%0A            <div%0A              class="set-entry-title"%0A            >%0A              <strong>%0A                Série 1 de 2%0A              </strong>%0A              <span>%0A                Concluído%0A              </span>%0A            </div>%0A            <div%0A              class="set-entry-fields typed-fields"%0A            >%0A              <label>%0A                Repetições%0A                <input%0A                  aria-label="Supino máquina série 1 repetições"%0A                  inputmode="decimal"%0A                  min="0"%0A                  step="1"%0A                  type="number"%0A                  value="10"%0A                />%0A              </label>%0A              <label>%0A                Peso (kg)%0A                <input%0A                  aria-label="Supino máquina série 1 carga"%0A                  inputmode="decimal"%0A                  min="0"%0A                  step="0.5"%0A                  type="number"%0A                  value="80"%0A                />%0A              </label>%0A            </div>%0A            <button%0A              aria-pressed="true"%0A              class="complete-set-action"%0A              type="button"%0A            >%0A              ✓ Registro concluído%0A            </button>%0A          </div>%0A          <div%0A            class="set-entry "%0A          >%0A            <div%0A              class="set-entry-title"%0A            >%0A              <strong>%0A                Série 2 de 2%0A              </strong>%0A              <span>%0A                Pendente%0A              </span>%0A            </div>%0A            <div%0A              class="set-entry-fields typed-fields"%0A            >%0A              <label>%0A                Repetições%0A                <input%0A                  aria-label="Supino máquina série 2 repetições"%0A                  inputmode="decimal"%0A                  min="0"%0A                  step="1"%0A                  type="number"%0A                  value=""%0A                />%0A              </label>%0A              <label>%0A                Peso (kg)%0A                <input%0A                  aria-label="Supino máquina série 2 carga"%0A                  inputmode="decimal"%0A                  min="0"%0A                  step="0.5"%0A                  type="number"%0A                  value=""%0A                />%0A              </label>%0A            </div>%0A            <button%0A              aria-pressed="false"%0A              class="complete-set-action"%0A              disabled=""%0A              type="button"%0A            >%0A              Registrar série%0A            </button>%0A          </div>%0A        </div>%0A      </article>%0A      <button%0A        class="workout-skip-exercise"%0A        type="button"%0A      >%0A        Pular exercício%0A      </button>%0A      <div%0A        class="exercise-navigation"%0A      >%0A        <button%0A          class="secondary-action"%0A          disabled=""%0A          type="button"%0A        >%0A          Anterior%0A        </button>%0A        <button%0A          class="primary-action"%0A          disabled=""%0A          type="button"%0A        >%0A          Concluir e salvar treino%0A        </button>%0A      </div>%0A      <button%0A        class="danger-action reset-session"%0A        type="button"%0A      >%0A        Resetar sessão%0A      </button>%0A    </div>%0A  </div>%0A</body>%0A ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19%0A ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38%0A ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17%0A ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19%0A ❯ tests/WorkoutExecutionView.test.tsx:40:19%0A%0A
+exit=1
