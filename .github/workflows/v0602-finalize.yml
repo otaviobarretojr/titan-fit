@@ -47,3 +47,4 @@ jobs:
             git commit -m "chore: record v0.60.2 final validation failure" || true
           fi
           git push
+# rerun after validator synchronization
