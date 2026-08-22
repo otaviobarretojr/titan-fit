@@ -31,8 +31,8 @@ jobs:
             echo "status=$STATUS"
             echo "fail_cmd=$FAIL_CMD"
             cat /tmp/v0602.status 2>/dev/null || true
-            echo "errors:"
-            grep -E "AssertionError|TestingLibraryElementError|Type error|error TS|Error:|FAIL|failed" /tmp/v0602.log | tail -30 || true
+            echo "--- tail ---"
+            tail -80 /tmp/v0602.log
           } > docs/v0.60.2-validation.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -40,4 +40,4 @@ jobs:
           git commit -m "chore: record v0.60.2 validation result"
           git push
           exit 0
-# concise diagnostics rerun
+# expose validate output
