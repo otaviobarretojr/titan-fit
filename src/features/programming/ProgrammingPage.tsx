@@ -35,7 +35,7 @@ export function ProgrammingPage({ plan, onStartWorkout }: Props) {
   const activeExecution = plan && activeWorkout ? loadWorkoutExecution(plan.id, activeWorkout.id) : null;
 
   return <div className="programming-page">
-    <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Escolha o treino que ficará ativo no Dashboard.</p></section>
+    <section className="section-header programming-header"><span className="eyebrow">PLANEJAMENTO TITAN</span><h2>Programação</h2><p>Escolha o treino que ficará ativo no Dashboard, com musculação e cardio integrado dentro do projeto.</p></section>
     {plan && <TrainingPlanExport plan={plan} />}
     {!plan ? <ProgrammingEmpty /> : <>
       <TrainingChoiceSelector plan={plan} value={trainingChoice} onChange={(choice) => { saveTrainingChoice(choice); setTrainingChoice(choice); }} />
