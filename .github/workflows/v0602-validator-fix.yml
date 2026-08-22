@@ -1,0 +1,31 @@
+name: Apply v0.60.2 validator fix
+on:
+  push:
+    paths:
+      - '.github/workflows/v0602-validator-fix.yml'
+      - 'scripts/fix-v0602-validator.mjs'
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: node scripts/fix-v0602-validator.mjs
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      - run: npm run validate
+      - name: Commit validated fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/validate-project.mjs
+          git commit -m "fix: validate manual PPL programming flow" || true
+          git push
