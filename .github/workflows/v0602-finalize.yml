@@ -14,17 +14,36 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run test
-      - run: npm run build
-      - run: npm run validate
-      - name: Trigger signed Android release
+      - name: Validate current main
         run: |
-          printf 'release-v0.60.2-manual-ppl-programming-final\n' > native/android-release.trigger
+          set +e
+          STATUS=0
+          FAIL_CMD=""
+          : > /tmp/final.log
+          : > /tmp/final.status
+          for CMD in "npm ci" "npm run lint" "npm run typecheck" "npm run test" "npm run build" "npm run validate"; do
+            bash -lc "$CMD" >> /tmp/final.log 2>&1
+            CODE=$?
+            echo "$CMD=$CODE" >> /tmp/final.status
+            if [ $CODE -ne 0 ]; then STATUS=$CODE; FAIL_CMD="$CMD"; break; fi
+          done
+          {
+            echo "status=$STATUS"
+            echo "fail_cmd=$FAIL_CMD"
+            cat /tmp/final.status
+            tail -40 /tmp/final.log
+          } > docs/v0.60.2-finalize-status.txt
+          echo "FINAL_STATUS=$STATUS" >> "$GITHUB_ENV"
+      - name: Commit status and trigger release when green
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add native/android-release.trigger
-          git commit -m "build: release validated Android v0.60.2" || true
+          if [ "$FINAL_STATUS" = "0" ]; then
+            printf 'release-v0.60.2-manual-ppl-programming-final\n' > native/android-release.trigger
+            git add docs/v0.60.2-finalize-status.txt native/android-release.trigger
+            git commit -m "build: release validated Android v0.60.2" || true
+          else
+            git add docs/v0.60.2-finalize-status.txt
+            git commit -m "chore: record v0.60.2 final validation failure" || true
+          fi
           git push
