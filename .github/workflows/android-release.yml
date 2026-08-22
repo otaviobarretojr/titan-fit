@@ -136,3 +136,19 @@ jobs:
           git add "docs/android-release-v${VERSION}.txt"
           git commit -m "chore: record Android v${VERSION} publication" || true
           git push
+
+      - name: Record workflow status
+        if: always()
+        run: |
+          VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo unknown)
+          mkdir -p docs
+          {
+            echo "version=v${VERSION}"
+            echo "job_status=${{ job.status }}"
+            echo "commit=${GITHUB_SHA}"
+          } > "docs/android-release-status.txt"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/android-release-status.txt
+          git commit -m "chore: record Android release workflow status" || true
+          git push || true
