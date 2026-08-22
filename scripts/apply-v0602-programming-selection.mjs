@@ -1,0 +1,42 @@
+import fs from 'node:fs';
+
+function edit(path, fn) { const before = fs.readFileSync(path, 'utf8'); const after = fn(before); if (before === after) throw new Error(`No changes in ${path}`); fs.writeFileSync(path, after); }
+
+edit('src/features/dashboard/DashboardPage.tsx', (s) => {
+  s = s.replace("import { loadWorkoutExecution } from '../workout/storage';", "import { loadWorkoutExecution } from '../workout/storage';\nimport { choiceLabel, loadTrainingChoice, resolveSelectedWorkout } from '../programming/activeWorkoutSelection';");
+  s = s.replace("function getTodayWorkout(plan: TitanPlan): TitanWorkoutDay | null { return plan.workouts.find((workout) => matchesToday(workout.day)) ?? null; }", "function getTodayWorkout(plan: TitanPlan, history: WorkoutHistoryRecord[]): TitanWorkoutDay | null { return resolveSelectedWorkout(plan, history); }");
+  s = s.replace("  const dayPlan = getTodayWorkout(plan);", "  const history = loadWorkoutHistory();\n  const trainingChoice = loadTrainingChoice();\n  const dayPlan = getTodayWorkout(plan, history);");
+  s = s.replace("  const history = loadWorkoutHistory();\n", "", 1);
+  s = s.replace("  const hasWorkoutToday = exercises.length > 0;", "  const hasWorkoutToday = trainingChoice !== 'rest' && exercises.length > 0;");
+  s = s.replace("<span className=\"eyebrow\">TREINO DO PROJETO · {strengthStart}</span>", "<span className=\"eyebrow\">TREINO ATIVO · {choiceLabel(trainingChoice)} · {strengthStart}</span>");
+  s = s.replace("<span className=\"today-workout-day\">{dayPlan.day}</span>", "<span className=\"today-workout-day\">Programação manual</span>");
+  s = s.replace("<section className=\"today-rest-card\" aria-label=\"Recuperação\"><span className=\"eyebrow\">PROJETO TITAN</span><h3>Dia de recuperação</h3><p>Hoje não há sessão programada no projeto ativo.</p><span className=\"today-rest-badge\">RECUPERAÇÃO</span></section>", "<section className=\"today-rest-card\" aria-label=\"Recuperação\"><span className=\"eyebrow\">PROGRAMAÇÃO ATIVA</span><h3>{trainingChoice === 'rest' ? 'Descanso ativado' : 'Treino não encontrado'}</h3><p>{trainingChoice === 'rest' ? 'A Programação está definida para recuperação. Quando quiser treinar, ative PULL, PUSH ou LEGS.' : `Não existe ${choiceLabel(trainingChoice)} compatível no projeto ativo.`}</p><span className=\"today-rest-badge\">{trainingChoice === 'rest' ? 'DESCANSO' : choiceLabel(trainingChoice)}</span></section>");
+  return s;
+});
+
+edit('src/features/programming/ProgrammingPage.tsx', (s) => {
+  s = s.replace("import { loadWorkoutExecution } from '../workout/storage';", "import { loadWorkoutExecution } from '../workout/storage';\nimport { choiceLabel, getWorkoutsForChoice, loadTrainingChoice, resolveSelectedWorkout, saveTrainingChoice, type TrainingChoice } from './activeWorkoutSelection';\nimport { loadWorkoutHistory } from '../history/storage';");
+  s = s.replace("  const [selected, setSelected] = useState<TitanWorkoutDay | null>(null);", "  const [selected, setSelected] = useState<TitanWorkoutDay | null>(null);\n  const [trainingChoice, setTrainingChoice] = useState<TrainingChoice>(() => loadTrainingChoice());");
+  s = s.replace("  const todayWorkout = workouts.find((item) => normalize(item.day).includes(today));", "  const history = loadWorkoutHistory();\n  const todayWorkout = resolveSelectedWorkout(plan, history, trainingChoice);");
+  s = s.replace("    {plan && <TrainingPlanExport plan={plan} />}", "    {plan && <TrainingPlanExport plan={plan} />}\n    {plan && <TrainingChoiceSelector plan={plan} value={trainingChoice} onChange={(choice) => { saveTrainingChoice(choice); setTrainingChoice(choice); }} />} ");
+  s = s.replace("<span className=\"eyebrow\">HOJE · {today.slice(0, 3).toUpperCase()}</span><h3>{todayWorkout?.title ?? 'Recuperação'}</h3><p>{todayWorkout ? workoutSummary(todayWorkout) : 'Sem sessão programada para hoje'}</p>", "<span className=\"eyebrow\">ATIVO · {choiceLabel(trainingChoice)}</span><h3>{trainingChoice === 'rest' ? 'Descanso' : todayWorkout?.title ?? 'Treino indisponível'}</h3><p>{trainingChoice === 'rest' ? 'Recuperação selecionada manualmente.' : todayWorkout ? workoutSummary(todayWorkout) : `Nenhum ${choiceLabel(trainingChoice)} encontrado no projeto.`}</p>");
+  s = s.replace("{todayWorkout && onStartWorkout && <button", "{trainingChoice !== 'rest' && todayWorkout && onStartWorkout && <button");
+  s = s.replace("function ProgrammingEmpty()", "function TrainingChoiceSelector({ plan, value, onChange }: { plan: TitanPlan; value: TrainingChoice; onChange: (choice: TrainingChoice) => void }) { const choices: TrainingChoice[] = ['pull','push','legs','rest']; return <section className=\"programming-choice-section\" aria-label=\"Selecionar treino ativo\"><div><span className=\"eyebrow\">TREINO ATIVO</span><h3>Escolha o próximo treino</h3><p>O Dashboard seguirá esta seleção. As variações A/B avançam pela ordem do projeto.</p></div><div className=\"programming-choice-grid\">{choices.map((choice) => { const count = choice === 'rest' ? 0 : getWorkoutsForChoice(plan, choice).length; return <button key={choice} type=\"button\" className={`programming-choice-card${value === choice ? ' active' : ''}`} onClick={() => onChange(choice)}><strong>{choiceLabel(choice)}</strong><small>{choice === 'rest' ? 'Recuperação' : count > 1 ? `${count} variações em sequência` : count === 1 ? '1 treino disponível' : 'Não disponível'}</small>{value === choice && <span>ATIVO</span>}</button>; })}</div></section>; }\nfunction ProgrammingEmpty()");
+  return s;
+});
+
+edit('src/app/App.tsx', (s) => {
+  s = s.replace("import { ProjectManagementPanel } from '../features/project/ProjectManagementPanel';", "import { ProjectManagementPanel } from '../features/project/ProjectManagementPanel';\nimport { advanceTrainingChoice } from '../features/programming/activeWorkoutSelection';");
+  s = s.replace("  function historyChanged() { setHistoryRefresh((value) => value + 1); navigate('today'); }", "  function historyChanged() { advanceTrainingChoice(); setHistoryRefresh((value) => value + 1); navigate('today'); }");
+  s = s.replace("{activeTab === 'programming' && <ProgrammingPage plan={activePlan} />}", "{activeTab === 'programming' && <ProgrammingPage plan={activePlan} onStartWorkout={startWorkout} />}");
+  return s;
+});
+
+edit('src/main.tsx', (s) => s.replace("import './styles/visual-rework-v060.css';", "import './styles/visual-rework-v060.css';\nimport './styles/programming-choice-v0602.css';"));
+
+const css = `.programming-choice-section{display:grid;gap:16px;padding:20px;border:1px solid rgba(15,23,42,.08);border-radius:24px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.05)}\n.programming-choice-section h3{margin:4px 0 4px;font-size:1.35rem}.programming-choice-section p{margin:0;color:#77808f}.programming-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.programming-choice-card{min-height:92px;border:1px solid #e6eaf0;border-radius:20px;background:#f7f9fc;padding:14px;text-align:left;display:flex;flex-direction:column;gap:5px;color:#172033}.programming-choice-card strong{font-size:1.05rem}.programming-choice-card small{color:#7a8493}.programming-choice-card span{margin-top:auto;font-size:.72rem;font-weight:800;color:#1671e8}.programming-choice-card.active{border-color:#8ab8f8;background:#eaf3ff;box-shadow:inset 0 0 0 1px rgba(35,123,235,.18)}\n@media(max-width:420px){.programming-choice-section{padding:16px;border-radius:20px}.programming-choice-grid{gap:8px}.programming-choice-card{min-height:86px;padding:12px}}\n`;
+fs.writeFileSync('src/styles/programming-choice-v0602.css', css);
+
+const pkg = JSON.parse(fs.readFileSync('package.json','utf8')); pkg.version='0.60.2'; fs.writeFileSync('package.json', JSON.stringify(pkg,null,2)+'\n');
+const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8')); lock.version='0.60.2'; lock.packages[''].version='0.60.2'; fs.writeFileSync('package-lock.json', JSON.stringify(lock,null,2)+'\n');
+let ch = fs.readFileSync('CHANGELOG.md','utf8'); if(!ch.includes('## v0.60.2')) ch = ch.replace(/(Este arquivo[^\n]*\n)/, `$1\n## v0.60.2 — Programação PPL manual\n- Programação permite ativar PULL, PUSH, LEGS ou Descanso.\n- Dashboard inicia o treino ativo em vez de depender do dia da semana.\n- Variações A/B avançam pela sequência do projeto e, após concluir uma sessão, a seleção avança PULL → PUSH → LEGS → Descanso.\n`); fs.writeFileSync('CHANGELOG.md', ch);
