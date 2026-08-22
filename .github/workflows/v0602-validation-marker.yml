@@ -37,4 +37,4 @@ jobs:
           git commit -m "chore: record v0.60.2 validation result"
           git push
           exit 0
-# rerun after timer test stabilization
+# rerun after restoring complete workout test coverage
