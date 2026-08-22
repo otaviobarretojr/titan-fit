@@ -118,3 +118,21 @@ jobs:
               --title "TITAN FIT v${VERSION} — Android Test" \
               --notes "Build Android assinado com a chave permanente do TITAN FIT. Atualizações futuras usam a mesma identidade de assinatura para preservar dados locais."
           fi
+
+      - name: Record published release
+        run: |
+          APK="TITAN-FIT-v${VERSION}-android-test.apk"
+          SIZE=$(stat -c%s "$APK")
+          SHA=$(cut -d' ' -f1 "${APK}.sha256")
+          {
+            echo "version=v${VERSION}"
+            echo "apk=${APK}"
+            echo "size_bytes=${SIZE}"
+            echo "sha256=${SHA}"
+            echo "published=1"
+          } > "docs/android-release-v${VERSION}.txt"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "docs/android-release-v${VERSION}.txt"
+          git commit -m "chore: record Android v${VERSION} publication" || true
+          git push
