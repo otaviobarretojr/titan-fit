@@ -14,22 +14,25 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Run validation and capture result
+      - name: Validate with concise result
         run: |
           set +e
-          : > /tmp/v0602.log
           STATUS=0
+          FAIL_CMD=""
+          : > /tmp/v0602.log
           for CMD in "npm ci" "npm run lint" "npm run typecheck" "npm run test" "npm run build" "npm run validate"; do
-            echo "===== $CMD =====" | tee -a /tmp/v0602.log
+            echo "===== $CMD =====" >> /tmp/v0602.log
             bash -lc "$CMD" >> /tmp/v0602.log 2>&1
             CODE=$?
-            echo "exit=$CODE" | tee -a /tmp/v0602.log
-            if [ $CODE -ne 0 ]; then STATUS=$CODE; break; fi
+            echo "$CMD=$CODE" >> /tmp/v0602.status
+            if [ $CODE -ne 0 ]; then STATUS=$CODE; FAIL_CMD="$CMD"; break; fi
           done
           {
             echo "status=$STATUS"
-            echo "--- tail ---"
-            tail -120 /tmp/v0602.log
+            echo "fail_cmd=$FAIL_CMD"
+            cat /tmp/v0602.status 2>/dev/null || true
+            echo "errors:"
+            grep -E "AssertionError|TestingLibraryElementError|Type error|error TS|Error:|FAIL|failed" /tmp/v0602.log | tail -30 || true
           } > docs/v0.60.2-validation.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -37,4 +40,4 @@ jobs:
           git commit -m "chore: record v0.60.2 validation result"
           git push
           exit 0
-# rerun after restoring complete workout test coverage
+# concise diagnostics rerun
