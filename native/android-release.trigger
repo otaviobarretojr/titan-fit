@@ -1,1 +1,1 @@
-release-v0.60.1-workout-timer-first-record
+release-v0.60.2-manual-ppl-programming
