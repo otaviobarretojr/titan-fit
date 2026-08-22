@@ -1,0 +1,3 @@
+version=v0.60.2
+job_status=success
+commit=60d3f4f11509cac349598e4e3424320b94e3355a
