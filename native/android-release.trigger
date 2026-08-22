@@ -1,1 +1,1 @@
-release-v0.60.2-manual-ppl-programming-final
+release-v0.60.2-manual-ppl-programming-publish-confirmed
