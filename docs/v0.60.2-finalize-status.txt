@@ -1,0 +1,48 @@
+status=0
+fail_cmd=
+npm ci=0
+npm run lint=0
+npm run typecheck=0
+npm run test=0
+npm run build=0
+npm run validate=0
+    at recursivelyTraversePassiveMountEffects [90m(/home/runner/work/titan-fit/titan-fit/[39mnode_modules/[4mreact-dom[24m/cjs/react-dom-client.development.js:15439:11[90m)[39m
+
+ [32m✓[39m src/features/workout/WorkoutExecutionView.rir.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 56[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m34 passed[39m[22m[90m (34)[39m
+[2m      Tests [22m [1m[32m126 passed[39m[22m[90m (126)[39m
+[2m   Start at [22m 01:46:41
+[2m   Duration [22m 10.91s[2m (transform 1.08s, setup 2.10s, collect 2.45s, tests 2.58s, environment 15.96s, prepare 2.93s)[22m
+
+
+> titan-fit@0.60.2 build
+> tsc -b && vite build
+
+[36mvite v6.4.3 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 160 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mmanifest.webmanifest                        [39m[1m[2m  0.75 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                                  [39m[1m[2m  1.01 kB[22m[1m[22m[2m │ gzip:   0.47 kB[22m
+[2mdist/[22m[2massets/[22m[35mindex-Bbibl5vs.css                   [39m[1m[2m220.72 kB[22m[1m[22m[2m │ gzip:  39.61 kB[22m
+[2mdist/[22m[2massets/[22m[36mweb-Dh_eSlU5.js                      [39m[1m[2m  0.36 kB[22m[1m[22m[2m │ gzip:   0.24 kB[22m
+[2mdist/[22m[2massets/[22m[36mweb-Ddl2CvQn.js                      [39m[1m[2m  3.46 kB[22m[1m[22m[2m │ gzip:   1.10 kB[22m
+[2mdist/[22m[2massets/[22m[36mworkbox-window.prod.es5-BBnX5xw4.js  [39m[1m[2m  5.75 kB[22m[1m[22m[2m │ gzip:   2.36 kB[22m
+[2mdist/[22m[2massets/[22m[36mweb-CQsKIx9R.js                      [39m[1m[2m  8.73 kB[22m[1m[22m[2m │ gzip:   2.97 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-nLfvnuyp.js                    [39m[1m[2m478.19 kB[22m[1m[22m[2m │ gzip: 144.04 kB[22m
+[32m✓ built in 1.53s[39m
+
+[36mPWA v0.21.2[39m
+mode      [35mgenerateSW[39m
+precache  [32m20 entries[39m [2m(707.77 KiB)[22m
+files generated
+  [2mdist/sw.js[22m
+  [2mdist/workbox-778a14ff.js[22m
+
+> titan-fit@0.60.2 validate
+> node scripts/validate-project.mjs && node scripts/validate-android-health.mjs
+
+Validação do TITAN FIT v0.60.2 concluída com sucesso.
+Validação Android/Health Connect v0.60.2 concluída com sucesso.
