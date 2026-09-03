@@ -1,1 +1,1 @@
-release-v0.60.3-fixed-weekly-routine
+release-v0.60.3-fixed-weekly-routine-final
