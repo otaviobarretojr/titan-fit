@@ -1,0 +1,3 @@
+version=v0.60.3
+validation=success
+routine=fixed-weekly
