@@ -1,0 +1,15 @@
+/* v0.60.3 — rotina semanal fixa: remove qualquer affordance de troca manual de treino. */
+.programming-section[aria-label="Selecionar treino ativo"] { display: none !important; }
+.programming-today { display: none !important; }
+.project-settings-card .secondary-action,
+.project-settings-card .settings-importer,
+.project-settings-card .settings-remove-plan,
+.project-settings-card > small { display: none !important; }
+.project-settings-card::after {
+  content: 'Rotina TITAN fixa · o treino do dia é definido automaticamente pelo calendário semanal.';
+  display: block;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--text-secondary, #6b7280);
+}
