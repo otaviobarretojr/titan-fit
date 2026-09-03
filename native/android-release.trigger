@@ -1,1 +1,1 @@
-release-v0.60.2-manual-ppl-programming-status-tracked
+release-v0.60.3-fixed-weekly-routine
