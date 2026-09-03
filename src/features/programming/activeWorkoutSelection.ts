@@ -1,32 +1,24 @@
 import type { TitanPlan, TitanWorkoutDay } from '../plan/types';
 import type { WorkoutHistoryRecord } from '../history/types';
+import { getScheduledWorkout, isScheduledRestDay } from './fixedSchedule';
 
 export type TrainingChoice = 'pull' | 'push' | 'legs' | 'rest';
 
-const STORAGE_KEY = 'titan-fit:programming-choice:v1';
-const ORDER: TrainingChoice[] = ['pull', 'push', 'legs', 'rest'];
-
+// Compatibilidade legada: a partir da rotina fixa, a escolha manual deixa de comandar o treino.
 export function loadTrainingChoice(): TrainingChoice {
-  const value = localStorage.getItem(STORAGE_KEY);
-  return value === 'pull' || value === 'push' || value === 'legs' || value === 'rest' ? value : 'pull';
+  return isScheduledRestDay() ? 'rest' : 'pull';
 }
 
-export function saveTrainingChoice(choice: TrainingChoice) {
-  localStorage.setItem(STORAGE_KEY, choice);
-  window.dispatchEvent(new CustomEvent('titan:programming-choice-changed', { detail: choice }));
+export function saveTrainingChoice(_choice: TrainingChoice) {
+  // Intencionalmente sem efeito: a rotina semanal agora é fixa.
 }
 
 export function advanceTrainingChoice() {
-  const current = loadTrainingChoice();
-  const index = ORDER.indexOf(current);
-  saveTrainingChoice(ORDER[(index + 1) % ORDER.length]);
+  // Intencionalmente sem efeito: o avanço é determinado pelo calendário semanal.
 }
 
 export function choiceLabel(choice: TrainingChoice) {
-  if (choice === 'pull') return 'PULL';
-  if (choice === 'push') return 'PUSH';
-  if (choice === 'legs') return 'LEGS';
-  return 'DESCANSO';
+  return choice === 'rest' ? 'DESCANSO' : 'ROTINA';
 }
 
 export function getWorkoutKind(workout: TitanWorkoutDay): Exclude<TrainingChoice, 'rest'> | null {
@@ -42,16 +34,6 @@ export function getWorkoutsForChoice(plan: TitanPlan, choice: TrainingChoice) {
   return plan.workouts.filter((workout) => getWorkoutKind(workout) === choice);
 }
 
-export function resolveSelectedWorkout(plan: TitanPlan, history: WorkoutHistoryRecord[], choice = loadTrainingChoice()): TitanWorkoutDay | null {
-  const candidates = getWorkoutsForChoice(plan, choice);
-  if (!candidates.length) return null;
-  if (candidates.length === 1) return candidates[0];
-
-  const completed = history
-    .filter((record) => record.planId === plan.id && candidates.some((candidate) => candidate.id === record.workoutId))
-    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-
-  if (!completed.length) return candidates[0];
-  const lastIndex = candidates.findIndex((candidate) => candidate.id === completed[0].workoutId);
-  return candidates[(Math.max(lastIndex, 0) + 1) % candidates.length];
+export function resolveSelectedWorkout(plan: TitanPlan, _history: WorkoutHistoryRecord[], _choice: TrainingChoice = loadTrainingChoice()): TitanWorkoutDay | null {
+  return getScheduledWorkout(plan);
 }
