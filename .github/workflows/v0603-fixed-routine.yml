@@ -1,0 +1,31 @@
+name: Finalize TITAN v0.60.3 fixed routine
+on:
+  push:
+    paths:
+      - 'native/v0603-fixed-routine.trigger'
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm version 0.60.3 --no-git-tag-version --allow-same-version
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run validate
+      - name: Persist synchronized metadata and validation marker
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf 'version=v0.60.3\nvalidation=success\nroutine=fixed-weekly\n' > docs/v0.60.3-validation.txt
+          git add package.json package-lock.json docs/v0.60.3-validation.txt
+          git commit -m "chore: finalize v0.60.3 fixed routine" || true
+          git push
