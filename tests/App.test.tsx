@@ -10,11 +10,10 @@ vi.mock('virtual:pwa-register/react', () => ({
 beforeEach(() => localStorage.clear());
 
 describe('TITAN FIT', () => {
-  it('renderiza o estado vazio e oferece inserção de projeto', () => {
+  it('inicia com a rotina TITAN fixa ativa', () => {
     render(<App />);
-    expect(screen.getByText('Nenhum projeto ativo')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Inserir projeto' })).toBeEnabled();
-    expect(screen.getByText('SEU PROJETO COMEÇA AQUI')).toBeInTheDocument();
+    expect(screen.getByText('PPL + Ombros — Rotina Fixa')).toBeInTheDocument();
+    expect(screen.queryByText('Nenhum projeto ativo')).not.toBeInTheDocument();
   });
 
   it('usa a navegação principal consolidada e integra evolução em Saúde', () => {
@@ -26,9 +25,6 @@ describe('TITAN FIT', () => {
     expect(nav.getByRole('button', { name: /^Ajustes$/i })).toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Progresso$/i })).not.toBeInTheDocument();
     expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Histórico$/i })).not.toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Projeto$/i })).not.toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Semana$/i })).not.toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Saúde$/i }));
     expect(screen.getByRole('heading', { name: 'Saúde' })).toBeInTheDocument();
@@ -41,12 +37,13 @@ describe('TITAN FIT', () => {
     expect(screen.queryByRole('tab', { name: 'Nutrição' })).not.toBeInTheDocument();
 
     fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
-    expect(screen.getByRole('heading', { name: 'Nenhum projeto de treino ativo' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Tabela completa' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Ativar treino/i })).not.toBeInTheDocument();
+
     fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
     expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
     expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
     expect(screen.queryByRole('region', { name: 'Programação nutricional' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Baixar modelo de dieta TITAN' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Resetar todos os dados' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
