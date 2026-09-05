@@ -16,7 +16,13 @@ android {
     namespace = "com.otaviobarretojr.titanfit"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig { applicationId "com.otaviobarretojr.titanfit"; minSdkVersion 29; targetSdkVersion rootProject.ext.targetSdkVersion; versionCode titanVersionCode; versionName titanVersionName; testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"; aaptOptions { ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~' } }
-    buildTypes { release { minifyEnabled false; signingConfig signingConfigs.titanRelease; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' } }
+    buildTypes {
+        debug {
+            applicationIdSuffix ".recovery"
+            versionNameSuffix "-recovery"
+        }
+        release { minifyEnabled false; signingConfig signingConfigs.titanRelease; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' }
+    }
 }
 repositories { flatDir{ dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs' } }
 dependencies {
