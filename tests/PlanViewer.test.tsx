@@ -14,14 +14,18 @@ const plan: TitanPlan = {
   }]
 };
 
-describe('PlanViewer video-free', () => {
-  it('navega até o exercício exibindo técnica sem player ou ação de vídeo', () => {
+describe('PlanViewer workout-first', () => {
+  it('navega até o exercício mostrando somente prescrição e dicas úteis', () => {
     render(<PlanViewer plan={plan} onImportAnother={() => undefined} onRemove={() => undefined} onHistoryChange={() => undefined} />);
-    expect(screen.getByText('Hipertrofia — Bloco 1')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Seus treinos' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Peitoral e dorsais/i }));
+    expect(screen.getByRole('button', { name: 'Iniciar treino' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Supino inclinado/i }));
     expect(screen.getByText('Controle a descida.')).toBeInTheDocument();
     expect(screen.getByText('Perder a posição das escápulas')).toBeInTheDocument();
+    expect(screen.getByText('4')).toBeInTheDocument();
+    expect(screen.getByText('8–10')).toBeInTheDocument();
+    expect(screen.getByText('2:00')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Ver execução/i })).not.toBeInTheDocument();
     expect(screen.queryByTitle(/Execução correta/i)).not.toBeInTheDocument();
   });
