@@ -6,8 +6,8 @@ const read = (file) => readFile(path.join(root, file), 'utf8');
 const failures = [];
 const assert = (condition, message) => { if (!condition) failures.push(message); };
 
-const [pkgText, vite, app, appTest, types, validation, execution, healthPage, healthHub, healthBridge, nativeHealthDocs, dashboard, programmingPage, activeSelection, workoutTypes, historyTypes, progressPage, intelligence, evolution, evolutionStorage, evolutionTypes, resetData, database, backup, deploy, ci] = await Promise.all([
-  read('package.json'), read('vite.config.ts'), read('src/app/App.tsx'), read('tests/App.test.tsx'), read('src/features/plan/types.ts'), read('src/features/plan/validation.ts'), read('src/features/workout/WorkoutExecutionView.tsx'), read('src/features/health/SamsungHealthPage.tsx'), read('src/features/health/HealthHubPage.tsx'), read('src/features/health/bridge.ts'), read('native/android-health-connect/README.md'), read('src/features/dashboard/DashboardPage.tsx'), read('src/features/programming/ProgrammingPage.tsx'), read('src/features/programming/activeWorkoutSelection.ts'), read('src/features/workout/types.ts'), read('src/features/history/types.ts'), read('src/features/history/ProgressPage.tsx'), read('src/features/history/intelligence.ts'), read('src/features/evolution/BodyEvolutionPage.tsx'), read('src/features/evolution/storage.ts'), read('src/features/evolution/types.ts'), read('src/core/database/resetAppData.ts'), read('src/core/database/indexedDb.ts'), read('src/core/backup/backup.ts'), read('.github/workflows/deploy-pages.yml'), read('.github/workflows/ci.yml')
+const [pkgText, vite, app, appTest, main, focusStyles, simpleExecution, planViewer, types, validation, execution, healthPage, healthHub, healthBridge, nativeHealthDocs, dashboard, programmingPage, activeSelection, workoutTypes, historyTypes, progressPage, intelligence, evolution, evolutionStorage, evolutionTypes, resetData, database, backup, deploy, ci] = await Promise.all([
+  read('package.json'), read('vite.config.ts'), read('src/app/App.tsx'), read('tests/App.test.tsx'), read('src/main.tsx'), read('src/styles/titan-focus-v061.css'), read('src/features/workout/SimpleWorkoutExecutionView.tsx'), read('src/features/plan/PlanViewer.tsx'), read('src/features/plan/types.ts'), read('src/features/plan/validation.ts'), read('src/features/workout/WorkoutExecutionView.tsx'), read('src/features/health/SamsungHealthPage.tsx'), read('src/features/health/HealthHubPage.tsx'), read('src/features/health/bridge.ts'), read('native/android-health-connect/README.md'), read('src/features/dashboard/DashboardPage.tsx'), read('src/features/programming/ProgrammingPage.tsx'), read('src/features/programming/activeWorkoutSelection.ts'), read('src/features/workout/types.ts'), read('src/features/history/types.ts'), read('src/features/history/ProgressPage.tsx'), read('src/features/history/intelligence.ts'), read('src/features/evolution/BodyEvolutionPage.tsx'), read('src/features/evolution/storage.ts'), read('src/features/evolution/types.ts'), read('src/core/database/resetAppData.ts'), read('src/core/database/indexedDb.ts'), read('src/core/backup/backup.ts'), read('.github/workflows/deploy-pages.yml'), read('.github/workflows/ci.yml')
 ]);
 
 const pkg = JSON.parse(pkgText);
@@ -19,36 +19,51 @@ assert(vite.includes("base: isAndroid ? './' : '/titan-fit/'") && vite.includes(
 assert(ci.includes('node-version: 24') && deploy.includes('node-version: 24'), 'CI e deploy devem usar Node 24');
 assert(deploy.includes('actions/deploy-pages@v4') && deploy.includes('npm run validate'), 'Deploy deve validar antes de publicar');
 
-for (const tab of ["{ id: 'today', label: 'Hoje' }", "{ id: 'programming', label: 'Programação' }", "{ id: 'health', label: 'Saúde' }", "{ id: 'settings', label: 'Ajustes' }"]) assert(app.includes(tab), `Navegação principal ausente: ${tab}`);
-assert(!app.includes("{ id: 'progress', label: 'Progresso' }") && app.includes("if (value === 'progress') return 'health'"), 'Progresso legado deve migrar para Saúde sem permanecer na barra principal');
+// Produto v0.61+: interface workout-first. A barra principal deve conter somente o essencial.
+for (const tab of ["{ id: 'today', label: 'Hoje' }", "{ id: 'plans', label: 'Treinos' }", "{ id: 'history', label: 'Histórico' }"]) {
+  assert(app.includes(tab), `Navegação principal workout-first ausente: ${tab}`);
+}
+for (const legacyTab of ["{ id: 'programming', label: 'Programação' }", "{ id: 'health', label: 'Saúde' }", "{ id: 'progress', label: 'Progresso' }", "{ id: 'cardio', label: 'Cardio' }", "{ id: 'settings', label: 'Ajustes' }"]) {
+  assert(!app.includes(legacyTab), `Navegação principal não deve manter item legado: ${legacyTab}`);
+}
+assert(app.includes('aria-label="Abrir ajustes"') && app.includes("activeTab === 'settings'"), 'Ajustes devem permanecer acessíveis fora da barra principal');
+assert(app.includes('Iniciar treino') && app.includes('<HistoryPage'), 'Home deve priorizar início do treino e preservar histórico');
+assert(!app.includes('Score TITAN') && !app.includes('Coach TITAN') && !app.includes('NutritionPage') && !app.includes('HealthHubPage'), 'Fluxo principal não deve carregar score, coach, nutrição ou saúde');
 assert(!app.includes("CardioPage") && !app.includes("'cardio' |") && !app.includes("activeTab === 'cardio'") && !app.includes('directCardioId') && !app.includes('startCardio'), 'App não deve manter rota ou execução de cardio standalone');
-assert(!dashboard.includes('../cardio/currentCardio') && !dashboard.includes('onStartCardio') && !dashboard.includes('Iniciar cardio'), 'Dashboard não deve iniciar cardio por módulo isolado');
-assert(dashboard.includes('resolveSelectedWorkout(plan, history, trainingChoice)') && dashboard.includes('dayPlan?.exercises') && dashboard.includes("exercise.exerciseType === 'cardio'") && dashboard.includes('onStartWorkout(dayPlan.id)'), 'Dashboard deve executar o treino manualmente selecionado com musculação e cardio integrados');
-assert(activeSelection.includes("'pull' | 'push' | 'legs' | 'rest'") && activeSelection.includes('loadTrainingChoice') && activeSelection.includes('saveTrainingChoice') && activeSelection.includes('resolveSelectedWorkout'), 'Seleção manual PULL/PUSH/LEGS/Descanso deve permanecer disponível');
-assert(!programmingPage.includes('../cardio/currentCardio') && !programmingPage.includes('ExerciseLibraryPage') && !programmingPage.includes('>Biblioteca</button>'), 'Programação deve permanecer sem biblioteca visual');
-assert(programmingPage.includes("exercise.exerciseType === 'cardio'") && programmingPage.includes("exercise.exerciseType === 'distance'") && programmingPage.includes('workoutSummary'), 'Programação deve reunir musculação e cardio no projeto');
-assert(programmingPage.includes('saveTrainingChoice') && programmingPage.includes('loadTrainingChoice'), 'Programação deve controlar o treino ativo manualmente');
-assert(!programmingPage.includes('NutritionProgramPanel') && !programmingPage.includes("activeTab === 'nutrition'"), 'Programação não deve manter módulo nutricional');
-assert(programmingPage.includes("const DAY_ORDER = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado']"), 'Semana oficial deve começar no domingo');
 
-assert(app.includes("activeTab === 'health' && <HealthHubPage refreshKey={historyRefresh} />"), 'Saúde deve usar o hub consolidado de visão geral e evolução');
-assert(healthHub.includes('<SamsungHealthPage />') && healthHub.includes('<ProgressPage refreshKey={refreshKey} />') && healthHub.includes('Visão geral') && healthHub.includes('Evolução'), 'HealthHub deve manter Saúde e Evolução no mesmo módulo');
-assert(healthPage.includes('Atividade diária') && healthPage.includes('Treinos da semana') && healthPage.includes('Health Connect'), 'Saúde deve manter dashboard e Health Connect');
+// Rework visual deve usar uma camada única e focada em treino.
+assert(main.includes("'./styles/titan-focus-v061.css'") && !main.includes("'./styles/dashboard") && !main.includes("'./styles/health"), 'Entrada do app deve usar a camada visual workout-first sem CSS legado de dashboard/saúde');
+for (const token of ['focus-workout-mode', 'focus-set-row', 'focus-rest-timer', 'load-guidance', 'titan-focus-nav']) {
+  assert(focusStyles.includes(token), `CSS workout-first deve preservar ${token}`);
+}
+
+// Execução deve privilegiar exercício, carga, repetições, descanso e dica curta.
+assert(simpleExecution.includes("field: 'weightKg' | 'repetitions'") && simpleExecution.includes('CARGA') && simpleExecution.includes('REPS'), 'Execução simples deve registrar carga e repetições por série');
+assert(simpleExecution.includes('DESCANSO') && simpleExecution.includes('restSeconds') && simpleExecution.includes('setRestRunning(true)'), 'Execução simples deve iniciar descanso automático');
+assert(simpleExecution.includes('Dica de execução') && simpleExecution.includes('commonMistakes'), 'Execução simples deve preservar dicas e erros comuns de forma recolhível');
+assert(simpleExecution.includes('CARGA SUGERIDA') && simpleExecution.includes('findPreviousPerformance') && simpleExecution.includes('suggestLoad'), 'Execução simples deve usar histórico para sugerir carga');
+assert(planViewer.includes('Seus treinos') && planViewer.includes('SÉRIES') && planViewer.includes('REPS') && planViewer.includes('DESCANSO'), 'Biblioteca de treinos deve exibir somente a prescrição essencial');
+
+// Módulos legados podem permanecer no código como infraestrutura/compatibilidade, mas não fazem parte da navegação ativa.
+assert(!dashboard.includes('../cardio/currentCardio') && !dashboard.includes('onStartCardio') && !dashboard.includes('Iniciar cardio'), 'Dashboard legado não deve iniciar cardio por módulo isolado');
+assert(activeSelection.includes("'pull' | 'push' | 'legs' | 'rest'") && activeSelection.includes('loadTrainingChoice') && activeSelection.includes('saveTrainingChoice') && activeSelection.includes('resolveSelectedWorkout'), 'Seleção manual legada deve continuar compatível com dados existentes');
+assert(!programmingPage.includes('../cardio/currentCardio') && !programmingPage.includes('NutritionProgramPanel'), 'Programação legada não deve reintroduzir cardio isolado ou nutrição');
+
+// Saúde/Android permanece como infraestrutura disponível para futuras integrações, sem ocupar a experiência principal.
+assert(healthHub.includes('<SamsungHealthPage />') && healthHub.includes('<ProgressPage refreshKey={refreshKey} />'), 'HealthHub legado deve continuar íntegro para compatibilidade');
+assert(healthPage.includes('Health Connect'), 'Infraestrutura de saúde deve continuar disponível no código');
 assert(healthBridge.includes('window.Capacitor?.Plugins?.TitanHealthConnect') && healthBridge.includes('readSamples'), 'Ponte Health Connect deve permanecer ativa');
 assert(nativeHealthDocs.includes('Galaxy Watch → Samsung Health → Health Connect') && nativeHealthDocs.includes('TitanHealthConnect'), 'Documentação Health Connect deve permanecer presente');
 
-assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve suportar musculação e cardio no mesmo projeto');
+assert(types.includes("'strength' | 'distance' | 'cardio' | 'isometric' | 'mobility'"), 'ExerciseType deve preservar compatibilidade de schema');
 assert(types.includes('TitanExerciseAlternative') && types.includes('alternativeExercises?: TitanExerciseAlternative[]'), 'Plano deve preservar alternativas estruturadas');
 assert(validation.includes("readString(value.exerciseType) || 'strength'"), 'Planos legados devem assumir strength quando exerciseType não existir');
 assert(validation.includes('validateAlternativeExercise') && validation.includes('alternativeExercises'), 'Importador deve validar alternativas');
-assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Execução deve persistir métricas de cardio no treino');
-assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar métricas cardiovasculares');
-assert(!execution.includes('getExerciseVideo') && !execution.includes('WorkoutExerciseVideo') && !execution.includes('video-stage') && execution.includes('exerciseOptions(baseExercise)') && execution.includes('selectedExerciseId: option.id'), 'Modo treino deve permanecer sem vídeo e preservar substituições');
+assert(workoutTypes.includes('distanceMeters') && workoutTypes.includes('speedKmh') && workoutTypes.includes('notes'), 'Persistência deve manter compatibilidade com métricas históricas');
+assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('averageHeartRate'), 'Histórico deve preservar dados já registrados');
+assert(!execution.includes('getExerciseVideo') && !execution.includes('WorkoutExerciseVideo') && !execution.includes('video-stage'), 'Modo treino legado também deve permanecer sem vídeo');
 
-assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Evolução deve manter corpo e PRs');
-for (const tab of ['Corpo', 'Treino']) assert(progressPage.includes(`>${tab}</button>`), `Evolução deve manter a aba ${tab}`);
-assert(!progressPage.includes('NutritionEvolutionPanel') && !progressPage.includes('>Nutrição</button>'), 'Evolução não deve manter módulo nutricional');
-assert(evolution.includes('Bioimpedância automática do relógio') && evolution.includes('Medidas e fotos') && evolution.includes('A bioimpedância vem automaticamente do Samsung Health'), 'Evolução corporal deve manter bioimpedância automática e registros manuais complementares');
+assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Módulo de evolução legado deve permanecer íntegro para dados existentes');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução deve permanecer versionado');
 assert(evolutionStorage.includes('body-evolution-v1'), 'Evolução deve permanecer persistida');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice'), 'Motor de progressão deve permanecer disponível');
@@ -74,4 +89,4 @@ if (failures.length) {
   console.error('Validação falhou:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`Validação do TITAN FIT v${pkg.version} concluída com sucesso.`);
+console.log(`Validação do TITAN FIT v${pkg.version} workout-first concluída com sucesso.`);
