@@ -1,1 +1,1 @@
-release-v0.60.3-fixed-weekly-routine-validated
+release-v0.60.4-simple-set-completion
