@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { SimpleWorkoutExecutionView } from '../workout/SimpleWorkoutExecutionView';
-import type { ExerciseType, TitanExercise, TitanPlan, TitanWorkoutDay } from './types';
+import type { TitanExercise, TitanPlan, TitanWorkoutDay } from './types';
 
 type Props = { plan: TitanPlan; initialWorkoutId?: string | null; onImportAnother: () => void; onRemove: () => void; onHistoryChange: () => void; onExitWorkout?: () => void; onDirectStartHandled?: () => void };
 
-export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, onHistoryChange, onExitWorkout, onDirectStartHandled }: Props) {
+export function PlanViewer({ plan, initialWorkoutId, onHistoryChange, onExitWorkout, onDirectStartHandled }: Props) {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(null);
   const [executingWorkoutId, setExecutingWorkoutId] = useState<string | null>(() => initialWorkoutId ?? null);
@@ -16,28 +16,38 @@ export function PlanViewer({ plan, initialWorkoutId, onImportAnother, onRemove, 
   if (selectedWorkout && selectedExercise) return <ExerciseDetail exercise={selectedExercise} workout={selectedWorkout} onBack={() => setSelectedExerciseId(null)} />;
   if (selectedWorkout) return <WorkoutDetail workout={selectedWorkout} onBack={() => setSelectedWorkoutId(null)} onSelectExercise={setSelectedExerciseId} onStart={() => setExecutingWorkoutId(selectedWorkout.id)} />;
 
-  const exerciseCount = plan.workouts.reduce((total, workout) => total + workout.exercises.length, 0);
-  return <><section className="section-header"><span className="eyebrow">PROJETO ATIVO</span><h2>{plan.project?.name ?? plan.name}</h2>{plan.description && <p>{plan.description}</p>}<p>{plan.workouts.length} treinos • {exerciseCount} exercícios</p></section>
-    <section className="section-header"><span className="eyebrow">TREINOS</span><h2>Projeto completo</h2><p>Programação ativa de musculação e cardio integrado.</p></section>
-    <section className="workout-list">{plan.workouts.map((workout) => <button type="button" className="workout-card workout-card-button" key={workout.id} onClick={() => setSelectedWorkoutId(workout.id)}><div><span className="info-label">{workout.day}</span><h3>{workout.title}</h3>{workout.focus && <p>{workout.focus}</p>}</div><span className="workout-count">{workout.exercises.length}<small>exercícios</small></span></button>)}</section>
-    <div className="stack-actions"><button type="button" className="secondary-action" onClick={onImportAnother}>Importar outro projeto</button><button type="button" className="danger-action" onClick={onRemove}>Remover projeto</button></div></>;
+  return <section className="training-library">
+    <header className="section-header"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Seus treinos</h2><p>{plan.workouts.length} sessões na programação atual.</p></header>
+    <div className="training-list">{plan.workouts.map((workout) => {
+      const totalSets = workout.exercises.reduce((sum, exercise) => sum + Math.max(1, exercise.sets ?? 1), 0);
+      return <button type="button" className="training-card" key={workout.id} onClick={() => setSelectedWorkoutId(workout.id)}><div><span>{workout.day}</span><strong>{workout.title}</strong><small>{workout.exercises.length} exercícios · {totalSets} séries</small></div><span className="training-chevron">›</span></button>;
+    })}</div>
+  </section>;
 }
 
 function WorkoutDetail({ workout, onBack, onSelectExercise, onStart }: { workout: TitanWorkoutDay; onBack: () => void; onSelectExercise: (id: string) => void; onStart: () => void }) {
-  return <><button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o projeto</button><section className="section-header"><span className="eyebrow">{workout.day.toUpperCase()}</span><h2>{workout.title}</h2>{workout.focus && <p>{workout.focus}</p>}<p>{workout.exercises.length} exercícios</p><button type="button" className="primary-action start-session" onClick={onStart}>Iniciar treino</button></section><section className="exercise-list">{workout.exercises.map((exercise, index) => <button type="button" className="exercise-card" key={exercise.id} onClick={() => onSelectExercise(exercise.id)}><span className="exercise-order">{index + 1}</span><div className="exercise-card-content"><span className="info-label">{exercise.muscleGroup} · {typeLabel(exercise.exerciseType ?? 'strength')}</span><h3>{exercise.name}</h3><p>{formatPrescription(exercise)}</p></div><span className="exercise-arrow">›</span></button>)}</section></>;
+  return <section className="workout-detail-simple">
+    <button type="button" className="quiet-link back-settings" onClick={onBack}>← Voltar</button>
+    <header className="section-header"><span className="eyebrow">{workout.day.toUpperCase()}</span><h2>{workout.title}</h2>{workout.focus && <p>{workout.focus}</p>}<button type="button" className="primary-action start-session" onClick={onStart}>Iniciar treino</button></header>
+    <div className="exercise-list-simple">{workout.exercises.map((exercise, index) => <button type="button" className="exercise-list-row" key={exercise.id} onClick={() => onSelectExercise(exercise.id)}><span className="exercise-index">{String(index + 1).padStart(2, '0')}</span><div><strong>{exercise.name}</strong><small>{exercise.muscleGroup}</small><p>{formatPrescription(exercise)}</p></div><span>›</span></button>)}</div>
+  </section>;
 }
 
 function ExerciseDetail({ exercise, workout, onBack }: { exercise: TitanExercise; workout: TitanWorkoutDay; onBack: () => void }) {
-  const type = exercise.exerciseType ?? 'strength';
-  return <><button type="button" className="secondary-action back-action" onClick={onBack}>← Voltar para o treino</button><section className="exercise-detail-header"><span className="eyebrow">{workout.title.toUpperCase()}</span><h2>{exercise.name}</h2><p>{exercise.muscleGroup} · {typeLabel(type)}</p></section><section className="prescription-grid">{metrics(exercise).map((metric) => <Metric key={metric.label} {...metric} />)}</section>{exercise.technique && <DetailSection title="Técnica" text={exercise.technique} />}{exercise.commonMistakes?.length ? <ListSection title="Erros comuns" items={exercise.commonMistakes} /> : null}{exercise.progression?.length ? <section className="detail-card"><span className="info-label">PROGRESSÃO PLANEJADA</span>{exercise.progression.map((step) => <p key={`${step.startWeek}-${step.endWeek}`}><strong>Semanas {step.startWeek}–{step.endWeek}:</strong> {step.inclinePercent ?? '—'}% · {step.speedMinKmh ?? step.speedKmh ?? '—'}–{step.speedMaxKmh ?? step.speedKmh ?? '—'} km/h</p>)}</section> : null}</>;
+  return <section className="exercise-detail-simple">
+    <button type="button" className="quiet-link back-settings" onClick={onBack}>← Voltar</button>
+    <span className="eyebrow">{workout.title}</span><h2>{exercise.name}</h2><p className="exercise-muscle">{exercise.muscleGroup}</p>
+    <div className="focus-prescription exercise-detail-prescription"><div><span>SÉRIES</span><strong>{exercise.sets ?? 1}</strong></div><div><span>REPS</span><strong>{formatRepetitions(exercise)}</strong></div><div><span>DESCANSO</span><strong>{exercise.restSeconds ? formatRest(exercise.restSeconds) : '—'}</strong></div></div>
+    {exercise.technique && <section className="detail-tip"><span className="info-label">DICA DE EXECUÇÃO</span><p>{exercise.technique}</p></section>}
+    {exercise.commonMistakes?.length ? <section className="detail-tip subtle"><span className="info-label">EVITE</span><p>{exercise.commonMistakes.slice(0, 3).join(' · ')}</p></section> : null}
+    {exercise.alternatives?.length ? <section className="detail-tip subtle"><span className="info-label">ALTERNATIVA</span><p>{exercise.alternatives.slice(0, 2).join(' · ')}</p></section> : null}
+  </section>;
 }
 
-function metrics(exercise: TitanExercise) { const type=exercise.exerciseType ?? 'strength'; const result=[] as Array<{label:string;value:string}>; if(exercise.sets)result.push({label:'Séries',value:String(exercise.sets)}); if(type==='strength')result.push({label:'Repetições',value:formatRepetitions(exercise)}); if(type==='distance')result.push({label:'Distância',value:exercise.minDistanceMeters&&exercise.maxDistanceMeters?`${exercise.minDistanceMeters}–${exercise.maxDistanceMeters} m`:`${exercise.distanceMeters??'—'} m`}); if(['cardio','isometric','mobility'].includes(type))result.push({label:'Tempo',value:formatDuration(exercise.durationSeconds)}); if(type==='cardio'&&exercise.inclinePercent!==undefined)result.push({label:'Inclinação',value:`${exercise.inclinePercent}%`}); if(exercise.restSeconds!==undefined&&exercise.restSeconds>0)result.push({label:'Descanso',value:formatRest(exercise.restSeconds)}); return result; }
-function Metric({label,value}:{label:string;value:string}){return <div className="metric-card"><span className="info-label">{label}</span><strong>{value}</strong></div>;}
-function DetailSection({title,text}:{title:string;text:string}){return <section className="detail-card"><span className="info-label">{title.toUpperCase()}</span><p>{text}</p></section>;}
-function ListSection({title,items}:{title:string;items:string[]}){return <section className="detail-card"><span className="info-label">{title.toUpperCase()}</span><ul>{items.map((item)=><li key={item}>{item}</li>)}</ul></section>;}
-function formatPrescription(exercise:TitanExercise){return metrics(exercise).map((item)=>item.value).join(' • ');}
-function formatRepetitions(exercise:TitanExercise){if(exercise.minReps!==undefined&&exercise.maxReps!==undefined)return exercise.minReps===exercise.maxReps?String(exercise.minReps):`${exercise.minReps}–${exercise.maxReps}`;return '—';}
-function formatRest(seconds:number){if(seconds<60)return `${seconds}s`;return `${Math.floor(seconds/60)}m${seconds%60?` ${seconds%60}s`:''}`;}
-function formatDuration(seconds?:number){return seconds?`${Math.round(seconds/60)} min`:'—';}
-function typeLabel(type:ExerciseType){return ({strength:'Musculação',distance:'Distância',cardio:'Cardio',isometric:'Isometria',mobility:'Mobilidade'})[type];}
+function formatPrescription(exercise:TitanExercise) {
+  const chunks = [`${exercise.sets ?? 1}×${formatRepetitions(exercise)}`];
+  if (exercise.restSeconds) chunks.push(formatRest(exercise.restSeconds));
+  return chunks.join(' · ');
+}
+function formatRepetitions(exercise:TitanExercise) { if(exercise.minReps!==undefined&&exercise.maxReps!==undefined)return exercise.minReps===exercise.maxReps?String(exercise.minReps):`${exercise.minReps}–${exercise.maxReps}`; return '—'; }
+function formatRest(seconds:number){if(seconds<60)return `${seconds}s`;return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
