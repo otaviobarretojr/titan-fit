@@ -64,6 +64,7 @@ assert(historyTypes.includes('totalDistanceMeters') && historyTypes.includes('av
 assert(!execution.includes('getExerciseVideo') && !execution.includes('WorkoutExerciseVideo') && !execution.includes('video-stage'), 'Modo treino legado também deve permanecer sem vídeo');
 
 assert(progressPage.includes('BodyEvolutionPage') && progressPage.includes('PrHall'), 'Módulo de evolução legado deve permanecer íntegro para dados existentes');
+assert(evolution.includes('Bioimpedância automática do relógio') && evolution.includes('Medidas e fotos'), 'Evolução corporal legada deve permanecer íntegra para dados existentes');
 assert(evolutionTypes.includes('BodyEvolutionEntry') && evolutionTypes.includes('BioimpedanceData'), 'Modelo de evolução deve permanecer versionado');
 assert(evolutionStorage.includes('body-evolution-v1'), 'Evolução deve permanecer persistida');
 assert(intelligence.includes('calculateStrengthPr') && intelligence.includes('getProgressionAdvice'), 'Motor de progressão deve permanecer disponível');
