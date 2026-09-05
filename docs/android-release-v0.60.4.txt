@@ -1,0 +1,5 @@
+version=v0.60.4
+apk=TITAN-FIT-v0.60.4-android-test.apk
+size_bytes=13124699
+sha256=9fb8a9a7e8a7e541ce7d2b2d56a719ac1eef7a48aeb16823e825bed430e834ed
+published=1
