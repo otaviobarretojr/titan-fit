@@ -118,7 +118,7 @@ export function SimpleWorkoutExecutionView({ planId, planName, workout, onBack, 
   if (summary) return <section className="workout-summary focus-workout-summary"><span className="eyebrow">TREINO CONCLUÍDO</span><h2>{workout.title}</h2><div className="summary-grid"><div><span>Tempo</span><strong>{formatDuration(summary.durationSeconds)}</strong></div><div><span>Séries</span><strong>{summary.totalSets}</strong></div></div><button type="button" className="primary-action" onClick={onCompleted}>Finalizar</button></section>;
 
   return <div className="workout-mode focus-workout-mode">
-    <header className="focus-workout-topbar"><button type="button" className="workout-exit" onClick={onBack}>←</button><div><span>{activeExerciseIndex + 1} / {workout.exercises.length}</span><strong>{formatSessionTime(sessionSeconds)}</strong></div><span>{progress}%</span></header>
+    <header className="focus-workout-topbar"><button type="button" className="workout-exit" aria-label="Sair do treino" onClick={onBack}>←</button><div><span>{activeExerciseIndex + 1} / {workout.exercises.length}</span><strong>{formatSessionTime(sessionSeconds)}</strong></div><span>{progress}%</span></header>
     <div className="focus-progress-track"><span style={{ width: `${progress}%` }} /></div>
 
     {restSeconds > 0 && <section className="focus-rest-timer" aria-label="Cronômetro de descanso"><span>DESCANSO</span><strong>{formatTimer(restSeconds)}</strong><div><button type="button" onClick={() => setRestSeconds((value) => Math.max(0, value - 15))}>−15s</button><button type="button" onClick={() => setRestRunning((value) => !value)}>{restRunning ? 'Pausar' : 'Continuar'}</button><button type="button" onClick={() => setRestSeconds((value) => value + 15)}>+15s</button></div></section>}
