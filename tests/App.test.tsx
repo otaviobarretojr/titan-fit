@@ -9,53 +9,33 @@ vi.mock('virtual:pwa-register/react', () => ({
 
 beforeEach(() => localStorage.clear());
 
-describe('TITAN FIT', () => {
-  it('inicia com a rotina TITAN fixa ativa', () => {
+describe('TITAN FIT workout-first', () => {
+  it('abre direto na experiência essencial de treino', () => {
     render(<App />);
-    expect(screen.getByText('PPL + Ombros — Rotina Fixa')).toBeInTheDocument();
-    expect(screen.queryByText('Nenhum projeto ativo')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'TITAN' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /Navegação principal/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Score TITAN/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nutrição de hoje/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Coach TITAN/i)).not.toBeInTheDocument();
   });
 
-  it('usa a navegação principal consolidada e integra evolução em Saúde', () => {
+  it('mantém somente Hoje, Treinos e Histórico na navegação principal', () => {
     render(<App />);
     const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
     expect(nav.getByRole('button', { name: /^Hoje$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Programação$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Saúde$/i })).toBeInTheDocument();
-    expect(nav.getByRole('button', { name: /^Ajustes$/i })).toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Progresso$/i })).not.toBeInTheDocument();
-    expect(nav.queryByRole('button', { name: /^Cardio$/i })).not.toBeInTheDocument();
-
-    fireEvent.click(nav.getByRole('button', { name: /^Saúde$/i }));
-    expect(screen.getByRole('heading', { name: 'Saúde' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sincronizar agora' })).toBeEnabled();
-    expect(screen.getByRole('region', { name: 'Resumo do relógio' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Visão geral' })).toHaveAttribute('aria-selected', 'true');
-    fireEvent.click(screen.getByRole('tab', { name: 'Evolução' }));
-    expect(screen.getByRole('tab', { name: 'Corpo' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Treino' })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'Nutrição' })).not.toBeInTheDocument();
-
-    fireEvent.click(nav.getByRole('button', { name: /^Programação$/i }));
-    expect(screen.getByRole('heading', { name: 'Tabela completa' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Ativar treino/i })).not.toBeInTheDocument();
-
-    fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
-    expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
-    expect(screen.getAllByRole('region', { name: 'Perfil e objetivos' })).toHaveLength(1);
-    expect(screen.queryByRole('region', { name: 'Programação nutricional' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ativar demonstração completa' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Resetar todos os dados' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
+    expect(nav.getByRole('button', { name: /^Treinos$/i })).toBeInTheDocument();
+    expect(nav.getByRole('button', { name: /^Histórico$/i })).toBeInTheDocument();
+    expect(nav.queryByRole('button', { name: /Saúde|Programação|Cardio|Progresso|Ajustes/i })).not.toBeInTheDocument();
   });
 
-  it('exibe saída específica quando o modo demonstração está ativo', () => {
-    localStorage.setItem('titan-fit:demo-mode', 'true');
+  it('mantém ajustes fora da navegação principal e exibe manutenção essencial', () => {
     render(<App />);
-    const nav = within(screen.getByRole('navigation', { name: /Navegação principal/i }));
-    fireEvent.click(nav.getByRole('button', { name: /^Ajustes$/i }));
-    expect(screen.getByRole('button', { name: 'Remover dados da demonstração' })).toBeEnabled();
-    expect(screen.getByText('Demonstração ativa')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir ajustes' }));
+    expect(screen.getByRole('heading', { name: 'Configurações' })).toBeInTheDocument();
+    expect(screen.getByText(`v${packageInfo.version}`)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Exportar backup' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Restaurar backup' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Resetar aplicativo' })).toBeEnabled();
+    expect(screen.queryByText(/Modo Demonstração/i)).not.toBeInTheDocument();
   });
 });
