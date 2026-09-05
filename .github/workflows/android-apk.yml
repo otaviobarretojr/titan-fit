@@ -1,0 +1,106 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/android-apk.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'capacitor.config.json'
+      - 'src/**'
+      - 'public/**'
+      - 'android/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: titan-fit-android-apk
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate project
+        run: npm run validate
+
+      - name: Build Android web bundle
+        run: npm run build:android
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Build installable APK
+        working-directory: android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Prepare APK
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          APK_SOURCE="android/app/build/outputs/apk/debug/app-debug.apk"
+          APK_NAME="TITAN-FIT-v${VERSION}.apk"
+
+          test -f "$APK_SOURCE"
+          cp "$APK_SOURCE" "$APK_NAME"
+          sha256sum "$APK_NAME" > "${APK_NAME}.sha256"
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "APK_NAME=$APK_NAME" >> "$GITHUB_ENV"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TITAN-FIT-v${{ env.VERSION }}-APK
+          path: |
+            ${{ env.APK_NAME }}
+            ${{ env.APK_NAME }}.sha256
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish APK in GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="apk-v${VERSION}"
+          TITLE="TITAN FIT v${VERSION} — APK Android"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK_NAME" "${APK_NAME}.sha256" --clobber
+          else
+            gh release create "$TAG" \
+              "$APK_NAME" \
+              "${APK_NAME}.sha256" \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes "APK instalável do TITAN FIT v${VERSION}. Build automático gerado pelo GitHub Actions. Esta versão usa a assinatura de debug do Android e é indicada para instalação direta/testes."
+          fi
+
+      - name: Summary
+        run: |
+          echo "## TITAN FIT Android" >> "$GITHUB_STEP_SUMMARY"
+          echo "APK: **${APK_NAME}**" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release: https://github.com/${GITHUB_REPOSITORY}/releases/tag/apk-v${VERSION}" >> "$GITHUB_STEP_SUMMARY"
